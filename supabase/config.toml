@@ -1,0 +1,10 @@
+project_id = "draftroom"
+
+[auth]
+enable_signup = false
+enable_anonymous_sign_ins = false
+
+[auth.email]
+# Keep the email/password provider enabled. The global signup gate above
+# prevents new accounts while allowing the provisioned owner to sign in.
+enable_signup = true

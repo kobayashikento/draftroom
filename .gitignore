@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+.pnpm-store/
+supabase/.temp/
+supabase/.branches/
+.DS_Store
+*.tsbuildinfo
+npm-debug.log*
+pnpm-debug.log*
+
+.env*
+!.env.example
+!.env.*.example
+
+studio-space-site.tar.gz

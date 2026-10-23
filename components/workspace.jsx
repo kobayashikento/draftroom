@@ -1,5 +1,5 @@
 'use client';
-import {Button, Input, Badge} from './ui';
+import {Button, Input, Badge, PriorityButton} from './ui';
 import {useWorkspace} from './workspace-provider';
 export {WorkspaceProvider, useWorkspace} from './workspace-provider';
 export {Button, Field, Select} from './ui';
@@ -20,5 +20,13 @@ export function ContentCard({item}) {
   const {state,open}=useWorkspace(); const series=state.series.find(s=>s.id===item.seriesId); const dates=item.publications.filter(p=>p.date).sort((a,b)=>a.date.localeCompare(b.date));
   return <article className="card"><Button className="open-card" aria-label={`Open ${item.title}`} onClick={()=>open(item.id)}><Artwork item={item}/><div className="card-body"><div className="meta">{series?.name||'A new little idea'}</div><h3>{item.title}</h3><StagePill item={item}/><div className="card-foot"><span>{dates.map(x=>x.platform==='Instagram'?'◎':'♪').join(' ')||'Unscheduled'} · {item.tasks.filter(t=>t.done).length}/{item.tasks.length} tasks</span><span>{dates[0]?fmt(dates[0].date):'No date yet'}</span></div></div></Button></article>;
 }
-export function TaskRow({item,task}) { const {updateItem,open}=useWorkspace();return <div className={`taskrow ${task.done?'checked':''}`}><Input type="checkbox" aria-label={task.title} checked={task.done} onChange={e=>{const done=e.target.checked;updateItem(item.id,p=>p.tasks.find(t=>t.id===task.id).done=done)}}/><div className="tasktext">{task.title}<small><Button className="link" onClick={()=>open(item.id,'Production')}>{item.title}</Button></small></div><span className="date-chip">{task.due?fmt(task.due):'No due date'}</span></div>}
+export function TaskRow({item,task,prioritizable=false}) {
+ const {updateItem,open}=useWorkspace();
+ return <div className={`taskrow ${task.done?'checked':''}`}>
+  <Input type="checkbox" aria-label={task.title} checked={task.done} onChange={e=>{const done=e.target.checked;updateItem(item.id,p=>p.tasks.find(t=>t.id===task.id).done=done)}}/>
+  <div className="tasktext"><span className="task-title">{task.title}</span><small><Button className="link" onClick={()=>open(item.id,'Production')}>{item.title}</Button></small></div>
+  <span className="date-chip">{task.due?fmt(task.due):'No due date'}</span>
+  {prioritizable&&<PriorityButton label={`task: ${task.title}`} active={task.priority==='High'} onClick={()=>updateItem(item.id,p=>{const target=p.tasks.find(t=>t.id===task.id);target.priority=target.priority==='High'?'Normal':'High'})}/>}
+ </div>;
+}
 export function reorder(list,id,delta) {const i=list.findIndex(x=>x.id===id),j=i+delta;if(i>=0&&j>=0&&j<list.length)[list[i],list[j]]=[list[j],list[i]];}

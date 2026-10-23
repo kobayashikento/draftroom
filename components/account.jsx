@@ -6,9 +6,9 @@ import {Button, Field, Input} from './ui';
 export function AccountShell({title, children}) {
   return <Box as="main" className="account-page">
     <Card.Root className="account-card" bg="draftroom.surface" borderColor="draftroom.border" borderRadius="16px">
-      <Card.Body gap="6" padding={{base: '6', md: '9'}}>
+      <Card.Body gap="6" padding={{base: '6', md: '8'}}>
         <div className="brand"><span className="brandmark" aria-hidden="true">✳</span>draftroom</div>
-        <Heading as="h1" fontSize="30px">{title}</Heading>
+        <Heading as="h1">{title}</Heading>
         {children}
       </Card.Body>
     </Card.Root>

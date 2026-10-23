@@ -1,6 +1,6 @@
 'use client';
 import {ChakraProvider, createSystem, defaultConfig, defineConfig} from '@chakra-ui/react';
-import {palette, colorRoles, fonts, kebab} from '../lib/design-tokens.js';
+import {palette, colorRoles, fonts, typeScale, kebab} from '../lib/design-tokens.js';
 
 const token = value => ({value});
 const config = defineConfig({
@@ -24,6 +24,8 @@ const config = defineConfig({
         },
       },
       fonts: Object.fromEntries(Object.entries(fonts).map(([name, value]) => [name, token(value)])),
+      fontSizes: Object.fromEntries(Object.keys(typeScale).map(name => [name==='base'?'md':name, token(`var(--dr-text-${name})`)])),
+      spacing: Object.fromEntries([0,1,2,3,4,5,6,7,8,9,10,12,14,16,20,24].map(value => [value, token(`calc(var(--dr-space) * ${value})`)])),
     },
     semanticTokens: {
       colors: {

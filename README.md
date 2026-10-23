@@ -35,6 +35,7 @@ Check that Node.js and pnpm are available in your shell with `node --version` an
 - `components/workspace-provider.jsx`: private login boundary, shared React context, immutable updates, persistence and account lifecycle.
 - `components/account.jsx`: Chakra login, connection notices, conflict recovery and sign-out confirmation.
 - `components/views.jsx`: six views, all querying the shared records.
+- `components/production.jsx`: collapsible To do/Completed checklists, task/project priority flags and an advancing Up next card.
 - `components/editors.jsx`: content detail, storyboard, tasks, publication records, quick capture, series templates and workflow-stage editors.
 - `lib/model.js`: stable IDs, seed data, series instantiation and calendar/production selectors.
 - `lib/workspace-data.js`: workspace validation, scoped browser caches and JSON export.
@@ -46,6 +47,10 @@ One versioned state object contains `stages`, `series`, and `items`. Each item o
 Workflow stage, task completion, and publication status are intentionally independent. Each platform has its own date, caption, URL, external ID, and manual-posted flag. Dates are local calendar dates, not UTC timestamps. Seed dates cover October 26–November 1, 2026; Today navigates to the current week.
 
 Stage behaviors (needs prep / ready / posted) remain independent of customizable stage names. Removing a stage migrates affected items to the first remaining stage. Templates are copied when creating episodes; editing a template does not rewrite existing posts.
+
+Production keeps checked tasks visible within unfinished checklists. Completing the entire checklist moves it into Completed, where cards start collapsed; finished Ready/Posted ideas are also available there. Unchecking a task returns an idea still in a working stage to To do. Each checklist can be collapsed manually. Classification uses the full checklist even when filtering task due dates by Today or This week.
+
+Flag individual tasks or entire projects to prioritize them. Up next and the production queue sort unfinished priority tasks first, then priority projects, then due dates; ties preserve the existing record order. Complete & next checks the suggested task and immediately presents the next task or reel. Optional task priority is saved with the existing workspace JSON, so older drafts remain compatible without a database migration. The interface uses named imports from `lucide-react` for icons.
 
 ## Supabase setup
 
@@ -81,7 +86,7 @@ Supabase Free can pause inactive projects and does not include automatic databas
 2. Edit storyboard titles, notes and overlay text. Add, remove and reorder entries.
 3. Change its stage; check that the board, calendar and production queue reflect it.
 4. In Publish, set different Instagram and TikTok dates. Check both calendar slots open the same editor and the stage stays unchanged.
-5. Check a task in Production. Open the content's Production tab and verify it is checked. Reload and verify persistence.
+5. Check a task in Production. It stays checked and crossed out within an unfinished checklist. Complete the entire checklist and verify it moves to Completed, collapsed by default. Expand it and uncheck a task to return it to To do while the idea is in a working stage. Flag a task or project and verify Up next changes; use Complete & next and verify the following task or reel appears. Check Today/This week filters, manual collapsing, and priority/completion persistence after reload.
 6. Move an item with unfinished tasks to Ready. It leaves the normal prep queue and gets an inconsistency notice; task history remains.
 7. Edit a series template and create the next episode. Exactly one draft appears with copied entries/tasks and no schedule.
 8. Rename, reorder, add and remove stages. Linked ideas remain accessible.

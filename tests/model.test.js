@@ -1,7 +1,22 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {seed,createItem,scheduled,pending,monday,addDays} from '../lib/model.js';
+import test from 'node:test';import assert from 'node:assert/strict';import {seed,createItem,scheduled,pending,productionTasks,monday,addDays} from '../lib/model.js';
 test('seed dates use accurate weeks across month boundary',()=>{const s=seed();assert.equal(monday('2026-11-01'),'2026-10-26');assert.equal(addDays('2026-10-26',6),'2026-11-01');assert.equal(scheduled(s,'2026-10-26','2026-11-01').length,5)});
 test('scheduling and task completion never change workflow',()=>{const s=seed(),p=s.items[0];p.publications[1].date='2026-10-31';p.tasks.forEach(t=>t.done=true);assert.equal(p.stageId,'editing');assert.equal(pending(s).filter(x=>x.p.id===p.id).length,0);assert.equal(scheduled(s,'2026-10-31','2026-10-31')[0].p,p)});
-test('ready posts excluded, with task history preserved',()=>{const s=seed(),p=s.items[0];p.stageId='ready';assert.ok(p.tasks.some(t=>!t.done));assert.equal(pending(s).filter(x=>x.p===p).length,0)});
+test('production keeps completed tasks and a fully checked post visible in the same order',()=>{
+ const s=seed(),p=s.items[0];
+ const taskIds=()=>productionTasks(s).filter(x=>x.p.id===p.id).map(({t})=>t.id);
+ const original=taskIds();
+ p.tasks[2].done=true;
+ assert.deepEqual(taskIds(),original);
+ p.tasks.forEach(t=>t.done=true);
+ assert.deepEqual(taskIds(),original);
+ assert.equal(pending(s).filter(x=>x.p.id===p.id).length,0);
+ const restored=JSON.parse(JSON.stringify(s));
+ assert.equal(productionTasks(restored).filter(x=>x.p.id===p.id&&x.t.done).length,p.tasks.length);
+ p.tasks[2].done=false;
+ assert.deepEqual(taskIds(),original);
+ assert.deepEqual(pending(s).filter(x=>x.p.id===p.id).map(({t})=>t.id),[p.tasks[2].id]);
+});
+test('ready posts excluded, with task history preserved',()=>{const s=seed(),p=s.items[0];p.stageId='ready';assert.ok(p.tasks.some(t=>!t.done));assert.equal(pending(s).filter(x=>x.p===p).length,0);assert.equal(productionTasks(s).filter(x=>x.p===p).length,0)});
 test('episode inherits independent templates and has no schedule',()=>{const s=seed(),p=createItem(s,{title:'November joys',seriesId:'joys'});assert.equal(p.storyboard.length,6);assert.equal(p.format,'Carousel');assert.ok(p.publications.every(x=>!x.date));p.storyboard[0].title='Changed';assert.notEqual(s.series[3].storyboard[0],'Changed');assert.equal(p.stageId,'idea')});
 test('local serialization preserves stable shared records',()=>{const s=seed();s.items[0].tasks[2].done=true;const restored=JSON.parse(JSON.stringify(s));assert.equal(restored.items[0].tasks[2].done,true);assert.equal(scheduled(restored,'2026-10-26','2026-10-26')[0].p.id,s.items[0].id)});
 test('custom stage names retain production behavior',()=>{const s=seed(),p=s.items[0];s.stages.find(x=>x.id==='editing').name='Finishing touches';assert.ok(pending(s).some(x=>x.p.id===p.id));s.stages.find(x=>x.id==='editing').kind='ready';assert.ok(!pending(s).some(x=>x.p.id===p.id));assert.equal(p.tasks[2].done,false)});

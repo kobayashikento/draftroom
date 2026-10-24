@@ -1,8 +1,5 @@
 'use client';
 import type { View, OverviewSummary, OverviewCategory } from '../../../lib/types.ts';
-type OverviewResultsProps = { selected: OverviewCategory; summary: OverviewSummary; week: string; currentDate: string; navigate: (view: View) => void };
-
-
 import { ArrowRight } from 'lucide-react';
 import { AppIcon } from '../../icons';
 import { Button } from '../../ui';
@@ -11,7 +8,18 @@ import { addDays } from '../../../lib/model';
 import { fmt } from '../../../lib/display.ts';
 import PostResults from './post-results';
 
-const sections: Record<OverviewCategory, { title: string; destination: View; action: string; empty: string }> = {
+type OverviewResultsProps = {
+  selected: OverviewCategory;
+  summary: OverviewSummary;
+  week: string;
+  currentDate: string;
+  navigate: (view: View) => void;
+};
+
+const sections: Record<
+  OverviewCategory,
+  { title: string; destination: View; action: string; empty: string }
+> = {
   planned: {
     title: 'Posts planned',
     destination: 'Calendar',
@@ -38,7 +46,13 @@ const sections: Record<OverviewCategory, { title: string; destination: View; act
   },
 };
 
-export default function OverviewResults({ selected, summary, week, currentDate, navigate }: OverviewResultsProps) {
+export default function OverviewResults({
+  selected,
+  summary,
+  week,
+  currentDate,
+  navigate,
+}: OverviewResultsProps) {
   const section = sections[selected];
   const matches = summary[selected];
   const noun = selected === 'tasks' ? 'task' : 'post';
@@ -66,7 +80,12 @@ export default function OverviewResults({ selected, summary, week, currentDate, 
           ))}
         </div>
       ) : (
-        <PostResults items={summary[selected]} selected={selected} week={week} currentDate={currentDate} />
+        <PostResults
+          items={summary[selected]}
+          selected={selected}
+          week={week}
+          currentDate={currentDate}
+        />
       )}
     </section>
   );

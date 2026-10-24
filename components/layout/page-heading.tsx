@@ -1,12 +1,12 @@
 'use client';
 import type { View } from '../../lib/types.ts';
-type PageHeadingProps = { view: View };
-
 import { Plus } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import { pages } from './pages';
+
+type PageHeadingProps = { view: View };
 
 export default function PageHeading({ view }: PageHeadingProps) {
   const { setModal } = useWorkspace();

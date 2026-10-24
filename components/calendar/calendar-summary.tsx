@@ -1,9 +1,9 @@
 'use client';
 import type { PublicationEntry, CalendarMode } from '../../lib/types.ts';
-type CalendarSummaryProps = { entries: PublicationEntry[]; mode: CalendarMode };
-
 import { Check } from 'lucide-react';
 import { AppIcon } from '../icons';
+
+type CalendarSummaryProps = { entries: PublicationEntry[]; mode: CalendarMode };
 
 export default function CalendarSummary({ entries, mode }: CalendarSummaryProps) {
   return (

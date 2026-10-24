@@ -2,12 +2,16 @@
 import type { FormEvent } from 'react';
 import type { RefObject } from 'react';
 import type { SendAssistant } from './use-assistant.ts';
-type AssistantComposerProps = { busy: boolean; onSend: SendAssistant; inputRef: RefObject<HTMLTextAreaElement | null> };
-
 import { useState } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button, Textarea } from '../ui';
+
+type AssistantComposerProps = {
+  busy: boolean;
+  onSend: SendAssistant;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
+};
 
 export default function AssistantComposer({ busy, onSend, inputRef }: AssistantComposerProps) {
   const [draft, setDraft] = useState('');

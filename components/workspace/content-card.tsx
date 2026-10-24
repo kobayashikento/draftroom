@@ -1,13 +1,13 @@
 'use client';
 import type { Item } from '../../lib/types.ts';
-type ContentCardProps = { item: Item };
-
 import { PlatformIcon } from '../icons';
 import { useWorkspace } from './workspace-context';
 import { Button } from '../ui';
 import StagePill from './stage-pill';
 import Artwork from './artwork';
 import { fmt } from '../../lib/display.ts';
+
+type ContentCardProps = { item: Item };
 
 export default function ContentCard({ item }: ContentCardProps) {
   const { state, open } = useWorkspace();

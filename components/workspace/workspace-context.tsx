@@ -41,7 +41,8 @@ export default function WorkspaceContext({
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setMessage(''), 3500);
   };
-  const open = (id: string, tab: EditorTab = 'Storyboard') => setModal({ type: 'content', id, tab });
+  const open = (id: string, tab: EditorTab = 'Storyboard') =>
+    setModal({ type: 'content', id, tab });
   return (
     <Context.Provider
       value={{

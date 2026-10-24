@@ -1,7 +1,5 @@
 'use client';
 import type { AssistantMessage, EditorTab } from '../../lib/types.ts';
-export type SendAssistant = (text: string, retryId?: string) => boolean;
-export type AssistantController = ReturnType<typeof useAssistant>;
 import { useEffect, useRef, useState } from 'react';
 import { useWorkspace } from '../workspace/workspace-context';
 import { requestAssistant } from '../../lib/assistant-client.ts';
@@ -11,6 +9,9 @@ import {
   prepareAssistantTurn,
   applyAssistantTurn,
 } from '../../lib/assistant-actions.ts';
+
+export type SendAssistant = (text: string, retryId?: string) => boolean;
+export type AssistantController = ReturnType<typeof useAssistant>;
 
 export default function useAssistant() {
   const { state, update, cloud, conflict, storageStatus, open } = useWorkspace();
@@ -40,7 +41,12 @@ export default function useAssistant() {
       return false;
     }
     const id = retryId || crypto.randomUUID();
-    const message: AssistantMessage = { id, role: 'user', text, createdAt: new Date().toISOString() };
+    const message: AssistantMessage = {
+      id,
+      role: 'user',
+      text,
+      createdAt: new Date().toISOString(),
+    };
     const messages = [
       ...assistantMessages(latest.current).filter((entry) => entry.id !== id),
       message,
@@ -54,7 +60,12 @@ export default function useAssistant() {
     void respond(id, text, messages, controller);
     return true;
   }
-  async function respond(id: string, text: string, messages: AssistantMessage[], controller: AbortController) {
+  async function respond(
+    id: string,
+    text: string,
+    messages: AssistantMessage[],
+    controller: AbortController,
+  ) {
     try {
       const response = await requestAssistant(latest.current, messages, controller.signal);
       if (controller.signal.aborted) return;
@@ -66,7 +77,11 @@ export default function useAssistant() {
       update((draft) => applyAssistantTurn(draft, turn));
     } catch (error) {
       if (!controller.signal.aborted) {
-        setError(error instanceof Error ? error.message : 'The assistant couldn’t respond. Please try again.');
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'The assistant couldn’t respond. Please try again.',
+        );
         setFailed({ text, id });
       }
     } finally {

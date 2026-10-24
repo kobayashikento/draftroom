@@ -1,12 +1,16 @@
 'use client';
 import type { Dispatch, SetStateAction } from 'react';
 import type { CalendarFilters } from '../../lib/types.ts';
-export type CalendarFilterController = ReturnType<typeof useCalendarFilters>;
 import { useState } from 'react';
+
+export type CalendarFilterController = ReturnType<typeof useCalendarFilters>;
 
 const emptyFilters = { format: '', seriesId: '', status: '', query: '' };
 
-export default function useCalendarFilters(platform: string, setPlatform: Dispatch<SetStateAction<string>>) {
+export default function useCalendarFilters(
+  platform: string,
+  setPlatform: Dispatch<SetStateAction<string>>,
+) {
   const [localFilters, setLocalFilters] = useState(emptyFilters);
   const values = { ...localFilters, platform };
   const activeCount = [values.format, values.seriesId, values.status].filter(Boolean).length;

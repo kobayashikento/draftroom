@@ -10,6 +10,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Code formatting
 
+- Use `.tsx` for React components and `.ts` for other application code. Keep strict TypeScript checks passing with `pnpm typecheck`, including the separate Deno configuration for the Edge Function. Define explicit named data shapes instead of TypeScript `Pick<T, K>`.
+
 - Keep source files readable with the project's Prettier configuration. Run `pnpm format` after edits and `pnpm format:check` before finishing. SQL and TOML are included; generated output, dependencies, lockfiles, binary assets and environment files are excluded.
 - Keep feature entry components focused on composition. Put related editors, calendar pieces, account screens and layout components in their feature folders, and import them directly. Use the single workspace context in `components/workspace/workspace-context.tsx`; avoid circular dependencies between feature components.
 

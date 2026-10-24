@@ -1,6 +1,10 @@
 import type { PlanningWorkspace, AssistantContext } from './types.ts';
 // Only these planning fields leave Draftroom. Captions, notes, email and credentials stay out.
-export function assistantContext(state: PlanningWorkspace, today: string, timezone: string): AssistantContext {
+export function assistantContext(
+  state: PlanningWorkspace,
+  today: string,
+  timezone: string,
+): AssistantContext {
   const clip = (value: unknown, max = 240) => String(value || '').slice(0, max);
   const items = state.items.slice(0, 150).map((item) => ({
     id: clip(item.id, 100),
@@ -44,22 +48,53 @@ export function assistantContext(state: PlanningWorkspace, today: string, timezo
   };
 }
 
-const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
-const strings = (value: Record<string, unknown>, fields: string[]) => fields.every((field) => typeof value[field] === 'string');
-const records = (value: unknown, check: (entry: Record<string, unknown>) => boolean) => Array.isArray(value) && value.every((entry: unknown) => object(entry) && check(entry));
+const object = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+const strings = (value: Record<string, unknown>, fields: string[]) =>
+  fields.every((field) => typeof value[field] === 'string');
+const records = (value: unknown, check: (entry: Record<string, unknown>) => boolean) =>
+  Array.isArray(value) && value.every((entry: unknown) => object(entry) && check(entry));
 function planningWorkspace(value: unknown): value is PlanningWorkspace & Record<string, unknown> {
-  return object(value) &&
+  return (
+    object(value) &&
     records(value.stages, (stage) => strings(stage, ['id', 'name', 'kind'])) &&
     records(value.series, (series) => strings(series, ['id', 'name', 'format'])) &&
-    records(value.items, (item) => strings(item, ['id', 'title', 'format', 'stageId', 'seriesId', 'priority']) &&
-      records(item.tasks, (task) => strings(task, ['id', 'title', 'category', 'due']) && typeof task.done === 'boolean' && (task.priority === undefined || typeof task.priority === 'string')) &&
-      records(item.publications, (publication) => strings(publication, ['platform', 'date', 'state'])));
+    records(
+      value.items,
+      (item) =>
+        strings(item, ['id', 'title', 'format', 'stageId', 'seriesId', 'priority']) &&
+        records(
+          item.tasks,
+          (task) =>
+            strings(task, ['id', 'title', 'category', 'due']) &&
+            typeof task.done === 'boolean' &&
+            (task.priority === undefined || typeof task.priority === 'string'),
+        ) &&
+        records(item.publications, (publication) =>
+          strings(publication, ['platform', 'date', 'state']),
+        ),
+    )
+  );
 }
 export function validateContext(context: unknown): AssistantContext {
-  if (!object(context) || !planningWorkspace(context) || context.items.length > 150 || !context.stages.length || context.stages.length > 30 || context.series.length > 60 || typeof context.today !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(context.today) || typeof context.timezone !== 'string' || context.items.some((item) => item.tasks.length > 40 || item.publications.length > 2))
+  if (
+    !object(context) ||
+    !planningWorkspace(context) ||
+    context.items.length > 150 ||
+    !context.stages.length ||
+    context.stages.length > 30 ||
+    context.series.length > 60 ||
+    typeof context.today !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(context.today) ||
+    typeof context.timezone !== 'string' ||
+    context.items.some((item) => item.tasks.length > 40 || item.publications.length > 2)
+  )
     throw new Error('Invalid workspace context.');
   const result = assistantContext(context, context.today, context.timezone);
   result.partial = context.partial === true || result.partial;
-  result.totalIdeas = typeof context.totalIdeas === 'number' && Number.isSafeInteger(context.totalIdeas) ? context.totalIdeas : result.totalIdeas;
+  result.totalIdeas =
+    typeof context.totalIdeas === 'number' && Number.isSafeInteger(context.totalIdeas)
+      ? context.totalIdeas
+      : result.totalIdeas;
   return result;
 }

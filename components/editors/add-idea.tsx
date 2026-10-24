@@ -2,8 +2,6 @@
 import type { Format } from '../../lib/types.ts';
 import type { FormEvent } from 'react';
 import type { AddIdeaModal } from '../../lib/types.ts';
-type AddIdeaProps = { modal: AddIdeaModal; close: () => void };
-
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { AppIcon } from '../icons';
@@ -12,6 +10,8 @@ import { useWorkspace } from '../workspace/workspace-context';
 import { fmt } from '../../lib/display.ts';
 import { createItem } from '../../lib/model';
 import Modal from './modal';
+
+type AddIdeaProps = { modal: AddIdeaModal; close: () => void };
 
 export default function AddIdea({ modal, close }: AddIdeaProps) {
   const { state, update, open, notify } = useWorkspace();
@@ -61,7 +61,11 @@ export default function AddIdea({ modal, close }: AddIdeaProps) {
           />
         </Field>
         <Field label="Format">
-          <Select options={['Reel', 'Carousel']} value={format} onChange={(value) => setFormat(value as Format)} />
+          <Select
+            options={['Reel', 'Carousel']}
+            value={format}
+            onChange={(value) => setFormat(value as Format)}
+          />
         </Field>
         <Field label="Series (optional)">
           <Select

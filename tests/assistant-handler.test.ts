@@ -6,12 +6,13 @@ import {
 } from '../supabase/functions/_shared/assistant-handler.ts';
 import { assistantContext } from '../supabase/functions/_shared/assistant-context.ts';
 import { seed } from '../lib/model.ts';
+type HandlerOptions = Parameters<typeof createAssistantHandler>[0];
 
 const payload = () => ({
   context: assistantContext(seed(), '2026-10-23', 'America/Toronto'),
   messages: [{ role: 'user', text: 'What should I work on?' }],
 });
-const request = (body = payload(), method = 'POST') =>
+const request = (body: unknown = payload(), method = 'POST') =>
   new Request('https://example.com/assistant', {
     method,
     ...(method === 'POST' ? { body: JSON.stringify(body) } : {}),
@@ -27,7 +28,7 @@ const success = () =>
       },
     ],
   });
-const handler = (options = {}) =>
+const handler = (options: Partial<HandlerOptions> = {}) =>
   createAssistantHandler({
     authorize: async () => 'owner',
     apiKey: 'TEST-KEY',
@@ -73,9 +74,9 @@ test('anonymous users and non-owner accounts cannot invoke Gemini', async () => 
 test('private Gemini credentials only go to Google, with validated structured output', async () => {
   const response = await handler({
     fetcher: async (url, options) => {
-      assert.match(url, /^https:\/\/generativelanguage.googleapis.com\/v1beta\/models\//);
-      assert.equal(options.headers['x-goog-api-key'], 'TEST-KEY');
-      const body = JSON.parse(options.body);
+      assert.match(String(url), /^https:\/\/generativelanguage.googleapis.com\/v1beta\/models\//);
+      assert.equal(new Headers(options?.headers).get('x-goog-api-key'), 'TEST-KEY');
+      const body = JSON.parse(String(options?.body));
       assert.equal(body.generationConfig.responseMimeType, 'application/json');
       assert.match(body.systemInstruction.parts[0].text, /create_task needs itemId/);
       assert.equal(JSON.stringify(body).includes('TEST-KEY'), false);
@@ -87,7 +88,7 @@ test('private Gemini credentials only go to Google, with validated structured ou
   assert.equal(response.headers.get('cache-control'), 'no-store');
 });
 test('missing configuration, provider failures and quota have safe actionable errors', async () => {
-  for (const [options, status, message] of [
+  const cases: [Partial<HandlerOptions>, number, RegExp][] = [
     [{ apiKey: '' }, 503, /GEMINI_API_KEY/],
     [
       { fetcher: async () => new Response('SECRET-PROVIDER-DETAIL', { status: 429 }) },
@@ -113,7 +114,8 @@ test('missing configuration, provider failures and quota have safe actionable er
       504,
       /too long/,
     ],
-  ]) {
+  ];
+  for (const [options, status, message] of cases) {
     const response = await handler(options)(request());
     assert.equal(response.status, status);
     const body = JSON.stringify(await response.json());

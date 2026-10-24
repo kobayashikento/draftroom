@@ -1,11 +1,16 @@
 import type { Workspace, CacheStorage, WorkspaceCache } from './types.ts';
 export const LEGACY_STORAGE_KEY = 'studio-space-v1';
 
-const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
+const object = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
 const string = (value: unknown): value is string => typeof value === 'string';
-const date = (value: unknown) => string(value) && (value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value));
+const date = (value: unknown) =>
+  string(value) && (value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value));
 
-function records(value: unknown, check: (record: Record<string, unknown>) => boolean): value is Record<string, unknown>[] {
+function records(
+  value: unknown,
+  check: (record: Record<string, unknown>) => boolean,
+): value is Record<string, unknown>[] {
   if (!Array.isArray(value)) return false;
   const ids = new Set<string>();
   return value.every((record) => {

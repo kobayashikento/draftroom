@@ -1,6 +1,13 @@
-import type { TaskDraft, AssistantReply, AssistantAction, ChatMessage, JsonSchema } from './types.ts';
+import type {
+  TaskDraft,
+  AssistantReply,
+  AssistantAction,
+  ChatMessage,
+  JsonSchema,
+} from './types.ts';
 export const TASK_CATEGORIES = ['plan', 'film', 'photo', 'edit', 'caption', 'publish'] as const;
-const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
+const object = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
 
 function text(value: unknown, name: string, max = 240, empty = false) {
   if (typeof value !== 'string' || value.length > max || (!empty && !value.trim()))
@@ -30,7 +37,12 @@ function taskFields(value: unknown): TaskDraft {
     !validDate(value.due)
   )
     throw new Error('Invalid task details.');
-  return { title, category: oneOf(value.category, TASK_CATEGORIES), due: value.due, priority: oneOf(value.priority, ['Normal', 'High'] as const) };
+  return {
+    title,
+    category: oneOf(value.category, TASK_CATEGORIES),
+    due: value.due,
+    priority: oneOf(value.priority, ['Normal', 'High'] as const),
+  };
 }
 export function validateReply(value: unknown): AssistantReply {
   if (!object(value) || !Array.isArray(value.actions) || value.actions.length > 10)
@@ -108,7 +120,10 @@ export function validateMessages(messages: unknown): ChatMessage[] {
   const result = messages.map((message: unknown): ChatMessage => {
     if (!object(message) || !['user', 'assistant'].some((choice) => choice === message.role))
       throw new Error('Invalid message.');
-    return { role: oneOf(message.role, ['user', 'assistant'] as const), text: text(message.text, 'message', 6000) };
+    return {
+      role: oneOf(message.role, ['user', 'assistant'] as const),
+      text: text(message.text, 'message', 6000),
+    };
   });
   if (result.at(-1)?.role !== 'user') throw new Error('A user message is required.');
   return result;

@@ -29,7 +29,9 @@ async function main() {
   const result = JSON.parse(
     cli(['projects', 'api-keys', '--project-ref', projectRef, '--reveal', '--output', 'json']),
   );
-  const keys: { type?: string; name?: string; api_key?: string }[] = Array.isArray(result) ? result : result.api_keys;
+  const keys: { type?: string; name?: string; api_key?: string }[] = Array.isArray(result)
+    ? result
+    : result.api_keys;
   const secret =
     keys?.find((key) => key.type === 'secret' && key.api_key?.startsWith('sb_secret_'))?.api_key ||
     keys?.find((key) => key.name === 'service_role')?.api_key;

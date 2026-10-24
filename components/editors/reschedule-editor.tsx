@@ -1,12 +1,12 @@
 'use client';
 import type { Item, Publication } from '../../lib/types.ts';
-type RescheduleEditorProps = { item: Item; publication: Publication; close: () => void };
-
 import { useState } from 'react';
 import { Input, Button, Field } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import { reschedulePublication } from '../../lib/calendar';
 import Modal from './modal';
+
+type RescheduleEditorProps = { item: Item; publication: Publication; close: () => void };
 
 export default function RescheduleEditor({ item, publication, close }: RescheduleEditorProps) {
   const { updateItem, notify } = useWorkspace();

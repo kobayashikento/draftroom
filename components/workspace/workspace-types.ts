@@ -1,6 +1,15 @@
 import type { ReactNode, Dispatch, SetStateAction } from 'react';
 import type { User } from '@supabase/supabase-js';
-import type { Workspace, Item, WorkspaceUpdater, WorkspaceModal, EditorTab, WorkspaceRow, ConflictChoice, StorageStatus } from '../../lib/types.ts';
+import type {
+  Workspace,
+  Item,
+  WorkspaceUpdater,
+  WorkspaceModal,
+  EditorTab,
+  WorkspaceRow,
+  ConflictChoice,
+  StorageStatus,
+} from '../../lib/types.ts';
 export type WorkspaceAccount = {
   cloud?: boolean;
   authUser?: User;

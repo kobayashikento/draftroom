@@ -1,10 +1,10 @@
 # draftroom
 
-A functional creator workspace built with **Next.js 16.4.2, React 19.3.1, Chakra UI 3.37.0, and the App Router**. It uses one connected content model across Overview, Calendar, Ideas, Series, Production, and Analytics.
+A functional creator workspace built with **Next.js 16.4.2, React 19.3.1, TypeScript 7, Chakra UI 3.37.0, and the App Router**. It uses one connected content model across Overview, Calendar, Ideas, Series, Production, and Analytics.
 
 ## Run
 
-Requires Node.js 22 or newer and pnpm. From this folder:
+Requires Node.js 22.18 or newer and pnpm. From this folder:
 
 ```sh
 pnpm install
@@ -22,18 +22,28 @@ pnpm start
 
 Check that Node.js and pnpm are available in your shell with `node --version` and `pnpm --version`. The project's package manager version is recorded in `package.json`. Dependencies and build output are generated locally and excluded from Git.
 
+## TypeScript
+
+React components use `.tsx`; domain logic, tests, scripts and Supabase functions use `.ts`. Strict checking, unused-code checks and runtime validation cover workspace records, component props, database access and assistant messages. Untrusted JSON enters through `unknown` and is validated before use.
+
+Run `pnpm typecheck` to regenerate Next.js declarations and check both the browser/Node code and the Supabase Edge Function. `tsconfig.json` configures Next.js and Node; `tsconfig.edge.json` checks the Deno entry point using the official Deno and Supabase types. The separate configurations keep runtime globals apart. `pnpm build` runs both checks before producing the static export.
+
+`lib/types.ts` defines shared workspace records; `lib/database.types.ts` describes the database table. The assistant's request, response and planning types live in `supabase/functions/_shared/types.ts` so the client and Edge Function share their contract. Use explicit named shapes for smaller data structures rather than TypeScript `Pick`.
+
+Node.js 22.18 or newer runs the `.ts` tests and utility scripts directly. Next.js compiles React `.tsx` components. CSS, JSON, SQL and TOML retain their native formats. Next.js regenerates the ignored `next-env.d.ts` file.
+
 ## Formatting
 
-[Prettier](https://prettier.io/docs/) formats JavaScript, JSX, CSS, JSON, Markdown, SQL and TOML using the shared `.prettierrc.json` configuration. Run `pnpm format` to format the project, or `pnpm format:check` to check formatting without writing files. Generated output, dependencies, lockfiles, binary assets and environment files are excluded by `.prettierignore`.
+[Prettier](https://prettier.io/docs/) formats TypeScript, TSX, CSS, JSON, Markdown, SQL and TOML using the shared `.prettierrc.json` configuration. Run `pnpm format` to format the project, or `pnpm format:check` to check formatting without writing files. Generated output, dependencies, lockfiles, binary assets and environment files are excluded by `.prettierignore`.
 
-Use two-space indentation, single quotes in JavaScript, trailing commas and a 100-character print width. Editor integrations can use the installed project formatter and the same configuration.
+Use two-space indentation, single quotes in TypeScript, trailing commas and a 100-character print width. Editor integrations can use the installed project formatter and the same configuration.
 
 ## Architecture
 
 - `app/layout.tsx`, `app/page.tsx`: Next.js App Router entry points and metadata.
 - `app/globals.css`: responsive workspace layouts and component geometry.
 - `lib/design-tokens.ts`: the working Pistachio & Oat palette, semantic color roles, typography and motion tokens.
-- `postcss.config.mjs`: Tailwind CSS v4 through the official PostCSS plugin.
+- `postcss.config.json`: Tailwind CSS v4 through the official PostCSS plugin.
 - `components/ui-provider.tsx`: Chakra provider consuming the shared design tokens.
 - `components/ui.tsx`: Chakra buttons, accessible fields, inputs, textareas, native selects, checkboxes and badges.
 - `components/icons.tsx`: shared Lucide icons for controls, navigation, status, content formats, platforms, series and branding.
@@ -79,7 +89,7 @@ Flag individual tasks or entire projects to prioritize them. Up next and the pro
 6. Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` using the project's Connect dialog. Use an `sb_publishable_…` key. Never use a secret or service-role key in public configuration.
 7. Restart `pnpm dev`, or rebuild with `pnpm build` and run `pnpm start`. Public environment values are included at build time. Sign in on the same browser and origin that contains the original drafts to migrate them.
 
-An administrator already signed into the Supabase CLI can run `pnpm exec tsx scripts/provision-owner.ts` after applying the schema and configuring `.env.local`, as an alternative to the manual account/owner-row steps. It creates the requested owner only if missing, saves a strong starter password under `DRAFTROOM_OWNER_INITIAL_PASSWORD` in ignored `.env.local`, and provisions the owner's row. It never changes an existing account's password. Administrator API keys are used only in the setup process's memory. The starter password is private and is not included in the browser build.
+An administrator already signed into the Supabase CLI can run `node scripts/provision-owner.ts` after applying the schema and configuring `.env.local`, as an alternative to the manual account/owner-row steps. It creates the requested owner only if missing, saves a strong starter password under `DRAFTROOM_OWNER_INITIAL_PASSWORD` in ignored `.env.local`, and provisions the owner's row. It never changes an existing account's password. Administrator API keys are used only in the setup process's memory. The starter password is private and is not included in the browser build.
 
 `supabase/config.toml` declares the private authentication settings: global signup is disabled and email/password login remains enabled. Preview with `supabase config diff --project-ref <project-ref>`, then apply with `supabase config push --project-ref <project-ref>`. Only declared settings change.
 

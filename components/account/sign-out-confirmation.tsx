@@ -1,12 +1,22 @@
 'use client';
-type SignOutConfirmationProps = { onClose: () => void; onConfirm: () => void | Promise<void>; exportData: () => void; cacheError?: string };
-
 import { Text, Dialog, Portal } from '@chakra-ui/react';
 import { Download, LogOut } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 
-export default function SignOutConfirmation({ onClose, onConfirm, exportData, cacheError }: SignOutConfirmationProps) {
+type SignOutConfirmationProps = {
+  onClose: () => void;
+  onConfirm: () => void | Promise<void>;
+  exportData: () => void;
+  cacheError?: string;
+};
+
+export default function SignOutConfirmation({
+  onClose,
+  onConfirm,
+  exportData,
+  cacheError,
+}: SignOutConfirmationProps) {
   return (
     <Dialog.Root
       open

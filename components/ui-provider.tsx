@@ -1,9 +1,9 @@
 'use client';
 import type { ReactNode } from 'react';
-type UIProviderProps = { children: ReactNode };
-
 import { ChakraProvider, createSystem, defaultConfig, defineConfig } from '@chakra-ui/react';
 import { palette, colorRoles, fonts, typeScale, kebab } from '../lib/design-tokens.ts';
+
+type UIProviderProps = { children: ReactNode };
 
 const token = (value: string) => ({ value });
 const config = defineConfig({

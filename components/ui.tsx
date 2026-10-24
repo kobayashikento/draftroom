@@ -1,6 +1,9 @@
 'use client';
 import type { ComponentProps, ReactNode, CSSProperties, RefAttributes } from 'react';
-import type { ButtonProps as ChakraButtonProps, InputProps as ChakraInputProps, TextareaProps as ChakraTextareaProps } from '@chakra-ui/react';
+import type {
+  ButtonProps as ChakraButtonProps,
+  TextareaProps as ChakraTextareaProps,
+} from '@chakra-ui/react';
 import {
   Button as ChakraButton,
   Field as ChakraField,
@@ -13,7 +16,11 @@ import {
 import { Flag, Check, ChevronDown } from 'lucide-react';
 import { AppIcon } from './icons';
 
-export function Button({ children, className = '', ...props }: ChakraButtonProps & RefAttributes<HTMLButtonElement>) {
+export function Button({
+  children,
+  className = '',
+  ...props
+}: ChakraButtonProps & RefAttributes<HTMLButtonElement>) {
   const primary = className.split(' ').includes('primary');
   return (
     <ChakraButton
@@ -28,7 +35,15 @@ export function Button({ children, className = '', ...props }: ChakraButtonProps
     </ChakraButton>
   );
 }
-export function PriorityButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+export function PriorityButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
   return (
     <Button
       className="icon-button priority-button"
@@ -41,7 +56,15 @@ export function PriorityButton({ active, label, onClick }: { active: boolean; la
     </Button>
   );
 }
-export function Field({ label, wide = false, children }: { label: string; wide?: boolean; children: ReactNode }) {
+export function Field({
+  label,
+  wide = false,
+  children,
+}: {
+  label: string;
+  wide?: boolean;
+  children: ReactNode;
+}) {
   return (
     <ChakraField.Root className={`field ${wide ? 'wide' : ''}`}>
       <ChakraField.Label className="field-label" color="draftroom.muted">
@@ -52,7 +75,9 @@ export function Field({ label, wide = false, children }: { label: string; wide?:
   );
 }
 type InputChange = { target: { checked: boolean; value: string } };
-type InputProps = Omit<ComponentProps<'input'>, 'onChange' | 'size'> & { onChange?: (event: InputChange) => void };
+type InputProps = Omit<ComponentProps<'input'>, 'onChange' | 'size'> & {
+  onChange?: (event: InputChange) => void;
+};
 export function Input({ type, checked, onChange, className = '', ...props }: InputProps) {
   if (type === 'checkbox')
     return (
@@ -60,7 +85,9 @@ export function Input({ type, checked, onChange, className = '', ...props }: Inp
         colorPalette="pistachio"
         size="sm"
         checked={checked}
-        onCheckedChange={({ checked }) => onChange?.({ target: { checked: checked === true, value: String(props.value ?? '') } })}
+        onCheckedChange={({ checked }) =>
+          onChange?.({ target: { checked: checked === true, value: String(props.value ?? '') } })
+        }
         flexShrink="0"
       >
         <Checkbox.HiddenInput className={className} {...props} />
@@ -80,7 +107,10 @@ export function Input({ type, checked, onChange, className = '', ...props }: Inp
     />
   );
 }
-export function Textarea({ className = '', ...props }: ChakraTextareaProps & RefAttributes<HTMLTextAreaElement>) {
+export function Textarea({
+  className = '',
+  ...props
+}: ChakraTextareaProps & RefAttributes<HTMLTextAreaElement>) {
   return (
     <ChakraTextarea
       colorPalette="pistachio"
@@ -91,7 +121,12 @@ export function Textarea({ className = '', ...props }: ChakraTextareaProps & Ref
   );
 }
 type SelectOption = string | readonly string[];
-type SelectProps = Omit<ComponentProps<'select'>, 'onChange' | 'value'> & { options: SelectOption[]; value: string; onChange: (value: string) => void; style?: CSSProperties };
+type SelectProps = Omit<ComponentProps<'select'>, 'onChange' | 'value'> & {
+  options: SelectOption[];
+  value: string;
+  onChange: (value: string) => void;
+  style?: CSSProperties;
+};
 export function Select({ options, value, onChange, style, className = '', ...props }: SelectProps) {
   return (
     <NativeSelect.Root

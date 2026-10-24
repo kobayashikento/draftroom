@@ -9,7 +9,8 @@ export const palette = {
 };
 
 const color = (name: string) => `var(--dr-${name})`;
-const mix = (first: string, second: string, amount: number) => `color-mix(in srgb, ${first} ${amount}%, ${second})`;
+const mix = (first: string, second: string, amount: number) =>
+  `color-mix(in srgb, ${first} ${amount}%, ${second})`;
 
 // Roles describe a color's job, so components never need to choose a hex value.
 export const colorRoles = {
@@ -66,7 +67,8 @@ export const spacingUnit = '0.25rem';
 export const iconStyle = { strokeWidth: 1.75, sizes: { sm: 16, md: 20, lg: 24, brand: 32 } };
 
 export const motion = { duration: '180ms', easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)' };
-export const kebab = (name: string) => name.replace(/[A-Z]/g, (letter: string) => `-${letter.toLowerCase()}`);
+export const kebab = (name: string) =>
+  name.replace(/[A-Z]/g, (letter: string) => `-${letter.toLowerCase()}`);
 
 export const cssCustomProperties = Object.fromEntries([
   ...Object.entries(palette).map(([name, value]) => [`--dr-${name}`, value]),

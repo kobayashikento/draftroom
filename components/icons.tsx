@@ -40,7 +40,11 @@ export function FormatIcon({ format, ...props }: IconProps & { format: Format })
   return <AppIcon icon={format === 'Reel' ? Clapperboard : Images} {...props} />;
 }
 
-export function PlatformIcon({ platform, labelled = false, ...props }: IconProps & { platform: string; labelled?: boolean }) {
+export function PlatformIcon({
+  platform,
+  labelled = false,
+  ...props
+}: IconProps & { platform: string; labelled?: boolean }) {
   return (
     <span className="platform-icon" title={platform}>
       <AppIcon icon={platform === 'Instagram' ? Camera : Music2} {...props} />

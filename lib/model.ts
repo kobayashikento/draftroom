@@ -1,4 +1,13 @@
-import type { Workspace, Item, ItemOptions, Stage, Series, ProductionTask, ProductionGroup, Platform } from './types.ts';
+import type {
+  Workspace,
+  Item,
+  ItemOptions,
+  Stage,
+  Series,
+  ProductionTask,
+  ProductionGroup,
+  Platform,
+} from './types.ts';
 export const uid = () => crypto.randomUUID();
 export const dateString = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -160,7 +169,8 @@ export function createItem(state: Workspace, { title, format, seriesId = '' }: I
     })),
   };
 }
-export const kind = (state: Workspace, p: Item) => state.stages.find((x) => x.id === p.stageId)?.kind || 'prep';
+export const kind = (state: Workspace, p: Item) =>
+  state.stages.find((x) => x.id === p.stageId)?.kind || 'prep';
 export const scheduled = (state: Workspace, start: string, end: string) =>
   state.items
     .flatMap((p) =>
@@ -170,7 +180,8 @@ export const scheduled = (state: Workspace, start: string, end: string) =>
     )
     .sort((a, b) => a.pub.date.localeCompare(b.pub.date));
 function compareProductionTasks(a: ProductionTask, b: ProductionTask) {
-  const due = ({ p, t }: ProductionTask) => t.due || p.publications.find((x) => x.date)?.date || '9999';
+  const due = ({ p, t }: ProductionTask) =>
+    t.due || p.publications.find((x) => x.date)?.date || '9999';
   return (
     Number(b.t.priority === 'High') - Number(a.t.priority === 'High') ||
     Number(b.p.priority === 'High') - Number(a.p.priority === 'High') ||
@@ -184,7 +195,10 @@ export const productionTasks = (state: Workspace) =>
     .sort(compareProductionTasks);
 export const pending = (state: Workspace) => productionTasks(state).filter(({ t }) => !t.done);
 
-export function productionQueue(state: Workspace, { start = '', end = '' }: { start?: string; end?: string } = {}) {
+export function productionQueue(
+  state: Workspace,
+  { start = '', end = '' }: { start?: string; end?: string } = {},
+) {
   const active: ProductionGroup[] = [],
     completed: ProductionGroup[] = [];
   for (const item of state.items) {

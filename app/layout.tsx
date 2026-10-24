@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
-type RootLayoutProps = { children: ReactNode };
 import './globals.css';
 import UIProvider from '../components/ui-provider';
 import { cssCustomProperties } from '../lib/design-tokens.ts';
+
+type RootLayoutProps = { children: ReactNode };
+
 export const metadata = {
   title: 'draftroom — your little creative workspace',
   description: 'A calm, connected content workspace for your next good idea.',

@@ -1,3 +1,4 @@
+import { required } from './helpers.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -79,9 +80,9 @@ test('local serialization preserves stable shared records', () => {
 test('custom stage names retain production behavior', () => {
   const s = seed(),
     p = s.items[0];
-  s.stages.find((x) => x.id === 'editing').name = 'Finishing touches';
+  required(s.stages.find((x) => x.id === 'editing')).name = 'Finishing touches';
   assert.ok(pending(s).some((x) => x.p.id === p.id));
-  s.stages.find((x) => x.id === 'editing').kind = 'ready';
+  required(s.stages.find((x) => x.id === 'editing')).kind = 'ready';
   assert.ok(!pending(s).some((x) => x.p.id === p.id));
   assert.equal(p.tasks[2].done, false);
 });

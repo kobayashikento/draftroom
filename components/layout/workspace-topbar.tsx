@@ -1,7 +1,5 @@
 'use client';
 import type { View } from '../../lib/types.ts';
-type WorkspaceTopbarProps = { view: View; compactNav: boolean; onToggleNavigation: () => void };
-
 import {
   CloudCheck,
   CloudUpload,
@@ -17,7 +15,13 @@ import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import { downloadWorkspace } from '../../lib/workspace-data.ts';
 
-export default function WorkspaceTopbar({ view, compactNav, onToggleNavigation }: WorkspaceTopbarProps) {
+type WorkspaceTopbarProps = { view: View; compactNav: boolean; onToggleNavigation: () => void };
+
+export default function WorkspaceTopbar({
+  view,
+  compactNav,
+  onToggleNavigation,
+}: WorkspaceTopbarProps) {
   const { state, storageTone, storageStatus, cloud, signOut } = useWorkspace();
   const exportData = () => downloadWorkspace(state);
   const SaveIcon = ['error', 'conflict'].includes(storageTone)

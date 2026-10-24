@@ -1,11 +1,15 @@
 'use client';
-type WorkspaceProblemProps = { message: string; retry: () => void; signOut?: () => void | Promise<void> };
-
 import { Text, Stack } from '@chakra-ui/react';
 import { RefreshCw, LogOut } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 import AccountShell from './account-shell';
+
+type WorkspaceProblemProps = {
+  message: string;
+  retry: () => void;
+  signOut?: () => void | Promise<void>;
+};
 
 export default function WorkspaceProblem({ message, retry, signOut }: WorkspaceProblemProps) {
   return (

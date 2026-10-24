@@ -31,7 +31,7 @@ export default function Ideas() {
               (x) => x.date >= monday(today()) && x.date <= addDays(monday(today()), 6),
             ))),
   );
-  const stageSelect = (p) => (
+  const stageSelect = (p: Item) => (
     <Select
       aria-label={`Stage for ${p.title}`}
       className="mt-2 w-full"

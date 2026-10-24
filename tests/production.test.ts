@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { required } from './helpers.ts';
 import assert from 'node:assert/strict';
 import { seed, pending, productionQueue } from '../lib/model.ts';
 import { parseWorkspace, validateWorkspace } from '../lib/workspace-data.ts';
@@ -12,16 +13,16 @@ test('finishing a checklist moves it to Completed, and reopening restores the sa
   let queue = productionQueue(state);
   assert.ok(!queue.active.some((group) => group.item.id === item.id));
   assert.deepEqual(
-    queue.completed.find((group) => group.item.id === item.id).tasks.map(({ t }) => t.id),
+    required(queue.completed.find((group) => group.item.id === item.id)).tasks.map(({ t }) => t.id),
     ids,
   );
-  assert.notEqual(queue.next.p.id, item.id);
+  assert.notEqual(required(queue.next).p.id, item.id);
   item.tasks[2].done = false;
   queue = productionQueue(state);
   assert.ok(queue.active.some((group) => group.item.id === item.id));
   assert.ok(!queue.completed.some((group) => group.item.id === item.id));
   assert.equal(item.stageId, stageId);
-  assert.equal(queue.next.t.id, item.tasks[2].id);
+  assert.equal(queue.next!.t.id, item.tasks[2].id);
 });
 
 test('priority tasks come before priority projects and completing one advances to the next project', () => {
@@ -42,11 +43,11 @@ test('priority tasks come before priority projects and completing one advances t
     queue.active.map((group) => group.item.id),
     [task.id, project.id, early.id],
   );
-  assert.equal(queue.next.t.id, task.tasks[0].id);
-  assert.equal(pending(state)[0].t.id, queue.next.t.id);
+  assert.equal(queue.next!.t.id, task.tasks[0].id);
+  assert.equal(pending(state)[0].t.id, queue.next!.t.id);
   task.tasks[0].done = true;
   queue = productionQueue(state);
-  assert.equal(queue.next.p.id, project.id);
+  assert.equal(required(queue.next).p.id, project.id);
   project.tasks[0].done = true;
   assert.equal(productionQueue(state).next.p.id, early.id);
   early.tasks[0].done = true;
@@ -65,7 +66,7 @@ test('a checked priority task never puts its project ahead of unfinished priorit
   first.tasks[0].priority = 'High';
   second.tasks[0].priority = 'High';
   const queue = productionQueue(state);
-  assert.equal(queue.next.t.id, second.tasks[0].id);
+  assert.equal(queue.next!.t.id, second.tasks[0].id);
   assert.equal(queue.active[0].item.id, second.id);
   assert.ok(!queue.active[0].tasks[0].t.done);
 });
@@ -88,7 +89,7 @@ test('date filters never mistake a partly finished checklist for a completed pro
   assert.equal(queue.active[0].tasks.length, 3);
   queue = productionQueue(state, { start: '2026-10-30', end: '2026-10-30' });
   assert.equal(queue.remaining, 1);
-  assert.equal(queue.next.t.id, item.tasks[3].id);
+  assert.equal(queue.next!.t.id, item.tasks[3].id);
   item.tasks[3].due = '';
   assert.equal(productionQueue(state, { start: '2026-10-30', end: '2026-10-30' }).active.length, 0);
   assert.equal(productionQueue(state).remaining, 1);
@@ -120,8 +121,11 @@ test('task priorities survive saved workspaces while drafts without priority rem
   assert.doesNotThrow(() => validateWorkspace(state));
   state.items[0].tasks[2].priority = 'High';
   const restored = parseWorkspace(JSON.stringify(state));
-  assert.equal(productionQueue(restored).next.t.id, state.items[0].tasks[2].id);
+  assert.equal(productionQueue(restored).next!.t.id, state.items[0].tasks[2].id);
   assert.equal(restored.items[0].tasks[2].priority, 'High');
-  state.items[0].tasks[2].priority = 'unknown';
-  assert.throws(() => validateWorkspace(state), /unsupported format/);
+  const invalid = {
+    ...state,
+    items: [{ ...state.items[0], tasks: [{ ...state.items[0].tasks[2], priority: 'unknown' }] }],
+  };
+  assert.throws(() => validateWorkspace(invalid), /unsupported format/);
 });

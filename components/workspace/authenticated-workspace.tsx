@@ -2,15 +2,19 @@
 import type { ReactNode } from 'react';
 import type { SupabaseClient, Session } from '@supabase/supabase-js';
 import type { Database } from '../../lib/database.types.ts';
-type AuthenticatedWorkspaceProps = { client: SupabaseClient<Database>; children: ReactNode };
-
 import { useEffect, useState } from 'react';
 import AccountShell from '../account/account-shell';
 import SignIn from '../account/sign-in';
 import CloudWorkspace from './cloud-workspace';
 
+type AuthenticatedWorkspaceProps = { client: SupabaseClient<Database>; children: ReactNode };
+
 export default function AuthenticatedWorkspace({ client, children }: AuthenticatedWorkspaceProps) {
-  const [auth, setAuth] = useState<{ loading: boolean; session: Session | null; error: string }>({ loading: true, session: null, error: '' });
+  const [auth, setAuth] = useState<{ loading: boolean; session: Session | null; error: string }>({
+    loading: true,
+    session: null,
+    error: '',
+  });
   useEffect(() => {
     let active = true;
     let observed = false;

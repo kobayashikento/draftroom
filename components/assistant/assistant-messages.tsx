@@ -1,13 +1,17 @@
 'use client';
 import type { EditorTab, AssistantMessage } from '../../lib/types.ts';
-type AssistantMessagesProps = { messages: AssistantMessage[]; busy: boolean; onOpen: (id: string, tab?: EditorTab) => void };
-
 import { useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
 import { CheckCheck, ArrowUpRight } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 import { assistantMarkdown } from '../../lib/assistant-markdown.ts';
+
+type AssistantMessagesProps = {
+  messages: AssistantMessage[];
+  busy: boolean;
+  onOpen: (id: string, tab?: EditorTab) => void;
+};
 
 export default function AssistantMessages({ messages, busy, onOpen }: AssistantMessagesProps) {
   const end = useRef<HTMLDivElement | null>(null);

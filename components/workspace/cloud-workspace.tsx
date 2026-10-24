@@ -3,8 +3,6 @@ import type { WorkspaceSnapshot, WorkspaceUpdater } from '../../lib/types.ts';
 import type { ReactNode } from 'react';
 import type { SupabaseClient, Session } from '@supabase/supabase-js';
 import type { Database } from '../../lib/database.types.ts';
-type CloudWorkspaceProps = { client: SupabaseClient<Database>; session: Session; children: ReactNode };
-
 import { useEffect, useRef, useState } from 'react';
 import { seed } from '../../lib/model.ts';
 import { getSupabaseConfig } from '../../lib/supabase.ts';
@@ -18,6 +16,12 @@ import { WorkspaceSync } from '../../lib/workspace-sync.ts';
 import WorkspaceProblem from '../account/workspace-problem';
 import SignOutConfirmation from '../account/sign-out-confirmation';
 import WorkspaceContext from './workspace-context';
+
+type CloudWorkspaceProps = {
+  client: SupabaseClient<Database>;
+  session: Session;
+  children: ReactNode;
+};
 
 export default function CloudWorkspace({ client, session, children }: CloudWorkspaceProps) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);

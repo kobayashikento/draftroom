@@ -1,10 +1,10 @@
 'use client';
 import type { SendAssistant } from './use-assistant.ts';
-type AssistantWelcomeProps = { onSend: SendAssistant; disabled: boolean };
-
 import { Sparkles, ArrowUpRight } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
+
+type AssistantWelcomeProps = { onSend: SendAssistant; disabled: boolean };
 
 const suggestions = [
   'What should I work on next?',

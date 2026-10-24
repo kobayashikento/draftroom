@@ -1,9 +1,9 @@
 'use client';
 import type { Item } from '../../lib/types.ts';
-type StagePillProps = { item: Item };
-
 import { Badge } from '../ui';
 import { useWorkspace } from './workspace-context';
+
+type StagePillProps = { item: Item };
 
 export default function StagePill({ item }: StagePillProps) {
   const { state } = useWorkspace();

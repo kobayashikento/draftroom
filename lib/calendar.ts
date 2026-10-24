@@ -1,4 +1,9 @@
-import type { Workspace, Item, PublicationCollection, CalendarMode, CalendarEntryOptions } from './types.ts';
+import type {
+  Workspace,
+  PublicationCollection,
+  CalendarMode,
+  CalendarEntryOptions,
+} from './types.ts';
 import { addDays, dateString, monday, parseDate } from './model.ts';
 
 export function calendarRange(anchor: string, mode: CalendarMode = 'Week') {
@@ -58,7 +63,11 @@ export function calendarEntries(
 
 // Only the selected platform's plan moves. Posted records, task due dates,
 // workflow stages, and other channels keep their existing values.
-export function reschedulePublication(item: PublicationCollection, publicationId: string, date: unknown) {
+export function reschedulePublication(
+  item: PublicationCollection,
+  publicationId: string,
+  date: unknown,
+) {
   const pub = item.publications.find((entry) => entry.id === publicationId);
   if (!pub || pub.state === 'manually_posted') return false;
   if (typeof date !== 'string') return false;

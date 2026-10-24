@@ -10,7 +10,10 @@ export class WorkspaceConflictError extends Error {
   }
 }
 
-export function createWorkspaceRepository(client: SupabaseClient<Database>, ownerId: string): WorkspaceRepository {
+export function createWorkspaceRepository(
+  client: SupabaseClient<Database>,
+  ownerId: string,
+): WorkspaceRepository {
   return {
     async load() {
       const { data, error } = await client

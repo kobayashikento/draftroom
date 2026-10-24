@@ -1,7 +1,5 @@
 'use client';
 import type { Item, ProductionTask } from '../../lib/types.ts';
-type ChecklistProps = { item: Item; tasks: ProductionTask[]; finished: boolean };
-
 import { useId, useState } from 'react';
 import { ArrowRight, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button, PriorityButton } from '../ui';
@@ -9,6 +7,8 @@ import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import StagePill from '../workspace/stage-pill';
 import TaskRow from '../workspace/task-row';
+
+type ChecklistProps = { item: Item; tasks: ProductionTask[]; finished: boolean };
 
 export default function Checklist({ item, tasks, finished }: ChecklistProps) {
   const { updateItem, open } = useWorkspace();

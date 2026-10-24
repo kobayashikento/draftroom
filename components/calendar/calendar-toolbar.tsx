@@ -1,13 +1,18 @@
 'use client';
 import type { LucideIcon } from 'lucide-react';
 import type { CalendarMode } from '../../lib/types.ts';
-type CalendarToolbarProps = { anchor: string; mode: CalendarMode; onAnchorChange: (anchor: string) => void; onModeChange: (mode: CalendarMode) => void };
-
 import { CalendarDays, CalendarRange, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 import { fmt, today } from '../../lib/display.ts';
 import { calendarRange, moveCalendarAnchor } from '../../lib/calendar';
+
+type CalendarToolbarProps = {
+  anchor: string;
+  mode: CalendarMode;
+  onAnchorChange: (anchor: string) => void;
+  onModeChange: (mode: CalendarMode) => void;
+};
 
 const modes: [CalendarMode, LucideIcon][] = [
   ['Week', CalendarDays],
@@ -15,7 +20,12 @@ const modes: [CalendarMode, LucideIcon][] = [
   ['List', List],
 ];
 
-export default function CalendarToolbar({ anchor, mode, onAnchorChange, onModeChange }: CalendarToolbarProps) {
+export default function CalendarToolbar({
+  anchor,
+  mode,
+  onAnchorChange,
+  onModeChange,
+}: CalendarToolbarProps) {
   const range = calendarRange(anchor, mode);
   const heading =
     mode === 'Month'

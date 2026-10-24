@@ -1,9 +1,9 @@
 'use client';
 import type { Item, Publication } from '../../lib/types.ts';
-type PublishEditorProps = { item: Item };
-
 import { Input, Textarea, Badge, Button, Field } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
+
+type PublishEditorProps = { item: Item };
 
 export default function PublishEditor({ item }: PublishEditorProps) {
   const { updateItem } = useWorkspace();

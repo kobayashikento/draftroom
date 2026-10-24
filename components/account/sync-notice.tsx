@@ -1,12 +1,20 @@
 'use client';
 import type { WorkspaceRow, ConflictChoice } from '../../lib/types.ts';
-type SyncNoticeProps = { cloud?: boolean; error?: string; cacheError?: string; conflict?: WorkspaceRow | null; retry?: () => void | Promise<void>; resolve?: (choice: ConflictChoice) => Promise<void>; exportData: () => void };
-
 import { useState } from 'react';
 import { Text, Stack, Alert } from '@chakra-ui/react';
 import { Info, TriangleAlert, Download, RefreshCw } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
+
+type SyncNoticeProps = {
+  cloud?: boolean;
+  error?: string;
+  cacheError?: string;
+  conflict?: WorkspaceRow | null;
+  retry?: () => void | Promise<void>;
+  resolve?: (choice: ConflictChoice) => Promise<void>;
+  exportData: () => void;
+};
 
 export default function SyncNotice({
   cloud,

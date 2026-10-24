@@ -1,7 +1,5 @@
 'use client';
 import type { Item, EditorTab } from '../../lib/types.ts';
-type ContentEditorProps = { item: Item; initialTab?: EditorTab; close: () => void };
-
 import { useState } from 'react';
 import { Tabs } from '@chakra-ui/react';
 import { Button } from '../ui';
@@ -13,6 +11,8 @@ import Modal from './modal';
 import Storyboard from './storyboard-editor';
 import TaskEditor from './task-editor';
 import PublishEditor from './publish-editor';
+
+type ContentEditorProps = { item: Item; initialTab?: EditorTab; close: () => void };
 
 export default function ContentEditor({ item, initialTab, close }: ContentEditorProps) {
   const [tab, setTab] = useState(initialTab || 'Storyboard'),

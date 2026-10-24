@@ -1,8 +1,8 @@
 'use client';
 import type { Item } from '../../lib/types.ts';
-type ArtworkProps = { item: Item };
-
 import { FormatIcon } from '../icons';
+
+type ArtworkProps = { item: Item };
 
 export default function Artwork({ item }: ArtworkProps) {
   const type = item.seriesId || 'joys';

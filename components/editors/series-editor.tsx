@@ -1,12 +1,12 @@
 'use client';
 import type { FormEvent } from 'react';
-type SeriesEditorProps = { id?: string; close: () => void };
-
 import { useState } from 'react';
 import { Input, Textarea, Button, Field, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import { uid } from '../../lib/model';
 import Modal from './modal';
+
+type SeriesEditorProps = { id?: string; close: () => void };
 
 export default function SeriesEditor({ id, close }: SeriesEditorProps) {
   const { state, update, notify } = useWorkspace(),

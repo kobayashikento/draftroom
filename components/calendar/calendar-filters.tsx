@@ -1,12 +1,19 @@
 'use client';
 import type { Dispatch, SetStateAction } from 'react';
 import type { CalendarFilterController } from './use-calendar-filters.ts';
-type CalendarFiltersProps = { filters: CalendarFilterController; showFilters: boolean; setShowFilters: Dispatch<SetStateAction<boolean>>; showUnscheduled: boolean; setShowUnscheduled: Dispatch<SetStateAction<boolean>>; unscheduledCount: number };
-
 import { Search, SlidersHorizontal, Inbox } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Input, Button, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
+
+type CalendarFiltersProps = {
+  filters: CalendarFilterController;
+  showFilters: boolean;
+  setShowFilters: Dispatch<SetStateAction<boolean>>;
+  showUnscheduled: boolean;
+  setShowUnscheduled: Dispatch<SetStateAction<boolean>>;
+  unscheduledCount: number;
+};
 
 export default function CalendarFilters({
   filters,

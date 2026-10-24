@@ -1,8 +1,5 @@
 'use client';
 import type { Item, OverviewCategory } from '../../../lib/types.ts';
-type PostResultsProps = { items: Item[]; selected: OverviewCategory; week: string; currentDate: string };
-
-
 import { ArrowRight } from 'lucide-react';
 import { AppIcon } from '../../icons';
 import { Button } from '../../ui';
@@ -12,6 +9,13 @@ import StagePill from '../../workspace/stage-pill';
 import { addDays } from '../../../lib/model';
 import { fmt } from '../../../lib/display.ts';
 import { overduePublications } from '../../../lib/overview.ts';
+
+type PostResultsProps = {
+  items: Item[];
+  selected: OverviewCategory;
+  week: string;
+  currentDate: string;
+};
 
 export default function PostResults({ items, selected, week, currentDate }: PostResultsProps) {
   const { state, open } = useWorkspace();

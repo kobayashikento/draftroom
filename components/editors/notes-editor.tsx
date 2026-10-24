@@ -1,13 +1,14 @@
 'use client';
 import type { Item } from '../../lib/types.ts';
-type NotesEditorProps = { item: Item };
-
 import { Input, Textarea, Field, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 
+type NotesEditorProps = { item: Item };
+
 export default function NotesEditor({ item }: NotesEditorProps) {
   const { updateItem } = useWorkspace();
-  const set = <K extends keyof Item>(key: K, value: Item[K]) => updateItem(item.id, (p) => (p[key] = value));
+  const set = <K extends keyof Item>(key: K, value: Item[K]) =>
+    updateItem(item.id, (p) => (p[key] = value));
   return (
     <div className="fields">
       <Field label="Notes" wide>

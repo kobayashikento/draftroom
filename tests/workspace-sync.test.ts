@@ -1,3 +1,6 @@
+import type { TestContext } from 'node:test';
+import type { WorkspaceRow, WorkspaceRepository, WorkspaceSnapshot } from '../lib/types.ts';
+import { required, workspaceData } from './helpers.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { seed } from '../lib/model.ts';
@@ -11,18 +14,22 @@ import {
 } from '../lib/workspace-data.ts';
 
 class MemoryStorage {
-  values = new Map();
-  getItem(key) {
+  values = new Map<string, string>();
+  getItem(key: string) {
     return this.values.get(key) ?? null;
   }
-  setItem(key, value) {
+  setItem(key: string, value: string) {
     this.values.set(key, value);
   }
 }
 
-function fixture(t, row = { data: null, revision: 0 }, storage = new MemoryStorage()) {
-  const remote = { row: structuredClone(row), saves: [], offline: false };
-  const repository = {
+function fixture(
+  t: TestContext,
+  row: WorkspaceRow = { data: null, revision: 0 },
+  storage = new MemoryStorage(),
+) {
+  const remote = { row: structuredClone(row), saves: [] as WorkspaceRow[], offline: false };
+  const repository: WorkspaceRepository = {
     async load() {
       if (remote.offline) throw new Error('Offline');
       return structuredClone(remote.row);
@@ -35,7 +42,7 @@ function fixture(t, row = { data: null, revision: 0 }, storage = new MemoryStora
       return structuredClone(remote.row);
     },
   };
-  const snapshots = [];
+  const snapshots: WorkspaceSnapshot[] = [];
   const sync = new WorkspaceSync({
     repository,
     storage,
@@ -52,13 +59,13 @@ test('first sign-in migrates existing drafts with stable IDs and saves once', as
   const original = seed();
   original.items[0].title = 'My existing draft';
   storage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(original));
-  await sync.start(() => readLegacyWorkspace(storage));
+  await sync.start(() => required(readLegacyWorkspace(storage)));
   assert.equal(sync.status, 'pending');
   await sync.flush();
-  assert.deepEqual(remote.row.data, original);
+  assert.deepEqual(workspaceData(remote.row), original);
   assert.equal(remote.saves.length, 1);
   assert.equal(sync.status, 'saved');
-  assert.equal(readLegacyWorkspace(storage).items[0].id, original.items[0].id);
+  assert.equal(required(readLegacyWorkspace(storage)).items[0].id, original.items[0].id);
 });
 
 test('existing cloud records take priority over legacy drafts and demo seeds', async (t) => {
@@ -68,7 +75,7 @@ test('existing cloud records take priority over legacy drafts and demo seeds', a
   await sync.start(() => {
     throw new Error('Must not read legacy data');
   });
-  assert.deepEqual(sync.data, cloud);
+  assert.deepEqual(workspaceData(sync), cloud);
   assert.equal(sync.revision, 5);
   assert.equal(remote.saves.length, 0);
 });
@@ -76,18 +83,18 @@ test('existing cloud records take priority over legacy drafts and demo seeds', a
 test('a failed save retains a dirty browser copy and resumes after reconnecting', async (t) => {
   const { sync, remote, storage } = fixture(t, { data: seed(), revision: 2 });
   await sync.start(seed);
-  const changed = structuredClone(sync.data);
+  const changed = structuredClone(workspaceData(sync));
   changed.items[0].tasks[2].done = true;
   sync.change(changed);
   remote.offline = true;
   assert.equal(await sync.flush(), false);
   assert.equal(sync.status, 'error');
-  assert.equal(JSON.parse(storage.getItem('test-owner')).dirty, true);
+  assert.equal(JSON.parse(required(storage.getItem('test-owner'))).dirty, true);
   remote.offline = false;
   await sync.refresh();
   assert.equal(sync.status, 'saved');
-  assert.equal(remote.row.data.items[0].tasks[2].done, true);
-  assert.equal(JSON.parse(storage.getItem('test-owner')).dirty, false);
+  assert.equal(workspaceData(remote.row).items[0].tasks[2].done, true);
+  assert.equal(JSON.parse(required(storage.getItem('test-owner'))).dirty, false);
 });
 
 test('reload restores and saves unsynced edits when the cloud revision still matches', async (t) => {
@@ -97,29 +104,29 @@ test('reload restores and saves unsynced edits when the cloud revision still mat
   const { sync, remote, storage } = fixture(t, { data: cloud, revision: 4 });
   storage.setItem('test-owner', JSON.stringify({ data: local, revision: 4, dirty: true }));
   await sync.start(seed);
-  assert.equal(sync.data.items[0].title, 'Unsynced title');
+  assert.equal(workspaceData(sync).items[0].title, 'Unsynced title');
   await sync.flush();
   assert.equal(remote.row.revision, 5);
-  assert.equal(remote.row.data.items[0].title, 'Unsynced title');
+  assert.equal(workspaceData(remote.row).items[0].title, 'Unsynced title');
 });
 
 test('stale device changes cannot overwrite a newer cloud version', async (t) => {
   const { sync, remote, storage } = fixture(t, { data: seed(), revision: 1 });
   await sync.start(seed);
-  const local = structuredClone(sync.data);
+  const local = structuredClone(workspaceData(sync));
   local.items[0].title = 'This device';
   sync.change(local);
-  remote.row.data.items[0].title = 'Another device';
+  workspaceData(remote.row).items[0].title = 'Another device';
   remote.row.revision = 2;
   await sync.flush();
   assert.equal(sync.status, 'conflict');
-  assert.equal(remote.row.data.items[0].title, 'Another device');
-  assert.equal(sync.data.items[0].title, 'This device');
+  assert.equal(workspaceData(remote.row).items[0].title, 'Another device');
+  assert.equal(workspaceData(sync).items[0].title, 'This device');
   await sync.resolve('cloud');
-  assert.equal(sync.data.items[0].title, 'Another device');
+  assert.equal(workspaceData(sync).items[0].title, 'Another device');
   assert.equal(sync.dirty, false);
   const recovery = [...storage.values.entries()].find(([key]) => key.includes(':recovery:'));
-  assert.equal(JSON.parse(recovery[1]).items[0].title, 'This device');
+  assert.equal(JSON.parse(required(recovery)[1]).items[0].title, 'This device');
 });
 
 test('keeping local changes uses the current revision and retains a cloud recovery copy', async (t) => {
@@ -133,17 +140,17 @@ test('keeping local changes uses the current revision and retains a cloud recove
   await sync.resolve('local');
   assert.equal(sync.status, 'saved');
   assert.equal(remote.row.revision, 4);
-  assert.equal(remote.row.data.items[0].title, 'Local choice');
+  assert.equal(workspaceData(remote.row).items[0].title, 'Local choice');
   const recovery = [...storage.values.entries()].find(([key]) => key.includes(':recovery:'));
-  assert.deepEqual(JSON.parse(recovery[1]), cloud);
+  assert.deepEqual(JSON.parse(required(recovery)[1]), cloud);
 });
 
 test('edits made during an in-flight save are written serially with the new revision', async (t) => {
   const { sync, repository, remote } = fixture(t, { data: seed(), revision: 6 });
   await sync.start(seed);
   const originalSave = repository.save;
-  let release;
-  const wait = new Promise((resolve) => {
+  let release: (() => void) | undefined;
+  const wait = new Promise<void>((resolve) => {
     release = resolve;
   });
   let first = true;
@@ -154,18 +161,18 @@ test('edits made during an in-flight save are written serially with the new revi
     }
     return originalSave(...args);
   };
-  const firstEdit = structuredClone(sync.data);
+  const firstEdit = structuredClone(workspaceData(sync));
   firstEdit.items[0].title = 'First edit';
   sync.change(firstEdit);
   const saving = sync.flush();
-  const secondEdit = structuredClone(sync.data);
+  const secondEdit = structuredClone(workspaceData(sync));
   secondEdit.items[0].title = 'Newest edit';
   sync.change(secondEdit);
-  release();
+  required(release)();
   await saving;
   assert.equal(remote.saves.length, 2);
   assert.equal(remote.row.revision, 8);
-  assert.equal(remote.row.data.items[0].title, 'Newest edit');
+  assert.equal(workspaceData(remote.row).items[0].title, 'Newest edit');
   assert.equal(sync.dirty, false);
 });
 
@@ -182,7 +189,7 @@ test('a lost successful save response is recovered without inventing a conflict'
     }
     return result;
   };
-  const changed = structuredClone(sync.data);
+  const changed = structuredClone(workspaceData(sync));
   changed.items[0].title = 'Saved, response lost';
   sync.change(changed);
   await sync.flush();
@@ -208,7 +215,7 @@ test('local storage failure is surfaced while a successful cloud save stays trut
   };
   await sync.start(seed);
   assert.match(sync.cacheError, /recovery copy/);
-  const changed = structuredClone(sync.data);
+  const changed = structuredClone(workspaceData(sync));
   changed.items[0].title = 'Still saved to cloud';
   sync.change(changed);
   await sync.flush();
@@ -233,19 +240,19 @@ test('a slow cloud read cannot roll back a save completed while it was in flight
   const { sync, repository } = fixture(t, { data: seed(), revision: 1 });
   await sync.start(seed);
   const old = await repository.load();
-  let release;
+  let release: (() => void) | undefined;
   repository.load = () =>
     new Promise((resolve) => {
       release = () => resolve(old);
     });
   const refresh = sync.refresh();
-  const changed = structuredClone(sync.data);
+  const changed = structuredClone(workspaceData(sync));
   changed.items[0].title = 'Newer completed save';
   sync.change(changed);
   await sync.flush();
-  release();
+  required(release)();
   await refresh;
-  assert.equal(sync.data.items[0].title, 'Newer completed save');
+  assert.equal(workspaceData(sync).items[0].title, 'Newer completed save');
   assert.equal(sync.revision, 2);
   assert.equal(sync.dirty, false);
 });

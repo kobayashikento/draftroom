@@ -1,4 +1,12 @@
-import type { Workspace, WorkspaceRepository, WorkspaceRow, WorkspaceSnapshot, CacheStorage, ConflictChoice, StorageStatus } from './types.ts';
+import type {
+  Workspace,
+  WorkspaceRepository,
+  WorkspaceRow,
+  WorkspaceSnapshot,
+  CacheStorage,
+  ConflictChoice,
+  StorageStatus,
+} from './types.ts';
 import { readCache, validateWorkspace } from './workspace-data.ts';
 import { WorkspaceConflictError } from './workspace-repository.ts';
 
@@ -21,8 +29,24 @@ export class WorkspaceSync {
   disposed: boolean;
   timer: ReturnType<typeof setTimeout> | undefined;
   saving: Promise<void> | null = null;
-  constructor({ repository, storage, cacheKey, onChange, delay = 600 }: { repository: WorkspaceRepository; storage: CacheStorage; cacheKey: string; onChange: (snapshot: WorkspaceSnapshot) => void; delay?: number }) {
-    this.repository = repository; this.storage = storage; this.cacheKey = cacheKey; this.onChange = onChange; this.delay = delay;
+  constructor({
+    repository,
+    storage,
+    cacheKey,
+    onChange,
+    delay = 600,
+  }: {
+    repository: WorkspaceRepository;
+    storage: CacheStorage;
+    cacheKey: string;
+    onChange: (snapshot: WorkspaceSnapshot) => void;
+    delay?: number;
+  }) {
+    this.repository = repository;
+    this.storage = storage;
+    this.cacheKey = cacheKey;
+    this.onChange = onChange;
+    this.delay = delay;
     this.data = null;
     this.revision = 0;
     this.dirty = false;
@@ -154,7 +178,9 @@ export class WorkspaceSync {
     return !this.dirty;
   }
 
-  isPending() { return this.status === 'pending'; }
+  isPending() {
+    return this.status === 'pending';
+  }
 
   async refresh() {
     if (this.disposed || this.conflict) return;

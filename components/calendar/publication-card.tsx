@@ -1,14 +1,26 @@
 'use client';
 import type { DragEventHandler, DragEvent } from 'react';
 import type { Item, Publication, PublicationEntry } from '../../lib/types.ts';
-type PublicationCardsProps = { entries: PublicationEntry[]; compact?: boolean; canDrag?: boolean; onDragStart?: (event: DragEvent<HTMLElement>, item: Item, publication: Publication) => void; onDragEnd?: DragEventHandler<HTMLElement> };
-type PublicationCardProps = PublicationEntry & { compact: boolean; canDrag: boolean; onDragStart?: DragEventHandler<HTMLElement>; onDragEnd?: DragEventHandler<HTMLElement> };
 import { CalendarArrowUp, Check, GripVertical } from 'lucide-react';
 import { AppIcon, PlatformIcon, FormatIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import StagePill from '../workspace/stage-pill';
 import Artwork from '../workspace/artwork';
+
+type PublicationCardsProps = {
+  entries: PublicationEntry[];
+  compact?: boolean;
+  canDrag?: boolean;
+  onDragStart?: (event: DragEvent<HTMLElement>, item: Item, publication: Publication) => void;
+  onDragEnd?: DragEventHandler<HTMLElement>;
+};
+type PublicationCardProps = PublicationEntry & {
+  compact: boolean;
+  canDrag: boolean;
+  onDragStart?: DragEventHandler<HTMLElement>;
+  onDragEnd?: DragEventHandler<HTMLElement>;
+};
 
 export function PublicationCards({
   entries,
@@ -30,7 +42,14 @@ export function PublicationCards({
   ));
 }
 
-export default function PublicationCard({ p, pub, compact, canDrag, onDragStart, onDragEnd }: PublicationCardProps) {
+export default function PublicationCard({
+  p,
+  pub,
+  compact,
+  canDrag,
+  onDragStart,
+  onDragEnd,
+}: PublicationCardProps) {
   const { open, setModal } = useWorkspace();
   const posted = pub.state === 'manually_posted';
   return (

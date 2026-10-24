@@ -1,13 +1,14 @@
 'use client';
 import type { Item, Format } from '../../lib/types.ts';
-type ContentFieldsProps = { item: Item };
-
 import { Input, Field, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 
+type ContentFieldsProps = { item: Item };
+
 export default function ContentFields({ item }: ContentFieldsProps) {
   const { state, updateItem } = useWorkspace();
-  const set = <K extends keyof Item>(key: K, value: Item[K]) => updateItem(item.id, (p) => (p[key] = value));
+  const set = <K extends keyof Item>(key: K, value: Item[K]) =>
+    updateItem(item.id, (p) => (p[key] = value));
   return (
     <div className="fields">
       <Field label="Working title" wide>

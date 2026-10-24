@@ -1,13 +1,13 @@
 'use client';
 import type { Item, Task } from '../../lib/types.ts';
-type TaskEditorProps = { item: Item };
-
 import { ArrowUp, ArrowDown, Plus, X } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Input, PriorityButton, Button, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import { reorder } from '../../lib/reorder.ts';
 import { uid, kind } from '../../lib/model';
+
+type TaskEditorProps = { item: Item };
 
 export default function TaskEditor({ item }: TaskEditorProps) {
   const { state, updateItem } = useWorkspace();

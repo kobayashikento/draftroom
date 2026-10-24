@@ -1,7 +1,5 @@
 'use client';
 import type { PublicationEntry } from '../../lib/types.ts';
-type CalendarAgendaProps = { days: string[]; entries: PublicationEntry[]; start: string; platform: string };
-
 import { CalendarDays, Plus } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
@@ -9,6 +7,13 @@ import { Button } from '../ui';
 import { fmt } from '../../lib/display.ts';
 import { parseDate } from '../../lib/model';
 import { PublicationCards } from './publication-card';
+
+type CalendarAgendaProps = {
+  days: string[];
+  entries: PublicationEntry[];
+  start: string;
+  platform: string;
+};
 
 export default function CalendarAgenda({ days, entries, start, platform }: CalendarAgendaProps) {
   const { setModal } = useWorkspace();

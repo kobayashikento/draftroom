@@ -1,8 +1,14 @@
+import type { Workspace } from '../lib/types.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { seed } from '../lib/model.ts';
+import { required } from './helpers.ts';
+
+type DatabaseFixtureRow = { owner_id: string; data: Workspace | null; revision: number };
+const errorCode = (error: unknown) =>
+  error && typeof error === 'object' && 'code' in error ? error.code : undefined;
 
 test('PostgreSQL migration protects the private workspace and increments revisions', async (t) => {
   const db = new PGlite();
@@ -33,7 +39,7 @@ test('PostgreSQL migration protects the private workspace and increments revisio
     await db.exec(
       `set role authenticated; select set_config('request.jwt.claim.sub', '${owner}', false);`,
     );
-    const { rows } = await db.query(
+    const { rows } = await db.query<DatabaseFixtureRow>(
       'select owner_id, data, revision from public.draftroom_workspaces',
     );
     assert.equal(rows.length, 1);
@@ -45,8 +51,8 @@ test('PostgreSQL migration protects the private workspace and increments revisio
   await t.test('anonymous requests have no table access', async () => {
     await db.exec('reset role; set role anon;');
     await assert.rejects(
-      db.query('select * from public.draftroom_workspaces'),
-      (error) => error.code === '42501',
+      db.query<DatabaseFixtureRow>('select * from public.draftroom_workspaces'),
+      (error) => errorCode(error) === '42501',
     );
     await db.exec('reset role;');
   });
@@ -55,53 +61,65 @@ test('PostgreSQL migration protects the private workspace and increments revisio
     await db.exec(
       `set role authenticated; select set_config('request.jwt.claim.sub', '${other}', false);`,
     );
-    assert.equal((await db.query('select * from public.draftroom_workspaces')).rows.length, 0);
     assert.equal(
-      (await db.query('update public.draftroom_workspaces set data = null returning owner_id')).rows
-        .length,
+      (await db.query<DatabaseFixtureRow>('select * from public.draftroom_workspaces')).rows.length,
+      0,
+    );
+    assert.equal(
+      (
+        await db.query<DatabaseFixtureRow>(
+          'update public.draftroom_workspaces set data = null returning owner_id',
+        )
+      ).rows.length,
       0,
     );
     await assert.rejects(
-      db.query('insert into public.draftroom_workspaces (owner_id) values ($1)', [other]),
-      (error) => error.code === '42501',
+      db.query<DatabaseFixtureRow>(
+        'insert into public.draftroom_workspaces (owner_id) values ($1)',
+        [other],
+      ),
+      (error) => errorCode(error) === '42501',
     );
   });
 
   await t.test('owner can save, but the server controls the revision and ownership', async () => {
     await db.exec(`select set_config('request.jwt.claim.sub', '${owner}', false);`);
-    const { rows } = await db.query(
+    const { rows } = await db.query<DatabaseFixtureRow>(
       'update public.draftroom_workspaces set data = $1 where revision = 0 returning revision, data',
       [JSON.stringify(seed())],
     );
     assert.equal(Number(rows[0].revision), 1);
-    assert.equal(rows[0].data.items.length, 4);
+    assert.equal(required(rows[0].data).items.length, 4);
     await assert.rejects(
-      db.query('update public.draftroom_workspaces set revision = 100'),
-      (error) => error.code === '42501',
+      db.query<DatabaseFixtureRow>('update public.draftroom_workspaces set revision = 100'),
+      (error) => errorCode(error) === '42501',
     );
     await assert.rejects(
-      db.query('update public.draftroom_workspaces set owner_id = $1', [other]),
-      (error) => error.code === '42501',
+      db.query<DatabaseFixtureRow>('update public.draftroom_workspaces set owner_id = $1', [other]),
+      (error) => errorCode(error) === '42501',
     );
   });
 
   await t.test('stale revisions update no rows and preserve the saved workspace', async () => {
-    const { rows } = await db.query(
+    const { rows } = await db.query<DatabaseFixtureRow>(
       'update public.draftroom_workspaces set data = null where revision = 0 returning revision',
     );
     assert.equal(rows.length, 0);
     assert.equal(
-      Number((await db.query('select revision from public.draftroom_workspaces')).rows[0].revision),
+      Number(
+        (await db.query<DatabaseFixtureRow>('select revision from public.draftroom_workspaces'))
+          .rows[0].revision,
+      ),
       1,
     );
   });
 
   await t.test('invalid JSON shape is rejected by the database', async () => {
     await assert.rejects(
-      db.query('update public.draftroom_workspaces set data = $1', [
+      db.query<DatabaseFixtureRow>('update public.draftroom_workspaces set data = $1', [
         JSON.stringify({ version: 1 }),
       ]),
-      (error) => error.code === '23514',
+      (error) => errorCode(error) === '23514',
     );
   });
 
@@ -111,7 +129,10 @@ test('PostgreSQL migration protects the private workspace and increments revisio
       await readFile(new URL('../supabase/provision-owner.sql', import.meta.url), 'utf8'),
     );
     assert.equal(
-      Number((await db.query('select revision from public.draftroom_workspaces')).rows[0].revision),
+      Number(
+        (await db.query<DatabaseFixtureRow>('select revision from public.draftroom_workspaces'))
+          .rows[0].revision,
+      ),
       1,
     );
   });

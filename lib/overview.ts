@@ -8,7 +8,11 @@ export function overduePublications(item: Item, currentDate: string) {
   );
 }
 
-export function overviewSummary(state: Workspace, week: string, currentDate: string): OverviewSummary {
+export function overviewSummary(
+  state: Workspace,
+  week: string,
+  currentDate: string,
+): OverviewSummary {
   const plans = scheduled(state, week, addDays(week, 6)).filter(
     ({ pub }) => pub.state !== 'manually_posted',
   );

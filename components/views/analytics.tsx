@@ -1,10 +1,10 @@
 'use client';
 import type { Item } from '../../lib/types.ts';
-type AnalyticsProps = { item?: Item };
-
 import { Badge, Button } from '../ui';
 import { PlatformIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
+
+type AnalyticsProps = { item?: Item };
 
 export default function Analytics({ item }: AnalyticsProps) {
   const { state, open } = useWorkspace();

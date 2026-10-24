@@ -3,21 +3,71 @@ export type Priority = 'Normal' | 'High';
 export type TaskCategory = 'plan' | 'film' | 'photo' | 'edit' | 'caption' | 'publish';
 export type TaskDraft = { title: string; category: TaskCategory; due: string; priority: Priority };
 export type CreateTaskAction = TaskDraft & { type: 'create_task'; itemId: string };
-export type CreateIdeaAction = { type: 'create_idea'; title: string; format: Format; seriesId: string; tasks: TaskDraft[] };
-export type ExistingTaskAction = { type: 'prioritize_task' | 'complete_task'; itemId: string; taskId: string };
+export type CreateIdeaAction = {
+  type: 'create_idea';
+  title: string;
+  format: Format;
+  seriesId: string;
+  tasks: TaskDraft[];
+};
+export type ExistingTaskAction = {
+  type: 'prioritize_task' | 'complete_task';
+  itemId: string;
+  taskId: string;
+};
 export type AssistantAction = CreateTaskAction | CreateIdeaAction | ExistingTaskAction;
 export type AssistantReply = { reply: string; actions: AssistantAction[] };
 export type ChatMessage = { role: 'user' | 'assistant'; text: string };
 export type ActionReceipt = { itemId: string; label: string };
-export type AssistantMessage = ChatMessage & { id: string; createdAt: string; receipts?: ActionReceipt[] };
-export type PlanningTask = { id: string; title: string; category: string; due: string; done: boolean; priority?: string };
+export type AssistantMessage = ChatMessage & {
+  id: string;
+  createdAt: string;
+  receipts?: ActionReceipt[];
+};
+export type PlanningTask = {
+  id: string;
+  title: string;
+  category: string;
+  due: string;
+  done: boolean;
+  priority?: string;
+};
 export type PlanningPublication = { platform: string; date: string; state: string };
-export type PlanningItem = { id: string; title: string; format: string; stageId: string; seriesId: string; priority: string; tasks: PlanningTask[]; publications: PlanningPublication[] };
+export type PlanningItem = {
+  id: string;
+  title: string;
+  format: string;
+  stageId: string;
+  seriesId: string;
+  priority: string;
+  tasks: PlanningTask[];
+  publications: PlanningPublication[];
+};
 export type PlanningStage = { id: string; name: string; kind: string };
 export type PlanningSeries = { id: string; name: string; format: string };
-export type PlanningWorkspace = { items: PlanningItem[]; stages: PlanningStage[]; series: PlanningSeries[] };
-export type AssistantContext = PlanningWorkspace & { today: string; timezone: string; totalIdeas: number; partial: boolean };
+export type PlanningWorkspace = {
+  items: PlanningItem[];
+  stages: PlanningStage[];
+  series: PlanningSeries[];
+};
+export type AssistantContext = PlanningWorkspace & {
+  today: string;
+  timezone: string;
+  totalIdeas: number;
+  partial: boolean;
+};
 export type AssistantRequest = { context: AssistantContext; messages: ChatMessage[] };
-export type JsonSchema = { type: string; properties?: Record<string, JsonSchema>; required?: string[]; additionalProperties?: boolean; enum?: readonly string[]; description?: string; items?: JsonSchema; maxItems?: number };
+export type JsonSchema = {
+  type: string;
+  properties?: Record<string, JsonSchema>;
+  required?: string[];
+  additionalProperties?: boolean;
+  enum?: readonly string[];
+  description?: string;
+  items?: JsonSchema;
+  maxItems?: number;
+};
 export type GeminiPart = { text?: string; thought?: boolean };
-export type GeminiResponse = { candidates?: { finishReason?: string; content?: { parts?: GeminiPart[] } }[] };
+export type GeminiResponse = {
+  candidates?: { finishReason?: string; content?: { parts?: GeminiPart[] } }[];
+};

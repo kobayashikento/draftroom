@@ -1,12 +1,17 @@
 'use client';
 import type { View } from '../../lib/types.ts';
-type SidebarProps = { view: View; platform: string; onNavigate: (view: View) => void; onPlatformChange: (platform: string) => void };
-
 import { Sparkles, Sun, Shapes } from 'lucide-react';
 import { AppIcon, BrandMark, PlatformIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import { pages } from './pages';
+
+type SidebarProps = {
+  view: View;
+  platform: string;
+  onNavigate: (view: View) => void;
+  onPlatformChange: (platform: string) => void;
+};
 
 export default function Sidebar({ view, platform, onNavigate, onPlatformChange }: SidebarProps) {
   const { state, authUser } = useWorkspace();

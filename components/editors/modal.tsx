@@ -1,13 +1,27 @@
 'use client';
 import type { ReactNode } from 'react';
-type ModalProps = { title: string; children: ReactNode; footer?: ReactNode; onClose: () => void; eyebrow?: string; compact?: boolean };
-
 import { Dialog, Portal } from '@chakra-ui/react';
 import { X } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 
-export default function Modal({ title, children, footer, onClose, eyebrow, compact = false }: ModalProps) {
+type ModalProps = {
+  title: string;
+  children: ReactNode;
+  footer?: ReactNode;
+  onClose: () => void;
+  eyebrow?: string;
+  compact?: boolean;
+};
+
+export default function Modal({
+  title,
+  children,
+  footer,
+  onClose,
+  eyebrow,
+  compact = false,
+}: ModalProps) {
   return (
     <Dialog.Root
       open

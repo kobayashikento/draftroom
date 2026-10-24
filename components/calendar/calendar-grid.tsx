@@ -1,8 +1,6 @@
 'use client';
 import type { PublicationEntry, CalendarMode } from '../../lib/types.ts';
 import type { PublicationDrag } from './use-publication-drag.ts';
-type CalendarGridProps = { anchor: string; mode: CalendarMode; days: string[]; entries: PublicationEntry[]; platform: string; drag: PublicationDrag };
-
 import { Plus } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
@@ -11,7 +9,23 @@ import { fmt, today } from '../../lib/display.ts';
 import { parseDate } from '../../lib/model';
 import { PublicationCards } from './publication-card';
 
-export default function CalendarGrid({ anchor, mode, days, entries, platform, drag }: CalendarGridProps) {
+type CalendarGridProps = {
+  anchor: string;
+  mode: CalendarMode;
+  days: string[];
+  entries: PublicationEntry[];
+  platform: string;
+  drag: PublicationDrag;
+};
+
+export default function CalendarGrid({
+  anchor,
+  mode,
+  days,
+  entries,
+  platform,
+  drag,
+}: CalendarGridProps) {
   const { setModal } = useWorkspace();
   return (
     <div

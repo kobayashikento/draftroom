@@ -1,13 +1,17 @@
 'use client';
 import type { Item, View, ProductionTask } from '../../../lib/types.ts';
-type SecondaryPanelsProps = { work: ProductionTask[]; ready: Item[]; navigate: (view: View) => void };
-
 import { ArrowRight, Heart, Sparkles } from 'lucide-react';
 import { AppIcon } from '../../icons';
 import { Button } from '../../ui';
 import { useWorkspace } from '../../workspace/workspace-context';
 import Artwork from '../../workspace/artwork';
 import TaskRow from '../../workspace/task-row';
+
+type SecondaryPanelsProps = {
+  work: ProductionTask[];
+  ready: Item[];
+  navigate: (view: View) => void;
+};
 
 export default function SecondaryPanels({ work, ready, navigate }: SecondaryPanelsProps) {
   const { state, open } = useWorkspace();

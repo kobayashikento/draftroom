@@ -19,7 +19,7 @@ test('Supabase configuration fails closed for incomplete or secret browser keys'
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'sb_secret_do-not-expose';
   assert.throws(getSupabaseConfig, /publishable key/);
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_test';
-  assert.equal(getSupabaseConfig().url, 'https://test.supabase.co');
+  assert.equal(getSupabaseConfig()!.url, 'https://test.supabase.co');
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://remote.example';
   assert.throws(getSupabaseConfig, /HTTPS/);
 });

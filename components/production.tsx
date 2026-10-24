@@ -77,7 +77,7 @@ export default function Production() {
               onClick={() =>
                 updateItem(
                   next.p.id,
-                  (p) => (p.tasks.find((task) => task.id === next.t.id).done = true),
+                  (p) => (p.tasks.find((task) => task.id === next.t.id)!.done = true),
                 )
               }
             >

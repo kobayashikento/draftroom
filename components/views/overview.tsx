@@ -1,8 +1,6 @@
 'use client';
 import type { Dispatch, SetStateAction } from 'react';
 import type { View, OverviewCategory } from '../../lib/types.ts';
-type OverviewProps = { week: string; setWeek: Dispatch<SetStateAction<string>>; navigate: (view: View) => void };
-
 import { useState } from 'react';
 import { useWorkspace } from '../workspace/workspace-context';
 import { today } from '../../lib/display.ts';
@@ -11,6 +9,12 @@ import WeekBar from '../week-bar';
 import SummaryCards from './overview/summary-cards';
 import OverviewResults from './overview/overview-results';
 import SecondaryPanels from './overview/secondary-panels';
+
+type OverviewProps = {
+  week: string;
+  setWeek: Dispatch<SetStateAction<string>>;
+  navigate: (view: View) => void;
+};
 
 export default function Overview({ week, setWeek, navigate }: OverviewProps) {
   const { state } = useWorkspace();

@@ -2,8 +2,6 @@
 import type { FormEvent } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../../lib/database.types.ts';
-type SignInProps = { client: SupabaseClient<Database>; sessionError?: string };
-
 import { useState } from 'react';
 import { Text, Stack } from '@chakra-ui/react';
 import { LogIn } from 'lucide-react';
@@ -11,12 +9,14 @@ import { AppIcon } from '../icons';
 import { Button, Field, Input } from '../ui';
 import AccountShell from './account-shell';
 
+type SignInProps = { client: SupabaseClient<Database>; sessionError?: string };
+
 export default function SignIn({ client, sessionError }: SignInProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(sessionError || '');
   const [busy, setBusy] = useState(false);
-  async function submit(event: FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLTextAreaElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError('');

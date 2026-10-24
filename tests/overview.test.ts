@@ -1,3 +1,4 @@
+import { required } from './helpers.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { seed, kind } from '../lib/model.ts';
@@ -29,7 +30,7 @@ test('planned overview results count each idea once and exclude manually posted 
 
 test('ready and unfinished task results follow workflow behavior across the workspace', () => {
   const state = seed();
-  state.stages.find((stage) => stage.id === 'ready').name = 'Good to go';
+  required(state.stages.find((stage) => stage.id === 'ready')).name = 'Good to go';
   const ready = state.items[2];
   ready.publications[0].date = '2027-01-01';
   ready.tasks[0].done = false;

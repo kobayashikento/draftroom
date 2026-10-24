@@ -4,7 +4,11 @@ import { getSupabaseClient } from './supabase.ts';
 import { assistantContext } from '../supabase/functions/_shared/assistant-context.ts';
 import { dateString } from './model.ts';
 
-export async function requestAssistant(state: Workspace, messages: AssistantMessage[], signal: AbortSignal) {
+export async function requestAssistant(
+  state: Workspace,
+  messages: AssistantMessage[],
+  signal: AbortSignal,
+) {
   const client = getSupabaseClient();
   if (!client)
     throw new Error(

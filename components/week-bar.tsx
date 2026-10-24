@@ -1,16 +1,20 @@
 'use client';
 import type { Dispatch, SetStateAction } from 'react';
 import type { CalendarMode } from '../lib/types.ts';
-type WeekBarProps = { week: string; setWeek: Dispatch<SetStateAction<string>>; mode?: CalendarMode };
-
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AppIcon } from './icons';
 import { Button } from './ui';
 import { fmt, today } from '../lib/display.ts';
 import { addDays, parseDate, dateString, monday } from '../lib/model';
 
+type WeekBarProps = {
+  week: string;
+  setWeek: Dispatch<SetStateAction<string>>;
+  mode?: CalendarMode;
+};
+
 export default function WeekBar({ week, setWeek, mode = 'Week' }: WeekBarProps) {
-  const move = (delta) => {
+  const move = (delta: number) => {
     if (mode === 'Month') {
       let d = parseDate(week);
       d.setDate(1);

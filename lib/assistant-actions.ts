@@ -1,9 +1,17 @@
 import type { Workspace, Item, AssistantMessage } from './types.ts';
-import type { CreateIdeaAction, CreateTaskAction, ExistingTaskAction, ActionReceipt } from '../supabase/functions/_shared/types.ts';
-type PreparedChange = (CreateIdeaAction & { id: string; item: Item }) | ((CreateTaskAction | ExistingTaskAction) & { id: string });
-export type AssistantTurn = { requestId: string; reply: string; changes: PreparedChange[] };
+import type {
+  CreateIdeaAction,
+  CreateTaskAction,
+  ExistingTaskAction,
+  ActionReceipt,
+} from '../supabase/functions/_shared/types.ts';
 import { createItem } from './model.ts';
 import { validateReply } from '../supabase/functions/_shared/assistant-protocol.ts';
+
+type PreparedChange =
+  | (CreateIdeaAction & { id: string; item: Item })
+  | ((CreateTaskAction | ExistingTaskAction) & { id: string });
+export type AssistantTurn = { requestId: string; reply: string; changes: PreparedChange[] };
 
 export function assistantMessages(state: Workspace): AssistantMessage[] {
   return Array.isArray(state.assistant?.messages) ? state.assistant.messages : [];
@@ -16,7 +24,11 @@ export function appendAssistantMessage(state: Workspace, message: AssistantMessa
   ].slice(-60);
 }
 
-export function prepareAssistantTurn(state: Workspace, requestId: string, response: unknown): AssistantTurn {
+export function prepareAssistantTurn(
+  state: Workspace,
+  requestId: string,
+  response: unknown,
+): AssistantTurn {
   const { reply, actions } = validateReply(response);
   const changes: PreparedChange[] = actions.map((action, index) => {
     const id = `assistant-${requestId}-${index}`;
@@ -40,7 +52,10 @@ export function applyAssistantTurn(state: Workspace, turn: AssistantTurn) {
   const receipts: ActionReceipt[] = [];
   let failure = '';
   for (const change of turn.changes) {
-    const item = change.type === 'create_idea' ? undefined : state.items.find((item) => item.id === change.itemId);
+    const item =
+      change.type === 'create_idea'
+        ? undefined
+        : state.items.find((item) => item.id === change.itemId);
     if (change.type === 'create_idea') {
       if (change.seriesId && !state.series.some((series) => series.id === change.seriesId))
         failure = 'That series has changed.';
@@ -52,7 +67,10 @@ export function applyAssistantTurn(state: Workspace, turn: AssistantTurn) {
   }
   if (!failure)
     for (const change of turn.changes) {
-      const item = change.type === 'create_idea' ? undefined : state.items.find((item) => item.id === change.itemId);
+      const item =
+        change.type === 'create_idea'
+          ? undefined
+          : state.items.find((item) => item.id === change.itemId);
       if (change.type === 'create_idea') {
         if (!state.items.some((item) => item.id === change.id))
           state.items.push(structuredClone(change.item));

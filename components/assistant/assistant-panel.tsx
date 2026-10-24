@@ -1,8 +1,6 @@
 'use client';
 import type { RefObject } from 'react';
 import type { AssistantController } from './use-assistant.ts';
-type AssistantPanelProps = { assistant: AssistantController; onClose: () => void; inputRef: RefObject<HTMLTextAreaElement | null>; hidden: boolean };
-
 import { ChevronDown, MessageSquarePlus, Sparkles } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
@@ -10,7 +8,19 @@ import AssistantWelcome from './assistant-welcome';
 import AssistantMessages from './assistant-messages';
 import AssistantComposer from './assistant-composer';
 
-export default function AssistantPanel({ assistant, onClose, inputRef, hidden }: AssistantPanelProps) {
+type AssistantPanelProps = {
+  assistant: AssistantController;
+  onClose: () => void;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
+  hidden: boolean;
+};
+
+export default function AssistantPanel({
+  assistant,
+  onClose,
+  inputRef,
+  hidden,
+}: AssistantPanelProps) {
   return (
     <section
       id="draftroom-assistant"

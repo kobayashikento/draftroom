@@ -46,7 +46,13 @@ export function createAssistantHandler({
   model = 'gemini-3.5-flash-lite',
   fetcher = fetch,
   corsHeaders = {},
-}: { authorize: (request: Request) => Promise<string | null>; apiKey?: string; model?: string; fetcher?: typeof fetch; corsHeaders?: Record<string, string> }) {
+}: {
+  authorize: (request: Request) => Promise<string | null>;
+  apiKey?: string;
+  model?: string;
+  fetcher?: typeof fetch;
+  corsHeaders?: Record<string, string>;
+}) {
   const calls = new Map<string, number[]>();
   const json = (value: unknown, status = 200) =>
     Response.json(value, { status, headers: { ...corsHeaders, 'Cache-Control': 'no-store' } });
@@ -69,7 +75,8 @@ export function createAssistantHandler({
           503,
         );
       const body = await requestBody(request);
-      if (!body || typeof body !== 'object' || !('messages' in body) || !('context' in body)) throw new AssistantError('A message and workspace context are required.', 400);
+      if (!body || typeof body !== 'object' || !('messages' in body) || !('context' in body))
+        throw new AssistantError('A message and workspace context are required.', 400);
       const messages = validateMessages(body.messages);
       const context = validateContext(body.context);
       const now = Date.now();

@@ -1,3 +1,5 @@
+import type { WorkspaceRow, WorkspaceRepository, CacheStorage } from '../lib/types.ts';
+import { required, workspaceData } from './helpers.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { seed } from '../lib/model.ts';
@@ -20,8 +22,8 @@ import {
 const task = { title: 'Film the opening', category: 'film', due: '2026-10-26', priority: 'High' };
 test('chat and created tasks save together and reload through revision-aware cloud sync', async (t) => {
   let row = { data: seed(), revision: 1 };
-  const saves = [];
-  const repository = {
+  const saves: WorkspaceRow[] = [];
+  const repository: WorkspaceRepository = {
     load: async () => structuredClone(row),
     save: async (data, revision) => {
       assert.equal(revision, row.revision);
@@ -30,8 +32,8 @@ test('chat and created tasks save together and reload through revision-aware clo
       return structuredClone(row);
     },
   };
-  const values = new Map();
-  const storage = {
+  const values = new Map<string, string>();
+  const storage: CacheStorage = {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
   };
@@ -45,7 +47,7 @@ test('chat and created tasks save together and reload through revision-aware clo
   const sync = new WorkspaceSync(options);
   t.after(() => sync.dispose());
   await sync.start(seed);
-  const draft = structuredClone(sync.data);
+  const draft = structuredClone(workspaceData(sync));
   appendAssistantMessage(draft, {
     id: 'sync-turn',
     role: 'user',
@@ -63,8 +65,8 @@ test('chat and created tasks save together and reload through revision-aware clo
   const reloaded = new WorkspaceSync(options);
   t.after(() => reloaded.dispose());
   await reloaded.start(seed);
-  assert.equal(reloaded.data.assistant.messages.length, 2);
-  assert.equal(reloaded.data.items[0].tasks.at(-1).title, task.title);
+  assert.equal(required(workspaceData(reloaded).assistant).messages.length, 2);
+  assert.equal(required(workspaceData(reloaded).items[0].tasks.at(-1)).title, task.title);
   assert.equal(reloaded.revision, 2);
 });
 test('assistant creates requested tasks and ideas through the workspace model', () => {
@@ -84,15 +86,15 @@ test('assistant creates requested tasks and ideas through the workspace model', 
     ],
   });
   applyAssistantTurn(state, turn);
-  assert.equal(state.items[0].tasks.at(-1).title, task.title);
-  assert.equal(state.items.at(-1).tasks.length, 1);
-  assert.equal(state.items.at(-1).seriesId, 'matcha');
+  assert.equal(required(state.items[0].tasks.at(-1)).title, task.title);
+  assert.equal(required(state.items.at(-1)).tasks.length, 1);
+  assert.equal(required(state.items.at(-1)).seriesId, 'matcha');
   assert.equal(
-    state.items.at(-1).publications.every((publication) => !publication.date),
+    required(state.items.at(-1)).publications.every((publication) => !publication.date),
     true,
   );
   assert.deepEqual(state.items[0].publications, original.publications);
-  assert.equal(state.assistant.messages[0].receipts.length, 2);
+  assert.equal(required(state.assistant).messages[0].receipts!.length, 2);
   assert.equal(validateWorkspace(state), state);
 });
 test('applying a response twice never duplicates tasks or ideas', () => {
@@ -108,7 +110,7 @@ test('applying a response twice never duplicates tasks or ideas', () => {
   const once = structuredClone(state);
   applyAssistantTurn(state, turn);
   assert.deepEqual(state, once);
-  state.assistant.messages = []; // Stable record IDs also protect replay after history is cleared.
+  required(state.assistant).messages = []; // Stable record IDs also protect replay after history is cleared.
   applyAssistantTurn(state, turn);
   assert.equal(state.items.length, once.items.length);
   assert.equal(state.items[0].tasks.length, once.items[0].tasks.length);
@@ -126,8 +128,8 @@ test('a stale response applies no actions when one target has disappeared', () =
   const before = structuredClone(state.items);
   applyAssistantTurn(state, turn);
   assert.deepEqual(state.items, before);
-  assert.match(state.assistant.messages[0].text, /No changes were made/);
-  assert.equal(state.assistant.messages[0].receipts.length, 0);
+  assert.match(required(state.assistant).messages[0].text, /No changes were made/);
+  assert.equal(required(state.assistant).messages[0].receipts!.length, 0);
 });
 test('actions use the latest state and preserve edits made while Gemini was thinking', () => {
   const state = seed();
@@ -163,7 +165,16 @@ test('workspace summaries omit private content and keep bounded planning context
   state.items[0].notes = 'PRIVATE-NOTES';
   state.items[0].hook = 'PRIVATE-HOOK';
   state.items[0].publications[0].caption = 'PRIVATE-CAPTION';
-  state.assistant = { messages: [{ text: 'PRIVATE-CHAT' }] };
+  state.assistant = {
+    messages: [
+      {
+        id: 'private-chat',
+        role: 'user',
+        text: 'PRIVATE-CHAT',
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  };
   const context = assistantContext(state, '2026-10-23', 'America/Toronto');
   assert.equal(JSON.stringify(context).includes('PRIVATE-'), false);
   assert.equal(validateContext(context).items[0].tasks[0].title, state.items[0].tasks[0].title);
@@ -180,11 +191,14 @@ test('chat is bounded, serializable with backups, and invalid imported history i
       text: 'Hello',
       createdAt: new Date().toISOString(),
     });
-  assert.equal(state.assistant.messages.length, 60);
+  assert.equal(required(state.assistant).messages.length, 60);
   assert.equal(
-    validateWorkspace(JSON.parse(JSON.stringify(state))).assistant.messages[0].id,
+    required(validateWorkspace(JSON.parse(JSON.stringify(state))).assistant).messages[0].id,
     'message-10',
   );
-  state.assistant.messages[0].role = 'system';
-  assert.throws(() => validateWorkspace(state));
+  const invalid = {
+    ...state,
+    assistant: { messages: [{ ...required(state.assistant).messages[0], role: 'system' }] },
+  };
+  assert.throws(() => validateWorkspace(invalid));
 });

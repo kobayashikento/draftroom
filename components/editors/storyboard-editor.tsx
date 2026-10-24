@@ -1,13 +1,13 @@
 'use client';
 import type { Item, StoryboardEntry } from '../../lib/types.ts';
-type StoryboardProps = { item: Item };
-
 import { ArrowUp, ArrowDown, Plus, X } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Input, Textarea, Button, Field } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import { reorder } from '../../lib/reorder.ts';
 import { uid } from '../../lib/model';
+
+type StoryboardProps = { item: Item };
 
 export default function Storyboard({ item }: StoryboardProps) {
   const { updateItem } = useWorkspace();
@@ -16,6 +16,7 @@ export default function Storyboard({ item }: StoryboardProps) {
       const target = draft.storyboard.find((entry) => entry.id === id);
       if (target) target[key] = value;
     });
+  const noun = item.format === 'Reel' ? 'shot' : 'slide';
   return (
     <>
       <p className="subtitle mb-4">

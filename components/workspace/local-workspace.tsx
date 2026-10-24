@@ -1,13 +1,13 @@
 'use client';
 import type { Workspace, WorkspaceUpdater } from '../../lib/types.ts';
 import type { ReactNode } from 'react';
-type LocalWorkspaceProps = { children: ReactNode };
-
 import { useEffect, useState } from 'react';
 import { seed } from '../../lib/model.ts';
 import { LEGACY_STORAGE_KEY, readLegacyWorkspace } from '../../lib/workspace-data.ts';
 import WorkspaceProblem from '../account/workspace-problem';
 import WorkspaceContext from './workspace-context';
+
+type LocalWorkspaceProps = { children: ReactNode };
 
 export default function LocalWorkspace({ children }: LocalWorkspaceProps) {
   const [state, setState] = useState<Workspace | null>(null);

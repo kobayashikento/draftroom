@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["deno"],
+    "incremental": false,
+    "plugins": [],
+    "paths": {
+      "npm:@supabase/supabase-js@2.118.0": [
+        "./node_modules/@supabase/supabase-js/dist/index.d.mts"
+      ],
+      "npm:@supabase/supabase-js@2.118.0/cors": [
+        "./node_modules/@supabase/supabase-js/dist/cors.d.mts"
+      ]
+    }
+  },
+  "include": ["supabase/functions/**/*.ts"],
+  "exclude": ["node_modules"]
+}

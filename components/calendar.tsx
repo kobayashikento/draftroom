@@ -1,8 +1,6 @@
 'use client';
 import type { CalendarMode } from '../lib/types.ts';
 import type { Dispatch, SetStateAction } from 'react';
-type CalendarProps = { week: string; setWeek: Dispatch<SetStateAction<string>>; platform: string; setPlatform: Dispatch<SetStateAction<string>> };
-
 import { useState } from 'react';
 import { useWorkspace } from './workspace/workspace-context';
 import { addDays } from '../lib/model';
@@ -15,6 +13,13 @@ import CalendarAgenda from './calendar/calendar-agenda';
 import UnscheduledPlans from './calendar/unscheduled-plans';
 import useCalendarFilters from './calendar/use-calendar-filters';
 import usePublicationDrag from './calendar/use-publication-drag';
+
+type CalendarProps = {
+  week: string;
+  setWeek: Dispatch<SetStateAction<string>>;
+  platform: string;
+  setPlatform: Dispatch<SetStateAction<string>>;
+};
 
 export default function Calendar({ week, setWeek, platform, setPlatform }: CalendarProps) {
   const { state } = useWorkspace();

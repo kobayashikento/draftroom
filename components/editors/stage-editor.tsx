@@ -1,7 +1,5 @@
 'use client';
 import type { StageKind } from '../../lib/types.ts';
-type StageEditorProps = { close: () => void };
-
 import { ArrowUp, ArrowDown, Plus, X } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Input, Button, Select } from '../ui';
@@ -9,6 +7,8 @@ import { useWorkspace } from '../workspace/workspace-context';
 import { reorder } from '../../lib/reorder.ts';
 import { uid } from '../../lib/model';
 import Modal from './modal';
+
+type StageEditorProps = { close: () => void };
 
 export default function StageEditor({ close }: StageEditorProps) {
   const { state, update, notify } = useWorkspace();
@@ -57,7 +57,9 @@ export default function StageEditor({ close }: StageEditorProps) {
               ['posted', 'Posted'],
             ]}
             value={s.kind}
-            onChange={(v) => update((d) => (d.stages.find((x) => x.id === s.id)!.kind = v as StageKind))}
+            onChange={(v) =>
+              update((d) => (d.stages.find((x) => x.id === s.id)!.kind = v as StageKind))
+            }
           />
           <Button
             className="icon-button"

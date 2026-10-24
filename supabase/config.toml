@@ -1,5 +1,8 @@
 project_id = 'draftroom'
 
+[functions.draftroom-assistant]
+verify_jwt = true
+
 [auth]
 enable_signup = false
 enable_anonymous_sign_ins = false

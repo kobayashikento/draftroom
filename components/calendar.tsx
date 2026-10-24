@@ -16,18 +16,19 @@ import CalendarGrid from './calendar/calendar-grid';
 import CalendarAgenda from './calendar/calendar-agenda';
 import UnscheduledPlans from './calendar/unscheduled-plans';
 import useCalendarFilters from './calendar/use-calendar-filters.ts';
-import usePublicationDrag from './calendar/use-publication-drag.ts';
+import useCalendarDrag from './calendar/use-calendar-drag.ts';
 import useCalendarView from './calendar/use-calendar-view.ts';
 import DayTaskEditor from './calendar/day-task-editor';
 import { calendarDayTasks } from './calendar/day-task.helpers.ts';
 import { today } from '../lib/display.ts';
+import CalendarMoveEditor from './calendar/calendar-move-editor';
 
 export default function Calendar({ week, setWeek, platform, setPlatform }: CalendarProps) {
   const { state } = useWorkspace();
   const view = useCalendarView();
-  const { mode, content, showFilters, showUnscheduled, taskEditor } = view;
+  const { mode, content, showFilters, showUnscheduled, taskEditor, moveTarget } = view;
   const filters = useCalendarFilters(platform, setPlatform);
-  const drag = usePublicationDrag();
+  const drag = useCalendarDrag();
   const range = calendarRange(week, mode);
   const days = calendarDays(range);
   const currentDate = today();
@@ -70,7 +71,7 @@ export default function Calendar({ week, setWeek, platform, setPlatform }: Calen
         content={content}
         onContentChange={view.setContent}
       />
-      <div className={`planner-canvas ${showUnscheduled ? 'has-drafts' : ''}`}>
+      <div className={`planner-canvas ${showUnscheduled ? 'has-drafts' : ''}`} {...drag.clickGuard}>
         {mode === 'List' ? (
           <CalendarAgenda
             content={content}
@@ -82,6 +83,7 @@ export default function Calendar({ week, setWeek, platform, setPlatform }: Calen
             platform={platform}
             onAddTask={date => view.setTaskEditor({ date })}
             onEditTask={view.setTaskEditor}
+            onMove={view.setMoveTarget}
           />
         ) : (
           <CalendarGrid
@@ -96,6 +98,7 @@ export default function Calendar({ week, setWeek, platform, setPlatform }: Calen
             drag={drag}
             onAddTask={date => view.setTaskEditor({ date })}
             onEditTask={view.setTaskEditor}
+            onMove={view.setMoveTarget}
           />
         )}
         <UnscheduledPlans
@@ -111,6 +114,9 @@ export default function Calendar({ week, setWeek, platform, setPlatform }: Calen
         Day tasks are for your routine. Ideas appear on checklist due dates and publishing days.
         Open an idea for its full checklist. Posts are published manually.
       </p>
+      {moveTarget && (
+        <CalendarMoveEditor target={moveTarget} onClose={() => view.setMoveTarget(null)} />
+      )}
       {taskEditor && (
         <DayTaskEditor
           key={`${taskEditor.id || 'new'}:${taskEditor.date}`}

@@ -20,46 +20,28 @@ import PublicationArtwork from './publication-artwork';
 import usePublicationMedia from './use-publication-media.ts';
 import MediaDetail from '../media/media-detail';
 
-export function PublicationCards({
-  entries,
-  compact = false,
-  canDrag = false,
-  onDragStart,
-  onDragEnd
-}: PublicationCardsProps) {
+export function PublicationCards({ entries, compact = false, drag }: PublicationCardsProps) {
   return entries.map(({ p, pub }) => (
-    <PublicationCard
-      key={pub.id}
-      p={p}
-      pub={pub}
-      compact={compact}
-      canDrag={canDrag}
-      onDragStart={event => onDragStart?.(event, p, pub)}
-      onDragEnd={onDragEnd}
-    />
+    <PublicationCard key={pub.id} p={p} pub={pub} compact={compact} drag={drag} />
   ));
 }
 
-export default function PublicationCard({
-  p,
-  pub,
-  compact,
-  canDrag,
-  onDragStart,
-  onDragEnd
-}: PublicationCardProps) {
+export default function PublicationCard({ p, pub, compact, drag }: PublicationCardProps) {
   const { open, setModal } = useWorkspace();
   const media = usePublicationMedia(p, pub);
   const posted = pub.state === 'manually_posted';
   return (
     <article
       className={`planner-card ${compact ? 'is-compact' : ''} ${posted ? 'is-posted' : ''}`}
-      draggable={canDrag && !posted}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
+      draggable={false}
+      data-movable={Boolean(drag && !posted)}
+      {...(!posted
+        ? drag?.handlers({ type: 'publication', itemId: p.id, publicationId: pub.id })
+        : {})}
     >
       <Button
         className="planner-card-open"
+        draggable={false}
         aria-label={`Edit ${p.title} for ${pub.platform}`}
         title={`${p.title}. ${media.label}. ${media.description} ${media.issues.join(' ')}`}
         aria-description={media.issues.length ? media.issues.join(' ') : media.description}
@@ -71,10 +53,10 @@ export default function PublicationCard({
           {posted ? (
             <AppIcon icon={Check} />
           ) : (
-            canDrag && <AppIcon icon={GripVertical} className="planner-grip" />
+            drag && <AppIcon icon={GripVertical} className="planner-grip" />
           )}
         </div>
-        <div className="planner-card-art">
+        <div className="planner-card-art" draggable={false}>
           <PublicationArtwork item={p} record={media.record} />
         </div>
         <div className="planner-card-copy">

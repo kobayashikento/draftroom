@@ -44,6 +44,17 @@ export function validateWorkspace(data: unknown): Workspace {
           Array.isArray(task.completedDates) &&
           task.completedDates.every(calendarDate) &&
           new Set(task.completedDates).size === task.completedDates.length &&
+          (task.movedDates === undefined ||
+            (task.repeat === 'weekly' &&
+              object(task.movedDates) &&
+              Object.entries(task.movedDates).every(
+                ([from, to]) =>
+                  calendarDate(from) &&
+                  calendarDate(to) &&
+                  from !== to &&
+                  from >= String(task.date) &&
+                  parseDate(from).getDay() === parseDate(String(task.date)).getDay()
+              ))) &&
           task.completedDates.every(
             date =>
               date >= String(task.date) &&

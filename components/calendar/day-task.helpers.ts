@@ -1,5 +1,6 @@
 import type { CalendarTask, Workspace } from '../../lib/types.ts';
 import type { CalendarDateRange } from './calendar.helpers.ts';
+import type { CalendarDrag, CalendarMoveTarget } from './calendar-move.helpers.ts';
 import { addDays, dateString, parseDate, uid } from '../../lib/model.ts';
 
 export type DayTaskDraft = {
@@ -9,10 +10,17 @@ export type DayTaskDraft = {
 };
 export type DayTaskEditorState = { date: string; id?: string };
 export type DayTaskEditorProps = DayTaskEditorState & { onClose: () => void };
-export type DayTaskOccurrence = { task: CalendarTask; date: string; done: boolean };
+export type DayTaskOccurrence = {
+  task: CalendarTask;
+  date: string;
+  scheduledDate: string;
+  done: boolean;
+};
 export type DayTaskCardsProps = {
   tasks: DayTaskOccurrence[];
   onEdit: (task: DayTaskEditorState) => void;
+  drag?: CalendarDrag;
+  onMove: (target: CalendarMoveTarget) => void;
 };
 
 export function dayTaskOccursOn(task: CalendarTask, date: string): boolean {
@@ -31,15 +39,18 @@ export function calendarDayTasks(
 ): DayTaskOccurrence[] {
   const search = query.trim().toLocaleLowerCase();
   const days = Array.from({ length: range.days }, (_, index) => addDays(range.start, index));
-  return days
-    .flatMap(date =>
-      (state.calendarTasks || [])
-        .filter(
-          task =>
-            (!search || task.title.toLocaleLowerCase().includes(search)) &&
-            dayTaskOccursOn(task, date)
-        )
-        .map(task => ({ task, date, done: task.completedDates.includes(date) }))
+  return (state.calendarTasks || [])
+    .filter(task => !search || task.title.toLocaleLowerCase().includes(search))
+    .flatMap(task =>
+      [...new Set([...days, ...Object.keys(task.movedDates || {})])]
+        .filter(scheduledDate => dayTaskOccursOn(task, scheduledDate))
+        .map(scheduledDate => ({
+          task,
+          scheduledDate,
+          date: task.movedDates?.[scheduledDate] || scheduledDate,
+          done: task.completedDates.includes(scheduledDate)
+        }))
+        .filter(occurrence => occurrence.date >= range.start && occurrence.date <= range.end)
     )
     .sort((a, b) => a.date.localeCompare(b.date) || Number(a.done) - Number(b.done));
 }
@@ -59,6 +70,8 @@ export function saveDayTask(state: Workspace, draft: DayTaskDraft, id?: string):
   const existing = id ? state.calendarTasks?.find(task => task.id === id) : undefined;
   if (id && !existing) return false;
   if (existing) {
+    if (existing.date !== draft.date || existing.repeat !== draft.repeat)
+      delete existing.movedDates;
     existing.title = draft.title.trim();
     existing.date = draft.date;
     existing.repeat = draft.repeat;
@@ -73,6 +86,33 @@ export function saveDayTask(state: Workspace, draft: DayTaskDraft, id?: string):
       title: draft.title.trim(),
       completedDates: []
     });
+  }
+  return true;
+}
+
+export function moveDayTask(
+  state: Workspace,
+  id: string,
+  scheduledDate: string,
+  date: string
+): boolean {
+  const task = state.calendarTasks?.find(task => task.id === id);
+  if (
+    !task ||
+    !dayTaskOccursOn(task, scheduledDate) ||
+    dayTaskError({ title: task.title, date, repeat: task.repeat })
+  )
+    return false;
+  const currentDate = task.movedDates?.[scheduledDate] || scheduledDate;
+  if (currentDate === date) return false;
+  if (task.repeat === 'none') {
+    task.date = date;
+    task.completedDates = task.completedDates.includes(scheduledDate) ? [date] : [];
+  } else if (date === scheduledDate) {
+    delete task.movedDates?.[scheduledDate];
+    if (!Object.keys(task.movedDates || {}).length) delete task.movedDates;
+  } else {
+    task.movedDates = { ...task.movedDates, [scheduledDate]: date };
   }
   return true;
 }

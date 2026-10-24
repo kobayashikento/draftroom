@@ -1,19 +1,39 @@
 'use client';
 
 import type { CalendarProductionCardsProps } from './calendar.helpers.ts';
+import type { CalendarMoveTarget } from './calendar-move.helpers.ts';
 import { calendarProductionGroups } from './calendar.helpers.ts';
 import { Button } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
-import { FormatIcon } from '../icons';
+import { AppIcon, FormatIcon } from '../icons';
+import { CalendarArrowUp, GripVertical } from 'lucide-react';
 
-export default function CalendarProductionCards({ tasks }: CalendarProductionCardsProps) {
+export default function CalendarProductionCards({
+  tasks,
+  date,
+  drag,
+  onMove
+}: CalendarProductionCardsProps) {
   const { open } = useWorkspace();
   return calendarProductionGroups(tasks).map(({ item, tasks }) => {
     const remaining = tasks.filter(({ t }) => !t.done).length;
+    const target: CalendarMoveTarget = {
+      type: 'production',
+      itemId: item.id,
+      taskIds: tasks.filter(({ t }) => !t.done).map(({ t }) => t.id),
+      date
+    };
     return (
-      <article key={item.id} className="planner-production">
+      <article
+        key={item.id}
+        className="planner-production"
+        draggable={false}
+        data-movable={Boolean(drag && remaining)}
+        {...(remaining ? drag?.handlers(target) : {})}
+      >
         <Button
           className="planner-task-open"
+          draggable={false}
           aria-label={`Work on ${item.title}`}
           onClick={() => open(item.id, 'Production')}
         >
@@ -28,6 +48,19 @@ export default function CalendarProductionCards({ tasks }: CalendarProductionCar
               : 'Today’s checklist done'}
           </span>
         </Button>
+        {remaining > 0 && (
+          <div className="planner-card-actions">
+            {drag && <AppIcon icon={GripVertical} className="planner-grip" />}
+            <Button
+              className="icon-button"
+              aria-label={`Move production work: ${item.title}`}
+              title="Choose a date"
+              onClick={() => onMove(target)}
+            >
+              <AppIcon icon={CalendarArrowUp} />
+            </Button>
+          </div>
+        )}
       </article>
     );
   });

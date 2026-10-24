@@ -1436,11 +1436,30 @@
     background: var(--dr-raised);
     box-shadow: 0 2px 4px var(--dr-shadow);
   }
-  .planner-card[draggable='true'] {
+  :is(.planner-card, .planner-task, .planner-production)[data-movable='true'] {
+    cursor: grab;
+    user-select: none;
+    touch-action: pan-y;
+  }
+  :is(.planner-card, .planner-task, .planner-production)[data-movable='true']:active {
+    cursor: grabbing;
+  }
+  [data-movable='true'] :is(.planner-task-open, .planner-card-open) {
     cursor: grab;
   }
-  .planner-card[draggable='true']:active {
+  [data-movable='true'] :is(.planner-task-open, .planner-card-open):active {
     cursor: grabbing;
+  }
+  :is(.planner-card, .planner-task, .planner-production)[data-movable='true'] img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+  .planner-card-actions {
+    @apply mt-2 flex items-center justify-between gap-2;
+    color: var(--dr-muted);
+  }
+  .planner-card-actions .icon-button {
+    @apply ml-auto border-0 bg-transparent;
   }
   .planner-card:focus-within {
     outline: 2px solid var(--dr-moss-strong);
@@ -1461,6 +1480,7 @@
   }
   .planner-grip {
     opacity: 0.55;
+    touch-action: none;
   }
   .planner-card-art {
     @apply mx-2 overflow-hidden rounded-md;
@@ -1526,6 +1546,12 @@
     box-shadow: none;
   }
   .is-compact :is(.planner-card-format, .pill, footer, .planner-grip) {
+    @apply hidden;
+  }
+  .planner-card.is-compact footer {
+    @apply flex justify-end;
+  }
+  .planner-card.is-compact footer > span {
     @apply hidden;
   }
   .is-compact .planner-card-open {

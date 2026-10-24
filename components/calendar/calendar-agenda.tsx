@@ -21,7 +21,8 @@ export default function CalendarAgenda({
   start,
   platform,
   onAddTask,
-  onEditTask
+  onEditTask,
+  onMove
 }: CalendarAgendaProps) {
   const { setModal } = useWorkspace();
   return (
@@ -47,13 +48,18 @@ export default function CalendarAgenda({
                   <DayTaskCards
                     tasks={dayTasks.filter(task => task.date === date)}
                     onEdit={onEditTask}
+                    onMove={onMove}
                   />
                 </div>
               )}
               {tasks.some(({ t }) => t.due === date) && (
                 <div className="grid gap-3">
                   <span className="planner-day-label">In production</span>
-                  <CalendarProductionCards tasks={tasks.filter(({ t }) => t.due === date)} />
+                  <CalendarProductionCards
+                    tasks={tasks.filter(({ t }) => t.due === date)}
+                    date={date}
+                    onMove={onMove}
+                  />
                 </div>
               )}
               <PublicationCards entries={entries.filter(e => e.pub.date === date)} />

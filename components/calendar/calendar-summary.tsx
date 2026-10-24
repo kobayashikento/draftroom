@@ -47,7 +47,7 @@ export default function CalendarSummary({
       <span className="planner-summary-hint">
         {mode === 'List'
           ? 'Your week, one day at a time'
-          : 'Drag an idea to move its publishing day'}
+          : 'Drag a card onto a day, or choose a date'}
       </span>
     </div>
   );

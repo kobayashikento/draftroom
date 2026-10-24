@@ -36,12 +36,7 @@ export default function UnscheduledPlans({
         </Button>
       </div>
       <div className="planner-draft-cards">
-        <PublicationCards
-          entries={entries}
-          canDrag={mode !== 'List'}
-          onDragStart={drag.start}
-          onDragEnd={drag.cancel}
-        />
+        <PublicationCards entries={entries} drag={mode !== 'List' ? drag : undefined} />
       </div>
       {!entries.length && (
         <div className="planner-drafts-empty">

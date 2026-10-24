@@ -24,7 +24,8 @@ export default function CalendarGrid({
   platform,
   drag,
   onAddTask,
-  onEditTask
+  onEditTask,
+  onMove
 }: CalendarGridProps) {
   const { setModal } = useWorkspace();
   return (
@@ -51,9 +52,7 @@ export default function CalendarGrid({
               aria-label={fmt(date, { dateStyle: 'full' })}
               aria-current={date === today() ? 'date' : undefined}
               className={calendarDayClass(date, anchor, mode, today(), drag.targetDate)}
-              onDragOver={event => drag.over(date, event)}
-              onDragLeave={drag.leave}
-              onDrop={event => drag.drop(date, event)}
+              data-calendar-date={date}
             >
               <header className="planner-day-head">
                 <div>
@@ -86,25 +85,29 @@ export default function CalendarGrid({
                       <AppIcon icon={ListTodo} />
                       Day tasks
                     </span>
-                    <DayTaskCards tasks={routineTasks} onEdit={onEditTask} />
+                    <DayTaskCards
+                      tasks={routineTasks}
+                      onEdit={onEditTask}
+                      drag={drag}
+                      onMove={onMove}
+                    />
                   </div>
                 )}
                 {dayTasks.length > 0 && (
                   <div className="planner-day-tasks">
                     <span className="planner-day-label">In production</span>
-                    <CalendarProductionCards tasks={dayTasks} />
+                    <CalendarProductionCards
+                      tasks={dayTasks}
+                      date={date}
+                      drag={drag}
+                      onMove={onMove}
+                    />
                   </div>
                 )}
                 {dayEntries.length > 0 && (
                   <span className="planner-day-label">Publishing · {dayEntries.length}</span>
                 )}
-                <PublicationCards
-                  entries={dayEntries}
-                  compact={mode === 'Month'}
-                  canDrag
-                  onDragStart={drag.start}
-                  onDragEnd={drag.cancel}
-                />
+                <PublicationCards entries={dayEntries} compact={mode === 'Month'} drag={drag} />
               </div>
               {mode === 'Week' &&
                 content !== 'Tasks' &&

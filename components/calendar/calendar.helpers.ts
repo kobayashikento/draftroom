@@ -1,8 +1,6 @@
 import type {
   PublicationEntry,
   CalendarMode,
-  Item,
-  Publication,
   Workspace,
   PublicationCollection,
   CalendarEntryOptions,
@@ -11,7 +9,8 @@ import type {
   ProductionGroup
 } from '../../lib/types.ts';
 import type { DayTaskEditorState, DayTaskOccurrence } from './day-task.helpers.ts';
-import type { Dispatch, SetStateAction, DragEvent, DragEventHandler } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import type { CalendarDrag, CalendarMoveTarget } from './calendar-move.helpers.ts';
 import { addDays, dateString, monday, parseDate } from '../../lib/model.ts';
 import { CalendarDays, CalendarRange, List } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -24,19 +23,15 @@ export type CalendarFilterController = {
   setValue: (key: keyof CalendarFilters, value: string) => void;
   reset: () => void;
 };
-export type DraggedPublication = { itemId: string; publicationId: string };
-export type PublicationDrag = {
-  targetDate: string;
-  start: (event: DragEvent<HTMLElement>, item: Item, publication: Publication) => void;
-  over: (date: string, event: DragEvent<HTMLElement>) => void;
-  leave: DragEventHandler<HTMLElement>;
-  drop: (date: string, event: DragEvent<HTMLElement>) => void;
-  cancel: () => void;
-};
 export type CalendarDateRange = { start: string; end: string; days: number };
 export type CalendarPlanCounts = { planned: number; posted: number };
 export type CalendarContent = 'All' | 'Ideas' | 'Tasks';
-export type CalendarProductionCardsProps = { tasks: ProductionTask[] };
+export type CalendarProductionCardsProps = {
+  tasks: ProductionTask[];
+  date: string;
+  drag?: CalendarDrag;
+  onMove: (target: CalendarMoveTarget) => void;
+};
 
 export const emptyCalendarFilters = { format: '', seriesId: '', status: '', query: '' };
 
@@ -90,6 +85,7 @@ export type CalendarAgendaProps = {
   platform: string;
   onAddTask: (date: string) => void;
   onEditTask: (task: DayTaskEditorState) => void;
+  onMove: (target: CalendarMoveTarget) => void;
 };
 
 export type CalendarFiltersProps = {
@@ -110,9 +106,10 @@ export type CalendarGridProps = {
   tasks: ProductionTask[];
   dayTasks: DayTaskOccurrence[];
   platform: string;
-  drag: PublicationDrag;
+  drag: CalendarDrag;
   onAddTask: (date: string) => void;
   onEditTask: (task: DayTaskEditorState) => void;
+  onMove: (target: CalendarMoveTarget) => void;
 };
 
 export type CalendarSummaryProps = {
@@ -135,16 +132,12 @@ export type CalendarToolbarProps = {
 export type PublicationCardsProps = {
   entries: PublicationEntry[];
   compact?: boolean;
-  canDrag?: boolean;
-  onDragStart?: (event: DragEvent<HTMLElement>, item: Item, publication: Publication) => void;
-  onDragEnd?: DragEventHandler<HTMLElement>;
+  drag?: CalendarDrag;
 };
 
 export type PublicationCardProps = PublicationEntry & {
   compact: boolean;
-  canDrag: boolean;
-  onDragStart?: DragEventHandler<HTMLElement>;
-  onDragEnd?: DragEventHandler<HTMLElement>;
+  drag?: CalendarDrag;
 };
 
 export type UnscheduledPlansProps = {
@@ -153,7 +146,7 @@ export type UnscheduledPlansProps = {
   hasFilters: boolean;
   visible: boolean;
   onClose: () => void;
-  drag: PublicationDrag;
+  drag: CalendarDrag;
 };
 
 export type CalendarProps = {

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { CalendarMode } from '../../lib/types.ts';
 import type { CalendarContent } from './calendar.helpers.ts';
 import type { DayTaskEditorState } from './day-task.helpers.ts';
+import type { CalendarMoveTarget } from './calendar-move.helpers.ts';
 
 export default function useCalendarView() {
   const [mode, setMode] = useState<CalendarMode>('Week');
@@ -11,6 +12,7 @@ export default function useCalendarView() {
   const [showFilters, setShowFilters] = useState(false);
   const [showUnscheduled, setShowUnscheduled] = useState(false);
   const [taskEditor, setTaskEditor] = useState<DayTaskEditorState | null>(null);
+  const [moveTarget, setMoveTarget] = useState<CalendarMoveTarget | null>(null);
   return {
     mode,
     setMode,
@@ -21,6 +23,8 @@ export default function useCalendarView() {
     showUnscheduled,
     setShowUnscheduled,
     taskEditor,
-    setTaskEditor
+    setTaskEditor,
+    moveTarget,
+    setMoveTarget
   };
 }

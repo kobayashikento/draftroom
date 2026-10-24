@@ -47,6 +47,7 @@ export type CalendarTask = {
   date: string;
   repeat: 'none' | 'weekly';
   completedDates: string[];
+  movedDates?: Record<string, string>;
 };
 export type Publication = {
   id: string;

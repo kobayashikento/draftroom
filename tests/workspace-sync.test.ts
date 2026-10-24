@@ -5,6 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { seed } from '../lib/model.ts';
 import { completeDayTask, saveDayTask } from '../components/calendar/day-task.helpers.ts';
+import { moveCalendarItem } from '../components/calendar/calendar-move.helpers.ts';
 import { WorkspaceSync } from '../lib/workspace-sync.ts';
 import { WorkspaceConflictError } from '../lib/workspace-repository.ts';
 import {
@@ -88,6 +89,11 @@ test('standalone calendar routines and per-week completion survive cloud save an
   saveDayTask(changed, { title: 'Batch filming', date: '2026-10-26', repeat: 'weekly' });
   const id = changed.calendarTasks![0].id;
   completeDayTask(changed, id, '2026-10-26', true);
+  moveCalendarItem(
+    changed,
+    { type: 'day-task', taskId: id, scheduledDate: '2026-10-26', date: '2026-10-26' },
+    '2026-10-28'
+  );
   sync.change(changed);
   assert.equal(await sync.flush(), true);
   assert.equal(remote.row.revision, 4);

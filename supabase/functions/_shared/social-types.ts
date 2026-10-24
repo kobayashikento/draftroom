@@ -135,14 +135,41 @@ export type PerformancePost = {
   platform: SocialPlatform;
   title: string;
   caption: string;
+  captionTruncated: boolean;
+  url: string;
+  mediaType: MediaKind;
+  duration: number | null;
   publishedAt: string | null;
   metrics: MediaMetrics;
-  measuredAt: string;
+  measuredAt: string | null;
+  daysAtMeasurement: number | null;
+  interactionsPerView: number | null;
   linkedItemId: string;
+};
+export type PerformanceMetric = keyof MediaMetrics | 'interactionsPerView';
+export type PerformanceMetricSummary = {
+  measuredPosts: number;
+  median: number | null;
+  topPostIds: string[];
+  bottomPostIds: string[];
+};
+export type PerformanceGroup = {
+  platform: SocialPlatform;
+  mediaType: MediaKind;
+  posts: number;
+  metrics: Record<PerformanceMetric, PerformanceMetricSummary>;
 };
 export type PerformanceContext = {
   status: 'available' | 'not_connected' | 'unavailable';
-  accounts: { platform: SocialPlatform; status: string; lastSyncedAt: string | null }[];
+  accounts: {
+    platform: SocialPlatform;
+    status: string;
+    lastSyncedAt: string | null;
+    hasMore: boolean;
+    metricNote: string;
+  }[];
   posts: PerformancePost[];
+  groups: PerformanceGroup[];
+  coverage: { loadedPosts: number; describedPosts: number; libraryPartial: boolean };
   partial: boolean;
 };

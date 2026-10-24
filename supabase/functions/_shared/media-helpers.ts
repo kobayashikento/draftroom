@@ -1,11 +1,4 @@
-import type {
-  ImportedMedia,
-  MediaMetrics,
-  MediaRecord,
-  PerformanceContext,
-  SocialAccount,
-  SocialPlatform
-} from './social-types.ts';
+import type { ImportedMedia, MediaMetrics, MediaRecord, SocialPlatform } from './social-types.ts';
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -121,55 +114,5 @@ export function mergeImportedMedia(
     ...incoming,
     source: 'api',
     updated_at: new Date().toISOString()
-  };
-}
-
-export function performanceContext(
-  media: MediaRecord[],
-  accounts: SocialAccount[],
-  partial = false
-): PerformanceContext {
-  const measured = media.filter(
-    record =>
-      record.source === 'api' && record.platform && record.metrics_updated_at && !record.archived_at
-  );
-  const recent = [...measured]
-    .sort((a, b) => (b.published_at || '').localeCompare(a.published_at || ''))
-    .slice(0, 20);
-  const leaders = [...measured]
-    .filter(record => record.metrics.views !== null)
-    .sort((a, b) => (b.metrics.views || 0) - (a.metrics.views || 0))
-    .slice(0, 10);
-  const selected = [
-    ...new Map([...recent, ...leaders].map(record => [record.id, record])).values()
-  ];
-  return {
-    status: measured.length
-      ? 'available'
-      : accounts.some(account => account.status === 'connected')
-        ? 'available'
-        : 'not_connected',
-    accounts: accounts.map(account => ({
-      platform: account.platform,
-      status: account.status,
-      lastSyncedAt: account.last_synced_at
-    })),
-    posts: selected.flatMap(record =>
-      record.platform && record.metrics_updated_at
-        ? [
-            {
-              id: record.id,
-              platform: record.platform,
-              title: record.title.slice(0, 240),
-              caption: record.caption.slice(0, 600),
-              publishedAt: record.published_at,
-              metrics: record.metrics,
-              measuredAt: record.metrics_updated_at,
-              linkedItemId: record.linked_item_id
-            }
-          ]
-        : []
-    ),
-    partial: partial || measured.length > selected.length
   };
 }

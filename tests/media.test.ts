@@ -4,9 +4,9 @@ import {
   canonicalPost,
   emptyMetrics,
   mergeImportedMedia,
-  newMediaRecord,
-  performanceContext
+  newMediaRecord
 } from '../supabase/functions/_shared/media-helpers.ts';
+import { performanceContext } from '../supabase/functions/_shared/assistant-performance.ts';
 import {
   authorizationUrl,
   normalizeInstagramMedia,
@@ -268,7 +268,8 @@ test('assistant performance excludes manual guesses, private video locations and
   const archived = { ...measured, id: crypto.randomUUID(), archived_at: '2026-10-23T00:00:00Z' };
   const context = performanceContext([measured, upload, linked, archived], [connectedAccount()]);
   assert.equal(context.posts.length, 1);
-  assert.equal(context.posts[0].caption.length, 600);
+  assert.equal(context.posts[0].caption.length, 1200);
+  assert.equal(context.posts[0].captionTruncated, true);
   assert.equal(context.posts[0].metrics.views, 0);
   const serialized = JSON.stringify(context);
   assert.ok(!serialized.includes('private-clip'));

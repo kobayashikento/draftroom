@@ -3,7 +3,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2.118.0/cors';
 import { createAssistantHandler, AssistantError } from '../_shared/assistant-handler.ts';
 import { ASSISTANT_BUCKET } from '../_shared/assistant-attachments.ts';
 import type { Database } from '../../../lib/database.types.ts';
-import { performanceContext } from '../_shared/media-helpers.ts';
+import { performanceContext, PERFORMANCE_LIBRARY_LIMIT } from '../_shared/assistant-performance.ts';
 
 function scopedClient(request: Request) {
   return createClient<Database>(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
@@ -16,20 +16,29 @@ const handler = createAssistantHandler({
   apiKey: Deno.env.get('GEMINI_API_KEY')?.trim(),
   model: Deno.env.get('GEMINI_MODEL') || 'gemini-3.5-flash-lite',
   corsHeaders,
-  loadPerformance: async (request, ownerId) => {
+  loadPerformance: async (request, ownerId, messages) => {
     const client = scopedClient(request);
     const [media, accounts] = await Promise.all([
       client
         .from('draftroom_media')
         .select('*', { count: 'exact' })
         .eq('owner_id', ownerId)
+        .eq('source', 'api')
         .is('archived_at', null)
         .order('published_at', { ascending: false })
-        .limit(200),
+        .limit(PERFORMANCE_LIBRARY_LIMIT),
       client.from('draftroom_social_accounts').select('*').eq('owner_id', ownerId)
     ]);
     if (media.error || accounts.error) throw new Error('Performance could not be loaded.');
-    return performanceContext(media.data || [], accounts.data || [], (media.count || 0) > 200);
+    return performanceContext(
+      media.data || [],
+      accounts.data || [],
+      (media.count || 0) > (media.data?.length || 0),
+      messages
+        .slice(-4)
+        .map(message => message.text)
+        .join('\n')
+    );
   },
   loadAttachment: async (request, attachment) => {
     const bucket = scopedClient(request).storage.from(ASSISTANT_BUCKET);

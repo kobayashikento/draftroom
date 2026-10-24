@@ -1,11 +1,12 @@
-import type { GeminiResponse } from './types.ts';
+import type { ChatMessage, GeminiResponse } from './types.ts';
 import { validateContext } from './assistant-context.ts';
-import { validateMessages, validateReply } from './assistant-protocol.ts';
+import { parseAssistantReply, validateMessages } from './assistant-protocol.ts';
 import { geminiRequest } from './assistant-prompt.ts';
 import { validateAttachments } from './assistant-attachments.ts';
 import { prepareGeminiFiles } from './assistant-files.ts';
 import type { AttachmentLoader, GeminiFileSession } from './assistant-files.ts';
 import type { PerformanceContext } from './social-types.ts';
+import { unavailablePerformance } from './assistant-performance.ts';
 
 const MAX_BODY = 160_000;
 export class AssistantError extends Error {
@@ -58,7 +59,11 @@ export function createAssistantHandler({
   model?: string;
   fetcher?: typeof fetch;
   loadAttachment?: AttachmentLoader;
-  loadPerformance?: (request: Request, ownerId: string) => Promise<PerformanceContext>;
+  loadPerformance?: (
+    request: Request,
+    ownerId: string,
+    messages: ChatMessage[]
+  ) => Promise<PerformanceContext>;
   corsHeaders?: Record<string, string>;
 }) {
   const calls = new Map<string, number[]>();
@@ -108,9 +113,9 @@ export function createAssistantHandler({
       // Ignore browser-supplied analytics and load only the verified owner's saved results.
       if (loadPerformance) {
         try {
-          context.performance = await loadPerformance(request, userId);
+          context.performance = await loadPerformance(request, userId, messages);
         } catch {
-          context.performance = { status: 'unavailable', accounts: [], posts: [], partial: false };
+          context.performance = unavailablePerformance();
         }
       }
       const signal = AbortSignal.any([request.signal, AbortSignal.timeout(125_000)]);
@@ -155,6 +160,17 @@ export function createAssistantHandler({
       if (response.status === 503)
         throw new AssistantError('Gemini is busy right now. Please try again in a moment.', 503);
       if (!response.ok) {
+        // Log provider errors for diagnosis without recording request contents or credentials.
+        const failure = await response.json().catch(() => null);
+        const detail = failure?.error?.message;
+        console.error('Gemini rejected the assistant request', {
+          model,
+          status: response.status,
+          detail:
+            typeof detail === 'string'
+              ? detail.replaceAll(apiKey, '[redacted]').slice(0, 1000)
+              : 'No provider details returned.'
+        });
         const error = new AssistantError(
           attachments.length && response.status === 400
             ? 'Gemini couldn’t read this request. Try fewer files or split PDFs into smaller documents of up to 1,000 pages.'
@@ -164,17 +180,40 @@ export function createAssistantHandler({
         error.providerStatus = response.status;
         throw error;
       }
+      let replyStage = 'response';
+      let finishReason: string | undefined;
+      let replyLength = 0;
+      let fenced = false;
+      let startsWithObject = false;
       try {
         const result: GeminiResponse = await response.json();
         const candidate = result.candidates?.[0];
+        finishReason = candidate?.finishReason;
+        replyStage = 'completion';
         if (candidate?.finishReason !== 'STOP') throw new Error('Incomplete response');
         const text = candidate.content?.parts
           ?.filter(part => !part.thought)
           .map(part => part.text || '')
           .join('');
         if (!text) throw new Error('Empty response');
-        return json(validateReply(JSON.parse(text)));
-      } catch {
+        replyLength = text.length;
+        fenced = text.trimStart().startsWith('```');
+        startsWithObject = text.trimStart().startsWith('{');
+        replyStage = 'validation';
+        return json(parseAssistantReply(text));
+      } catch (error) {
+        console.error('Gemini returned an unusable assistant response', {
+          model,
+          stage: replyStage,
+          finishReason,
+          replyLength,
+          fenced,
+          startsWithObject,
+          jsonPosition:
+            error instanceof SyntaxError
+              ? error.message.match(/(?:position|line|column) \d+/g)
+              : undefined
+        });
         throw new AssistantError(
           'Gemini couldn’t finish a usable response. No changes were made. Try a smaller request.',
           502

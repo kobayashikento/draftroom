@@ -72,7 +72,8 @@ export type AssistantContext = PlanningWorkspace & {
 };
 export type AssistantRequest = { context: AssistantContext; messages: ChatMessage[] };
 export type JsonSchema = {
-  type: string;
+  type?: string;
+  anyOf?: JsonSchema[];
   properties?: Record<string, JsonSchema>;
   required?: string[];
   additionalProperties?: boolean;

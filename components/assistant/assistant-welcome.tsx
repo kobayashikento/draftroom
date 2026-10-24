@@ -15,8 +15,8 @@ export default function AssistantWelcome({ onSend, disabled }: AssistantWelcomeP
       <p className="text-xs font-medium text-muted">A LITTLE SPACE TO THINK</p>
       <h2>What are we making next?</h2>
       <p className="text-sm text-muted">
-        Bring a planning PDF or image, talk through an idea, or ask me to add tasks to your
-        projects.
+        Explore what’s working in your imported posts, talk through an idea, or bring a planning PDF
+        or image to turn it into next steps.
       </p>
       <div className="assistant-suggestions">
         {suggestions.map(text => (

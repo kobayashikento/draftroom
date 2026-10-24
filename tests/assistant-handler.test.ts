@@ -78,6 +78,7 @@ test('private Gemini credentials only go to Google, with validated structured ou
       assert.equal(new Headers(options?.headers).get('x-goog-api-key'), 'TEST-KEY');
       const body = JSON.parse(String(options?.body));
       assert.equal(body.generationConfig.responseMimeType, 'application/json');
+      assert.ok(body.generationConfig.maxOutputTokens >= 8192);
       assert.match(body.systemInstruction.parts[0].text, /create_task needs itemId/);
       assert.equal(JSON.stringify(body).includes('TEST-KEY'), false);
       return success();
@@ -145,6 +146,53 @@ test('incomplete or unsupported model actions never reach the app', async () => 
     })(request());
     assert.equal(response.status, 502);
     assert.match((await response.json()).error, /No changes were made/);
+  }
+});
+
+test('complete JSON replies in a single markdown fence retain strict action validation', async () => {
+  for (const actions of [[], [{ type: 'delete_idea', itemId: 'x' }]]) {
+    const response = await handler({
+      fetcher: async () =>
+        Response.json({
+          candidates: [
+            {
+              finishReason: 'STOP',
+              content: {
+                parts: [
+                  {
+                    text:
+                      '```json\n' +
+                      JSON.stringify({ reply: 'These reels share a caption theme.', actions }) +
+                      '\n```'
+                  }
+                ]
+              }
+            }
+          ]
+        })
+    })(request());
+    assert.equal(response.status, actions.length ? 502 : 200);
+  }
+});
+
+test('complete prose analysis is a read-only reply while malformed structured replies are rejected', async () => {
+  const cases: [string, number][] = [
+    [
+      'Your top Instagram reels share a specific caption theme. Lower-view posts use broader captions; try one more specific opening as an experiment.',
+      200
+    ],
+    ['{"reply":"Partial JSON", "actions":[', 502],
+    ['```json\n{"reply":"Broken", "actions":[\n```', 502],
+    ['[{"type":"delete_idea"}]', 502],
+    [JSON.stringify({ reply: 'Changed.', actions: [{ type: 'delete_idea', itemId: 'x' }] }), 502]
+  ];
+  for (const [text, status] of cases) {
+    const response = await handler({
+      fetcher: async () =>
+        Response.json({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text }] } }] })
+    })(request());
+    assert.equal(response.status, status);
+    if (status === 200) assert.deepEqual(await response.json(), { reply: text, actions: [] });
   }
 });
 test('CORS, method checks, payload bounds and per-owner cooldown protect the endpoint', async () => {

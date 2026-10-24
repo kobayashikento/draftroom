@@ -21,8 +21,9 @@ export default function PublishEditor({ item }: PublishEditorProps) {
   return (
     <>
       <p className="banner">
-        Publish from your phone, sync your account, then match the published post to this idea.
-        Draftroom will recognize that channel as live and connect its thumbnail and insights.
+        Publish from your phone, then move the idea to Posted or mark a channel manually posted to
+        sync its connected account. Match the published post below to connect its thumbnail and
+        insights and confirm that channel is live.
       </p>
       {item.publications.map(pub => (
         <section className="entry" key={pub.id} aria-label={pub.platform}>

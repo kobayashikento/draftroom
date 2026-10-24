@@ -366,13 +366,21 @@ test('assistant enriches from verified server performance and discards forged br
             id: 'verified-post',
             title: 'Verified clip',
             caption: 'A small ritual',
+            captionTruncated: false,
+            url: '',
+            mediaType: 'video',
+            duration: null,
             platform: 'TikTok',
             publishedAt: null,
             linkedItemId: '',
             measuredAt: '2026-10-24T00:00:00Z',
+            daysAtMeasurement: null,
+            interactionsPerView: 8,
             metrics: { views: 25, likes: 2, comments: 0, shares: 0, saves: null, reach: null }
           }
         ],
+        groups: [],
+        coverage: { loadedPosts: 1, describedPosts: 1, libraryPartial: false },
         partial: false
       };
     },

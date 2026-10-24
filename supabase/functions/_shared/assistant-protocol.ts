@@ -76,6 +76,26 @@ export function validateReply(value: unknown): AssistantReply {
   };
 }
 
+export function parseReplyJson(value: string): unknown {
+  const trimmed = value.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*\n([\s\S]*?)\n```$/i);
+  return JSON.parse(fenced ? fenced[1] : trimmed);
+}
+
+export function parseAssistantReply(value: string): AssistantReply {
+  let parsed: unknown;
+  try {
+    parsed = parseReplyJson(value);
+  } catch (error) {
+    const trimmed = value.trim();
+    // A complete conversational answer needs no actions. Never repair or extract
+    // actions from malformed structured output, including fenced JSON.
+    if (/^(?:[\{\[\"]|```)/.test(trimmed)) throw error;
+    parsed = { reply: trimmed, actions: [] };
+  }
+  return validateReply(parsed);
+}
+
 const string = { type: 'string' };
 const taskProperties = {
   title: string,
@@ -90,26 +110,30 @@ const schema = (properties: Record<string, JsonSchema>): JsonSchema => ({
   additionalProperties: false
 });
 export const REPLY_SCHEMA = schema({
-  reply: string,
+  reply: { type: 'string', description: 'A concise answer under 5,000 characters.' },
   actions: {
     type: 'array',
     maxItems: 10,
     items: {
-      type: 'object',
-      properties: {
-        type: {
-          type: 'string',
-          enum: ['create_task', 'create_idea', 'prioritize_task', 'complete_task']
-        },
-        itemId: string,
-        taskId: string,
-        ...taskProperties,
-        format: { type: 'string', enum: ['Reel', 'Carousel'] },
-        seriesId: string,
-        tasks: { type: 'array', maxItems: 12, items: schema(taskProperties) }
-      },
-      required: ['type'],
-      additionalProperties: false
+      anyOf: [
+        schema({
+          type: { type: 'string', enum: ['create_task'] },
+          itemId: string,
+          ...taskProperties
+        }),
+        schema({
+          type: { type: 'string', enum: ['create_idea'] },
+          title: string,
+          format: { type: 'string', enum: ['Reel', 'Carousel'] },
+          seriesId: string,
+          tasks: { type: 'array', maxItems: 12, items: schema(taskProperties) }
+        }),
+        schema({
+          type: { type: 'string', enum: ['prioritize_task', 'complete_task'] },
+          itemId: string,
+          taskId: string
+        })
+      ]
     }
   }
 });

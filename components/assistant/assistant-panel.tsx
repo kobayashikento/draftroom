@@ -98,10 +98,10 @@ export default function AssistantPanel({
             <p>
               Gemini receives your messages, attached files and a summary of idea titles, tasks and
               dates. Files stay in private storage for follow-up questions; a new chat removes them.
-              Synced post captions and measured results help Gemini plan; social video files aren’t
-              sent. Workspace notes and draft captions aren’t included automatically. Google may use
-              free-tier content to improve its products. AI can make mistakes; review changes in
-              your checklist.{' '}
+              Synced post captions and measured results help Gemini compare performance and plan;
+              social video files aren’t sent. Workspace notes and draft captions aren’t included
+              automatically. Google may use free-tier content to improve its products. AI can make
+              mistakes; review changes in your checklist.{' '}
               <a
                 href="https://ai.google.dev/gemini-api/docs/pricing"
                 target="_blank"

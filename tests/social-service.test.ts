@@ -368,6 +368,7 @@ test('assistant enriches from verified server performance and discards forged br
             caption: 'A small ritual',
             captionTruncated: false,
             url: '',
+            href: '/library/?post=verified-post',
             mediaType: 'video',
             duration: null,
             platform: 'TikTok',

@@ -1,5 +1,9 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { clearWorkspaceLink, parseWorkspaceLink } from '../lib/workspace-links.ts';
+import { useMedia } from './media/media-context';
+import MediaDetail from './media/media-detail';
 import { useWorkspace } from './workspace/workspace-context';
 import AddIdea from './editors/add-idea';
 import ContentEditor from './editors/content-editor';
@@ -9,8 +13,20 @@ import StageEditor from './editors/stage-editor';
 
 export default function Modals() {
   const { modal, setModal, state } = useWorkspace();
+  const library = useMedia();
+  const router = useRouter();
   if (!modal) return null;
-  const close = () => setModal(null);
+  const close = () => {
+    setModal(null);
+    const url = new URL(window.location.href);
+    const link = parseWorkspaceLink(`${url.pathname}${url.search}`);
+    if (link && link.type !== 'view')
+      router.replace(clearWorkspaceLink(url.href), { scroll: false });
+  };
+  if (modal.type === 'media') {
+    const record = library.media.find(record => record.id === modal.id);
+    return record ? <MediaDetail key={record.id} record={record} close={close} /> : null;
+  }
   if (modal.type === 'add')
     return (
       <AddIdea
@@ -30,6 +46,12 @@ export default function Modals() {
     ) : null;
   }
   return item ? (
-    <ContentEditor key={item.id} item={item} initialTab={modal.tab} close={close} />
+    <ContentEditor
+      key={`${item.id}:${modal.tab}:${modal.taskId || ''}`}
+      item={item}
+      initialTab={modal.tab}
+      initialTaskId={modal.taskId}
+      close={close}
+    />
   ) : null;
 }

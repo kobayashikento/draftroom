@@ -1,9 +1,17 @@
-import type { PlanningWorkspace, AssistantContext } from './types.ts';
+import type {
+  PlanningWorkspace,
+  AssistantContext,
+  AssistantNavigationLink,
+  AssistantContextOptions
+} from './types.ts';
+import { workspaceLinkHref } from '../../../lib/workspace-links.ts';
+import { viewPaths } from '../../../lib/navigation.ts';
 // Only these planning fields leave Draftroom. Captions, notes, email and credentials stay out.
 export function assistantContext(
   state: PlanningWorkspace,
   today: string,
-  timezone: string
+  timezone: string,
+  options: AssistantContextOptions = {}
 ): AssistantContext {
   const clip = (value: unknown, max = 240) => String(value || '').slice(0, max);
   const items = state.items.slice(0, 150).map(item => ({
@@ -27,6 +35,48 @@ export function assistantContext(
       state: clip(state, 30)
     }))
   }));
+  const series = state.series.slice(0, 60).map(({ id, name, format }) => ({
+    id: clip(id, 100),
+    name: clip(name),
+    format: clip(format, 20)
+  }));
+  const links: AssistantNavigationLink[] =
+    options.includeLinks === false
+      ? []
+      : [
+          ...items.flatMap(item => [
+            {
+              type: 'idea' as const,
+              id: item.id,
+              title: item.title,
+              href: workspaceLinkHref({ type: 'idea', id: item.id, tab: 'Storyboard' })
+            },
+            ...item.tasks.map(task => ({
+              type: 'task' as const,
+              id: task.id,
+              title: task.title,
+              parentTitle: item.title,
+              href: workspaceLinkHref({
+                type: 'idea',
+                id: item.id,
+                tab: 'Production',
+                taskId: task.id
+              })
+            }))
+          ]),
+          ...series.map(series => ({
+            type: 'series' as const,
+            id: series.id,
+            title: series.name,
+            href: workspaceLinkHref({ type: 'series', id: series.id })
+          })),
+          ...Object.entries(viewPaths).map(([view, href]) => ({
+            type: 'view' as const,
+            id: view,
+            title: view,
+            href
+          }))
+        ];
   return {
     today,
     timezone: clip(timezone, 80),
@@ -39,11 +89,8 @@ export function assistantContext(
     stages: state.stages
       .slice(0, 30)
       .map(({ id, name, kind }) => ({ id: clip(id, 100), name: clip(name), kind: clip(kind, 20) })),
-    series: state.series.slice(0, 60).map(({ id, name, format }) => ({
-      id: clip(id, 100),
-      name: clip(name),
-      format: clip(format, 20)
-    })),
+    series,
+    links,
     items
   };
 }

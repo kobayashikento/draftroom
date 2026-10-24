@@ -22,7 +22,8 @@ export async function requestAssistant(
       context: assistantContext(
         state,
         dateString(new Date()),
-        Intl.DateTimeFormat().resolvedOptions().timeZone
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
+        { includeLinks: false }
       )
     },
     signal,

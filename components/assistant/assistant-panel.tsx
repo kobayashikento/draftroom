@@ -63,6 +63,7 @@ export default function AssistantPanel({
           busy={assistant.busy}
           activity={assistant.activity}
           onOpen={assistant.open}
+          onNavigate={onClose}
         />
         {assistant.error && (
           <div className="assistant-error" role="alert">

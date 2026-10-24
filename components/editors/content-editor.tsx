@@ -13,8 +13,15 @@ import Modal from './modal';
 import Storyboard from './storyboard-editor';
 import TaskEditor from './task-editor';
 import PublishEditor from './publish-editor';
+import useLinkedTask from './use-linked-task.ts';
 
-export default function ContentEditor({ item, initialTab, close }: ContentEditorProps) {
+export default function ContentEditor({
+  item,
+  initialTab,
+  initialTaskId,
+  close
+}: ContentEditorProps) {
+  const linkedTask = useLinkedTask(initialTaskId);
   const [tab, setTab] = useState(initialTab || 'Storyboard');
   const [deleting, setDeleting] = useState(false);
   if (deleting)
@@ -24,6 +31,7 @@ export default function ContentEditor({ item, initialTab, close }: ContentEditor
       title="Make room for this idea."
       eyebrow="YOUR DRAFTROOM"
       onClose={close}
+      initialFocusEl={linkedTask.initialFocusEl}
       footer={
         <>
           <Button className="link danger" onClick={() => setDeleting(true)}>
@@ -55,7 +63,12 @@ export default function ContentEditor({ item, initialTab, close }: ContentEditor
         <Tabs.Content value={tab}>
           {tab === 'Storyboard' && <Storyboard item={item} />}
           {tab === 'Production' && (
-            <TaskEditor item={item} onOpenPublish={() => setTab('Publish')} />
+            <TaskEditor
+              item={item}
+              focusTaskId={initialTaskId}
+              focusTargetRef={linkedTask.target}
+              onOpenPublish={() => setTab('Publish')}
+            />
           )}
           {tab === 'Publish' && <PublishEditor item={item} />}
           {tab === 'Notes' && <NotesEditor item={item} />}

@@ -1,5 +1,5 @@
 import type { Options } from 'react-markdown';
-// Assistant output can format text, but cannot load images, execute HTML or create links.
+// Base formatting stays inert; the chat adds only verified workspace links separately.
 export const assistantMarkdown: Options = {
   skipHtml: true,
   unwrapDisallowed: true,

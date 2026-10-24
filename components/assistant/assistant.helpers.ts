@@ -86,6 +86,7 @@ export type AssistantMessagesProps = {
   busy: boolean;
   activity: string;
   onOpen: (id: string, tab?: EditorTab) => void;
+  onNavigate: () => void;
 };
 
 export type AssistantPanelProps = {

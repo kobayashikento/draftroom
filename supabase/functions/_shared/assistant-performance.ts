@@ -8,6 +8,7 @@ import type {
   SocialAccount
 } from './social-types.ts';
 import { canonicalPost, emptyMetrics, isSocialPlatform, metric } from './media-helpers.ts';
+import { workspaceLinkHref } from '../../../lib/workspace-links.ts';
 
 export const PERFORMANCE_LIBRARY_LIMIT = 1000;
 export const PERFORMANCE_POST_LIMIT = 300;
@@ -50,6 +51,7 @@ function performancePost(record: MediaRecord): PerformancePost {
     caption: record.caption.slice(0, 1200),
     captionTruncated: record.caption.length > 1200,
     url,
+    href: workspaceLinkHref({ type: 'post', id: record.id }),
     mediaType: record.media_type,
     duration: metric(record.duration),
     publishedAt: record.published_at,

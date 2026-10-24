@@ -15,7 +15,12 @@ import { reorder } from '../../lib/reorder.ts';
 import { kind } from '../../lib/model.ts';
 import ItemPostConnection from '../media/item-post-connection';
 
-export default function TaskEditor({ item, onOpenPublish }: TaskEditorProps) {
+export default function TaskEditor({
+  item,
+  onOpenPublish,
+  focusTaskId,
+  focusTargetRef
+}: TaskEditorProps) {
   const { state, updateItem } = useWorkspace();
   const set = taskFieldSetter(item.id, updateItem);
   return (
@@ -27,7 +32,11 @@ export default function TaskEditor({ item, onOpenPublish }: TaskEditorProps) {
         <p className="warning">This idea has unfinished tasks. Its stage stays as you set it.</p>
       )}
       {item.tasks.map((t, i) => (
-        <div className="task-edit" key={t.id}>
+        <div
+          className={`task-edit ${t.id === focusTaskId ? 'is-linked' : ''}`}
+          key={t.id}
+          ref={t.id === focusTaskId ? focusTargetRef : undefined}
+        >
           <Input
             type="checkbox"
             aria-label={`Complete ${t.title}`}

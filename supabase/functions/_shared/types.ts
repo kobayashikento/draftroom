@@ -69,7 +69,16 @@ export type AssistantContext = PlanningWorkspace & {
   totalIdeas: number;
   partial: boolean;
   performance?: PerformanceContext;
+  links: AssistantNavigationLink[];
 };
+export type AssistantNavigationLink = {
+  type: 'idea' | 'task' | 'series' | 'view';
+  id: string;
+  title: string;
+  href: string;
+  parentTitle?: string;
+};
+export type AssistantContextOptions = { includeLinks?: boolean };
 export type AssistantRequest = { context: AssistantContext; messages: ChatMessage[] };
 export type JsonSchema = {
   type?: string;

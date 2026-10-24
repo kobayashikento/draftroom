@@ -115,7 +115,8 @@ export type WorkspaceModal =
   | { type: 'series'; id?: string }
   | { type: 'stages' }
   | { type: 'reschedule'; id: string; publicationId: string }
-  | { type: 'content'; id: string; tab: EditorTab };
+  | { type: 'content'; id: string; tab: EditorTab; taskId?: string }
+  | { type: 'media'; id: string };
 export type OverviewCategory = 'planned' | 'ready' | 'tasks' | 'overdue';
 export type OverviewSummary = {
   planned: Item[];

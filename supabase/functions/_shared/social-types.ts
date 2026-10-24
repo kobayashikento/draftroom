@@ -137,6 +137,7 @@ export type PerformancePost = {
   caption: string;
   captionTruncated: boolean;
   url: string;
+  href: string;
   mediaType: MediaKind;
   duration: number | null;
   publishedAt: string | null;

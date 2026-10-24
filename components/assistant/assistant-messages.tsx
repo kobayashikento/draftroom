@@ -6,7 +6,9 @@ import Markdown from 'react-markdown';
 import { CheckCheck, ArrowUpRight } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
-import { assistantMarkdown } from '../../lib/assistant-markdown.ts';
+import { assistantLinkedMarkdown } from './assistant-links.helpers.ts';
+import useAssistantLinks from './use-assistant-links.ts';
+import AssistantReferenceLink from './assistant-reference-link';
 import AssistantFileList from './assistant-file-list';
 
 export default function AssistantMessages({
@@ -14,8 +16,15 @@ export default function AssistantMessages({
   hidden,
   busy,
   activity,
-  onOpen
+  onOpen,
+  onNavigate
 }: AssistantMessagesProps) {
+  const references = useAssistantLinks();
+  const markdown = assistantLinkedMarkdown(references, ({ href, children }) => (
+    <AssistantReferenceLink href={href} index={references} onNavigate={onNavigate}>
+      {children}
+    </AssistantReferenceLink>
+  ));
   const end = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (end.current?.getClientRects().length)
@@ -38,7 +47,7 @@ export default function AssistantMessages({
             <p className="assistant-message-text">{message.text}</p>
           ) : (
             <div className="assistant-markdown">
-              <Markdown {...assistantMarkdown}>{message.text}</Markdown>
+              <Markdown {...markdown}>{message.text}</Markdown>
             </div>
           )}
           {message.attachments?.length ? <AssistantFileList files={message.attachments} /> : null}

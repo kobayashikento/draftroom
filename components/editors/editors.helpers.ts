@@ -7,7 +7,7 @@ import type {
   ItemUpdater,
   Workspace
 } from '../../lib/types.ts';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { createItem } from '../../lib/model.ts';
 
 export type ItemFields = {
@@ -75,7 +75,12 @@ export function deleteIdea(state: Workspace, id: string): void {
 
 export type AddIdeaProps = { modal: AddIdeaModal; close: () => void };
 
-export type ContentEditorProps = { item: Item; initialTab?: EditorTab; close: () => void };
+export type ContentEditorProps = {
+  item: Item;
+  initialTab?: EditorTab;
+  initialTaskId?: string;
+  close: () => void;
+};
 
 export type ContentFieldsProps = { item: Item };
 
@@ -88,6 +93,7 @@ export type ModalProps = {
   onClose: () => void;
   eyebrow?: string;
   compact?: boolean;
+  initialFocusEl?: () => HTMLElement | null;
 };
 
 export type NotesEditorProps = { item: Item };
@@ -102,4 +108,9 @@ export type StageEditorProps = { close: () => void };
 
 export type StoryboardProps = { item: Item };
 
-export type TaskEditorProps = { item: Item; onOpenPublish: () => void };
+export type TaskEditorProps = {
+  item: Item;
+  onOpenPublish: () => void;
+  focusTaskId?: string;
+  focusTargetRef?: RefObject<HTMLDivElement | null>;
+};

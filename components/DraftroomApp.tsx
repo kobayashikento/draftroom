@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import type { DraftroomAppProps } from './layout/layout.helpers.ts';
 import { BrandMark } from './layout/brand-logo';
 import { WorkspaceProvider } from './workspace-provider';
@@ -12,6 +13,7 @@ import PageHeading from './layout/page-heading';
 import Assistant from './assistant';
 import MediaProvider from './media/media-context';
 import useWorkspaceNavigation from './layout/use-workspace-navigation.ts';
+import WorkspaceLinks from './workspace/workspace-links';
 
 function Draftroom({ children }: DraftroomAppProps) {
   const { state, message, platform, setPlatform } = useWorkspaceContext();
@@ -46,6 +48,9 @@ function Draftroom({ children }: DraftroomAppProps) {
         </main>
       </div>
       <Assistant />
+      <Suspense fallback={null}>
+        <WorkspaceLinks />
+      </Suspense>
       <Modals />
       {message && (
         <div id="toast" role="status">

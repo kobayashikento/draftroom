@@ -12,11 +12,13 @@ export default function Modal({
   footer,
   onClose,
   eyebrow,
-  compact = false
+  compact = false,
+  initialFocusEl
 }: ModalProps) {
   return (
     <Dialog.Root
       open
+      initialFocusEl={initialFocusEl}
       onOpenChange={({ open }) => {
         if (!open) onClose();
       }}

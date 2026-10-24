@@ -49,15 +49,24 @@ export type CalendarTask = {
   completedDates: string[];
   movedDates?: Record<string, string>;
 };
-export type Publication = {
-  id: string;
-  platform: Platform;
-  date: string;
-  caption: string;
+export type PublicationReference = {
   url: string;
   postId: string;
   state: 'planned' | 'manually_posted';
   publishedAt: string | null;
+};
+export type PublishedPostLink = {
+  mediaId: string;
+  previous: PublicationReference;
+  previousStageId: string;
+  previousLinkedItemId: string;
+};
+export type Publication = PublicationReference & {
+  id: string;
+  platform: Platform;
+  date: string;
+  caption: string;
+  linkedPost?: PublishedPostLink;
 };
 export type Item = {
   id: string;

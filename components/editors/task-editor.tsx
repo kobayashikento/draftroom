@@ -13,12 +13,16 @@ import { Input, PriorityButton, Button, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import { reorder } from '../../lib/reorder.ts';
 import { kind } from '../../lib/model.ts';
+import ItemPostConnection from '../media/item-post-connection';
 
-export default function TaskEditor({ item }: TaskEditorProps) {
+export default function TaskEditor({ item, onOpenPublish }: TaskEditorProps) {
   const { state, updateItem } = useWorkspace();
   const set = taskFieldSetter(item.id, updateItem);
   return (
     <>
+      <div className="mb-4">
+        <ItemPostConnection item={item} onLink={onOpenPublish} />
+      </div>
       {kind(state, item) !== 'prep' && item.tasks.some(t => !t.done) && (
         <p className="warning">This idea has unfinished tasks. Its stage stays as you set it.</p>
       )}

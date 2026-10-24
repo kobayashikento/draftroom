@@ -11,6 +11,8 @@ import {
   Share2,
   Sparkles,
   Undo2,
+  Check,
+  Unlink,
   Users
 } from 'lucide-react';
 import { AppIcon, PlatformIcon } from '../icons';
@@ -23,7 +25,20 @@ import MediaPlayer from './media-player';
 import MetricTile from './metric-tile';
 
 export default function MediaDetail({ record, close, readOnly = false }: MediaDetailProps) {
-  const { library, state, error, idea, account, archive, linkIdea, openIdea } = useMediaDetail({
+  const {
+    library,
+    state,
+    error,
+    idea,
+    account,
+    archive,
+    linkIdea,
+    openIdea,
+    publication,
+    publicationMatched,
+    markLive,
+    removeMatch
+  } = useMediaDetail({
     record,
     close
   });
@@ -100,7 +115,7 @@ export default function MediaDetail({ record, close, readOnly = false }: MediaDe
               <Select
                 aria-label="Link video to an idea"
                 value={idea?.id || ''}
-                disabled={Boolean(library.busy)}
+                disabled={Boolean(library.busy) || publicationMatched}
                 options={[
                   ['', 'No idea linked'],
                   ...state.items.map(item => [item.id, item.title])
@@ -108,6 +123,38 @@ export default function MediaDetail({ record, close, readOnly = false }: MediaDe
                 onChange={linkIdea}
               />
             </Field>
+          )}
+          {!readOnly && record.source === 'api' && publication && (
+            <div className="grid gap-2">
+              {publicationMatched ? (
+                <>
+                  <p className="text-sm">
+                    This post is matched to the idea and marks {record.platform} live.
+                  </p>
+                  <Button
+                    className="link"
+                    disabled={Boolean(library.busy)}
+                    onClick={() => void removeMatch()}
+                  >
+                    <AppIcon icon={Unlink} /> Remove publication match
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted">
+                    Match this published post to the idea to update its publication status. The idea
+                    moves to Posted once every planned channel is posted.
+                  </p>
+                  <Button
+                    className="small"
+                    disabled={Boolean(library.busy)}
+                    onClick={() => void markLive()}
+                  >
+                    <AppIcon icon={Check} /> Mark {record.platform} live for this idea
+                  </Button>
+                </>
+              )}
+            </div>
           )}
           {idea && (
             <Button className="link" onClick={openIdea}>

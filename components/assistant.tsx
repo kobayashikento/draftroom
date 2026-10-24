@@ -37,10 +37,7 @@ export default function Assistant() {
         <span className="assistant-avatar">
           <AppIcon icon={Sparkles} size="md" />
         </span>
-        <span className="flex-1 text-left">
-          <span className="block font-semibold">Ask Draftroom</span>
-          <span className="block text-xs text-muted">A little help with what’s next</span>
-        </span>
+        <span className="font-semibold">Ask Draftroom</span>
         <AppIcon icon={ChevronUp} className={expanded ? 'rotate-180' : ''} />
       </Button>
     </aside>

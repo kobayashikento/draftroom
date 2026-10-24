@@ -12,6 +12,7 @@ import IdeaSketch from '../workspace/idea-sketch';
 import CalendarProductionCards from './calendar-production-cards';
 import DayTaskCards from './day-task-cards';
 import CalendarDay from './calendar-day';
+import { CalendarPostCards } from './calendar-post-card';
 
 export default function CalendarGrid({
   content,
@@ -19,6 +20,7 @@ export default function CalendarGrid({
   mode,
   days,
   entries,
+  posts,
   tasks,
   dayTasks: dayTaskEntries,
   platform,
@@ -43,6 +45,7 @@ export default function CalendarGrid({
           ))}
         {days.map((date, index) => {
           const dayEntries = entries.filter(e => e.pub.date === date);
+          const dayPosts = posts.filter(post => post.date === date);
           const dayTasks = tasks.filter(({ t }) => t.due === date);
           const routineTasks = dayTaskEntries.filter(task => task.date === date);
           return (
@@ -96,10 +99,15 @@ export default function CalendarGrid({
                   <span className="planner-day-label">Publishing · {dayEntries.length}</span>
                 )}
                 <PublicationCards entries={dayEntries} compact={mode === 'Month'} canDrag />
+                {dayPosts.length > 0 && (
+                  <span className="planner-day-label">Posted · {dayPosts.length}</span>
+                )}
+                <CalendarPostCards posts={dayPosts} compact={mode === 'Month'} />
               </div>
               {mode === 'Week' &&
                 content !== 'Tasks' &&
                 !dayEntries.length &&
+                !dayPosts.length &&
                 !dayTasks.length &&
                 !routineTasks.length && (
                   <Button

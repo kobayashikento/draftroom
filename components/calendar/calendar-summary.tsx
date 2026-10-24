@@ -8,6 +8,7 @@ import { Button } from '../ui';
 
 export default function CalendarSummary({
   entries,
+  posts,
   tasks,
   dayTasks,
   mode,
@@ -25,7 +26,7 @@ export default function CalendarSummary({
             aria-pressed={content === value}
             onClick={() => onContentChange(value)}
           >
-            {value}
+            {value === 'Ideas' ? 'Ideas & posts' : value}
           </Button>
         ))}
       </div>
@@ -43,6 +44,10 @@ export default function CalendarSummary({
       <span>
         <AppIcon icon={Check} />
         {counts.posted} manually posted
+      </span>
+      <span>
+        <AppIcon icon={Check} />
+        {posts.length} synced {posts.length === 1 ? 'post' : 'posts'}
       </span>
       <span className="planner-summary-hint">
         {mode === 'List'

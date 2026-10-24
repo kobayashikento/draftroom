@@ -102,4 +102,4 @@ export type StageEditorProps = { close: () => void };
 
 export type StoryboardProps = { item: Item };
 
-export type TaskEditorProps = { item: Item };
+export type TaskEditorProps = { item: Item; onOpenPublish: () => void };

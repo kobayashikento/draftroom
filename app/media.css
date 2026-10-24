@@ -522,6 +522,29 @@
 }
 
 @layer components {
+  .publication-post-linker {
+    @apply mb-4 grid gap-3;
+  }
+  .publication-post-picker {
+    @apply grid gap-4 rounded-lg border p-4;
+    border-color: var(--dr-border);
+    background: var(--dr-surface);
+  }
+  .publication-post-options {
+    @apply grid max-h-80 gap-2 overflow-y-auto;
+  }
+  .dr-button.publication-post-option {
+    @apply flex h-auto w-full items-center justify-start gap-4 p-3 font-normal;
+    border-color: var(--dr-border);
+    background: var(--dr-raised);
+  }
+  .dr-button.publication-post-option[aria-pressed='true'] {
+    border-color: var(--dr-moss-strong);
+    background: var(--dr-accent-soft);
+  }
+  .publication-post-option .art {
+    @apply h-20 w-28 shrink-0 rounded-md;
+  }
   .publication-artwork {
     @apply relative overflow-hidden;
     background: var(--dr-oat);

@@ -4,31 +4,31 @@ A functional creator workspace built with **Next.js 16.4.2, React 19.3.1, TypeSc
 
 ## Run
 
-Requires Node.js 22.18 or newer and pnpm. From this folder:
+Requires Node.js 22.18 or newer and Yarn Classic 1.22.22. From this folder:
 
 ```sh
-pnpm install
-pnpm dev
+yarn install
+yarn dev
 ```
 
 Open http://127.0.0.1:3000. For a production build:
 
 ```sh
-pnpm build
-pnpm start
+yarn build
+yarn start
 ```
 
-`next build` produces the static export in `out/`. The small `scripts/serve.ts` server serves that export. Without Supabase configuration, the app continues in browser-only mode and clearly labels it. `pnpm test` runs the model, persistence, and PostgreSQL access-policy tests.
+`next build` produces the static export in `out/`. The small `scripts/serve.ts` server serves that export. Without Supabase configuration, the app continues in browser-only mode and clearly labels it. `yarn test` runs the model, persistence, and PostgreSQL access-policy tests.
 
-Check that Node.js and pnpm are available in your shell with `node --version` and `pnpm --version`. The project's package manager version is recorded in `package.json`. Dependencies and build output are generated locally and excluded from Git.
+Check that Node.js and Yarn are available in your shell with `node --version` and `yarn --version`. The project's package manager version is recorded in `package.json`. Commit `yarn.lock` and use `yarn install --frozen-lockfile` in CI to keep dependency versions consistent. Dependencies and build output are generated locally and excluded from Git.
 
 ## TypeScript
 
 React components use `.tsx`; domain logic, tests, scripts and Supabase functions use `.ts`. Strict checking, unused-code checks and runtime validation cover workspace records, component props, database access and assistant messages. Untrusted JSON enters through `unknown` and is validated before use.
 
-Run `pnpm typecheck` to regenerate Next.js declarations and check both the browser/Node code and the Supabase Edge Function. `tsconfig.json` configures Next.js and Node; `tsconfig.edge.json` checks the Deno entry point using the official Deno and Supabase types. The separate configurations keep runtime globals apart. `pnpm build` runs both checks before producing the static export.
+Run `yarn typecheck` to regenerate Next.js declarations and check both the browser/Node code and the Supabase Edge Function. `tsconfig.json` configures Next.js and Node; `tsconfig.edge.json` checks the Deno entry point using the official Deno and Supabase types. The separate configurations keep runtime globals apart. `yarn build` runs both checks before producing the static export.
 
-`pnpm tsc` is a shortcut for the same complete check. `yarn tsc` fails before TypeScript starts because `package.json` selects pnpm and the installed Yarn Classic refuses that package-manager setting. Use pnpm with the existing `pnpm-lock.yaml`; no global Yarn or Corepack change is required. For just the Next.js/Node configuration, use `pnpm exec tsc --noEmit`.
+`yarn tsc` is a shortcut for the same complete check. To run only the Next.js/Node TypeScript check, use `yarn exec tsc --noEmit`. Use Yarn with the existing `yarn.lock`; do not create npm or pnpm lockfiles.
 
 `lib/types.ts` defines shared workspace records; `lib/database.types.ts` describes the database table. The assistant's request, response and planning types live in `supabase/functions/_shared/types.ts` so the client and Edge Function share their contract. Use explicit named shapes for smaller data structures rather than TypeScript `Pick`.
 
@@ -36,7 +36,7 @@ Node.js 22.18 or newer runs the `.ts` tests and utility scripts directly. Next.j
 
 ## Formatting
 
-[Prettier](https://prettier.io/docs/) formats TypeScript, TSX, CSS, JSON, Markdown, SQL and TOML using the shared `.prettierrc.json` configuration. Run `pnpm format` to format the project, or `pnpm format:check` to check formatting without writing files. Generated output, dependencies, lockfiles, binary assets and environment files are excluded by `.prettierignore`.
+[Prettier](https://prettier.io/docs/) formats TypeScript, TSX, CSS, JSON, Markdown, SQL and TOML using the shared `.prettierrc.json` configuration. Run `yarn format` to format the project, or `yarn format:check` to check formatting without writing files. Generated output, dependencies, lockfiles, binary assets and environment files are excluded by `.prettierignore`.
 
 Use two-space indentation, single quotes in TypeScript, semicolons, no trailing commas, LF line endings and no parentheses around a single arrow-function parameter. The print width is 100 characters. Editor integrations can use the installed project formatter and the same configuration.
 
@@ -93,7 +93,7 @@ Flag individual tasks or entire projects to prioritize them. Up next and the pro
 4. In **Authentication → Sign In / Providers**, disable **Allow new users to sign up**. Leave email/password sign-in enabled.
 5. Run `supabase/provision-owner.sql`. It creates the owner's empty workspace without replacing existing data. Other authenticated accounts cannot create workspaces or access this owner's data.
 6. Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` using the project's Connect dialog. Use an `sb_publishable_…` key. Never use a secret or service-role key in public configuration.
-7. Restart `pnpm dev`, or rebuild with `pnpm build` and run `pnpm start`. Public environment values are included at build time. Sign in on the same browser and origin that contains the original drafts to migrate them.
+7. Restart `yarn dev`, or rebuild with `yarn build` and run `yarn start`. Public environment values are included at build time. Sign in on the same browser and origin that contains the original drafts to migrate them.
 
 An administrator already signed into the Supabase CLI can run `node scripts/provision-owner.ts` after applying the schema and configuring `.env.local`, as an alternative to the manual account/owner-row steps. It creates the requested owner only if missing, saves a strong starter password under `DRAFTROOM_OWNER_INITIAL_PASSWORD` in ignored `.env.local`, and provisions the owner's row. It never changes an existing account's password. Administrator API keys are used only in the setup process's memory. The starter password is private and is not included in the browser build.
 
@@ -131,7 +131,7 @@ Files upload directly to an owner-only Supabase Storage bucket using resumable 6
    supabase functions deploy draftroom-assistant --project-ref YOUR_PROJECT_REF --use-api
    ```
 
-4. Deploy the normal `pnpm build` output to your existing host. Keep the existing Supabase URL and publishable-key configuration.
+4. Deploy the normal `yarn build` output to your existing host. Keep the existing Supabase URL and publishable-key configuration.
 
 The default model is `gemini-3.5-flash-lite`, a fast model with a free tier. An optional Supabase secret `GEMINI_MODEL` changes it; check that the chosen model is available on your account’s free tier. There is no automatic paid-model fallback. Free-tier quotas depend on the Google project/model; quota exhaustion appears as an error instead of a fabricated answer. A best-effort, per-instance cooldown limits each owner to six requests per minute; Google’s project quotas remain the overall usage limit.
 
@@ -147,9 +147,15 @@ You can also use **Add post link** after publishing from your phone. Publish pre
 
 API sync imports 20 posts at a time. **Sync** refreshes the newest page; **Import older posts** advances through available history. Existing linked ideas and archive choices survive a refresh. Cached results stay available after disconnection or a failed sync. Account switching within one platform is not supported yet. Analytics shows measured views, likes, comments, shares, saves and reach only when the platform supplies them; it does not invent metrics for pasted links or uploads. Period filters select posts by publication date, rather than claiming a historical daily analytics series. Video/thumbnail URLs supplied by platforms can expire; syncing refreshes them.
 
-Calendar publication cards use the same media matcher as the Publish preview. Exact platform-specific post URLs or post IDs take priority, followed by a single explicitly linked post for that channel. Similar titles never create a match, and multiple linked posts require an exact reference. Cards use the matched post’s thumbnail, image or video still; an unavailable preview is labelled rather than replaced with an unrelated post. Unlinked illustrations are labelled **Draft cover**. Private draft uploads can illustrate a plan but cannot verify a posted publication.
+Use **Production → Link published post → Publish** to match an idea to a synced Instagram or TikTok post by its thumbnail, caption and published date. **Link & mark live** saves the exact platform URL, ID and publication time, connects the library post to the idea and marks that channel posted. Other channels, planned dates, captions and checklists are preserved. The idea moves to the configured Posted stage only when every intended channel (one with a date, caption, post reference or posted state) is posted. A linked Posted idea appears in Production’s Completed tab even when old checklist tasks remain unchecked. **Remove match** restores the previous publication references/state and prior stage where appropriate. Replacement matches retain the original undo snapshot. API-synced posts already assigned to another idea are unavailable for matching; pasted links and uploads cannot claim verified publication.
 
-**Check linked post** highlights cross-platform links, conflicting IDs, ambiguous matches, and differences between synced published details and the plan’s status, local publication date, caption or format. Open Publish to inspect the differences and synced caption, or use the card’s preview control to watch the exact matched media. Manual posted records remain labelled unverified until a matching API-synced post is available. Cached synced results describe the last import, not a fresh check that a post still exists online. These checks do not rewrite schedules, captions, checklists or manual posted states.
+Production and idea cards show **Live on Instagram/TikTok** badges and the matched thumbnail. From a Library post’s detail view, choose its Connected idea and use **Mark Instagram/TikTok live for this idea** for the same publication update. Removing that publication match restores the prior library relationship. Automatic sync refreshes post metadata and preserves those relationships; it never guesses idea matches from similar titles. Live badges describe confirmation at the last sync, not a continuous online availability check. The optional publication-link undo metadata is saved with the existing workspace JSON and remains compatible with older drafts.
+
+Calendar automatically includes API-synced posts in Week, Month and List views on their actual publication dates in the browser’s local timezone, even without a linked idea. Cards show the platform thumbnail (or an available image/video still), a **Synced post** label, publication time and a post/insights preview. The same shared library updates the calendar immediately after **Sync posts** or **Import older posts**; there is no background platform polling. Already-imported posts appear without another sync. Archived posts, undated records, pasted links and private uploads do not become standalone published calendar entries. Cached synced posts remain visible when an account is disconnected; they describe the last import.
+
+Calendar uses the same media matcher as the Publish preview. Exact platform-specific post URLs or post IDs take priority, followed by a single explicitly linked post for that channel. A matched plan is represented once by the synced post on its actual published date, with a shortcut back to the original idea. Displaying imported posts does not rewrite the saved plan, stage or checklist; the explicit **Link & mark live** action updates publication status as described above. Similar titles never create a match, and multiple linked posts require an exact reference. Unmatched planning cards use their linked thumbnail, image or video still when available; an unavailable preview is labelled rather than replaced with an unrelated post. Unlinked illustrations are labelled **Draft cover**. Private draft uploads can illustrate a plan but cannot verify a posted publication.
+
+**Check linked post** on planning cards and **Check linked plan** on synced cards highlight cross-platform links, conflicting IDs, ambiguous matches, and differences between synced published details and the plan’s status, local publication date, caption or format. Open Publish to inspect the differences and synced caption, or use the card’s preview control to watch the exact matched media. Manual posted records remain labelled unverified until a matching API-synced post is available. Cached synced results describe the last import, not a fresh check that a post still exists online. These checks do not rewrite schedules, captions, checklists or manual posted states.
 
 The assistant loads a bounded performance summary on the server using the caller’s database permissions, rather than trusting client-supplied metrics. It receives synced captions, dates and available counts, with freshness and coverage information. Uploaded video footage, signed video URLs and social credentials are excluded. Imported captions are untrusted reference material. Limited samples and lifetime counters cannot establish causation or a reliable best posting time.
 
@@ -212,7 +218,7 @@ Live provider exchange and insights must be verified with the developer apps onc
 15. Sign out and confirm the workspace is hidden. Attempt database access without a session or as an unprovisioned user; both must be denied.
 16. Open Ask Draftroom, switch views, and minimize/reopen the panel. Ask for a new idea or a task on an existing idea, open its action receipt and check the checklist. Reload after “Saved to cloud” and confirm the conversation and task remain. Ask a planning question and confirm it suggests work without creating unsolicited tasks. Check that quota/network errors offer a retry without claiming changes were saved.
 
-`pnpm test` exercises migration, save ordering, recovery after failed requests, cache isolation, corrupted data preservation, and conflicts. The SQL tests run the actual migration in an in-memory PostgreSQL instance with simulated Supabase identity claims, checking anonymous access, another account, owner writes, forbidden ownership/revision changes and stale writes. A live Supabase sign-in/sync walkthrough still requires project provisioning and the owner's credentials.
+`yarn test` exercises migration, save ordering, recovery after failed requests, cache isolation, corrupted data preservation, and conflicts. The SQL tests run the actual migration in an in-memory PostgreSQL instance with simulated Supabase identity claims, checking anonymous access, another account, owner writes, forbidden ownership/revision changes and stale writes. A live Supabase sign-in/sync walkthrough still requires project provisioning and the owner's credentials.
 
 ## Scope
 

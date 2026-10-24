@@ -907,7 +907,7 @@
     pointer-events: none;
   }
   .dr-button.assistant-trigger {
-    @apply mx-auto flex w-80 max-w-full justify-start gap-3 rounded-2xl p-3;
+    @apply mx-auto flex w-fit max-w-full justify-start gap-2 rounded-2xl px-3 py-2;
     pointer-events: auto;
     border: 1px solid var(--dr-control-border);
     background: var(--dr-canvas);
@@ -915,7 +915,7 @@
   }
   .assistant-avatar,
   .assistant-emblem {
-    @apply grid size-10 shrink-0 place-items-center rounded-xl;
+    @apply grid size-8 shrink-0 place-items-center rounded-lg;
     color: var(--dr-moss-strong);
     background: var(--dr-accent-soft);
   }

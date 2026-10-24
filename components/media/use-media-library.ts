@@ -6,6 +6,11 @@ import { finishPendingUpload, mediaCommand, resultId } from '../../lib/media-cli
 import { isRecord } from '../../supabase/functions/_shared/media-helpers.ts';
 import type { MediaController, MediaRecord } from './media.helpers.ts';
 import {
+  applyPublicationPostLink,
+  preparePublicationPostLink,
+  removePublicationPostLink
+} from './publication-link.helpers.ts';
+import {
   blankLibrary,
   LOCAL_MEDIA_KEY,
   localLinkRecord,
@@ -15,7 +20,7 @@ import {
 } from './media.helpers.ts';
 
 export default function useMediaLibrary(onOpenLibrary: () => void): MediaController {
-  const { cloud, authUser, notify } = useWorkspace();
+  const { cloud, authUser, notify, state, update } = useWorkspace();
   const [snapshot, setSnapshot] = useState(blankLibrary);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -91,6 +96,16 @@ export default function useMediaLibrary(onOpenLibrary: () => void): MediaControl
     setSnapshot(current => ({ ...current, media }));
   }
 
+  async function saveMediaConnection(record: MediaRecord, linkedItemId: string): Promise<void> {
+    if (cloud)
+      await mediaCommand({
+        action: 'update_media',
+        id: record.id,
+        linkedItemId,
+        archived: Boolean(record.archived_at)
+      });
+  }
+
   return {
     ...snapshot,
     loading,
@@ -99,6 +114,49 @@ export default function useMediaLibrary(onOpenLibrary: () => void): MediaControl
     cloud: Boolean(cloud),
     refresh,
     openLibrary: onOpenLibrary,
+    linkPublication: input =>
+      run('Matching published post', async () => {
+        const prepared = preparePublicationPostLink(state, snapshot.media, input);
+        await saveMediaConnection(prepared.record, input.itemId);
+        if (prepared.previousRecord?.linked_item_id === input.itemId)
+          await saveMediaConnection(prepared.previousRecord, prepared.previousLinkedItemId);
+        if (!cloud)
+          saveLocal(
+            snapshot.media.map(record =>
+              record.id === input.mediaId
+                ? { ...record, linked_item_id: input.itemId }
+                : record.id === prepared.previousRecord?.id &&
+                    record.linked_item_id === input.itemId
+                  ? { ...record, linked_item_id: prepared.previousLinkedItemId }
+                  : record
+            )
+          );
+        update(draft => applyPublicationPostLink(draft, prepared));
+        if (cloud) await refresh();
+        notify(`${prepared.record.platform} post matched. This channel is live.`);
+      }),
+    unlinkPublication: (itemId, publicationId) =>
+      run('Removing publication match', async () => {
+        const publication = state.items
+          .find(item => item.id === itemId)
+          ?.publications.find(pub => pub.id === publicationId);
+        const link = publication?.linkedPost;
+        if (!link) return;
+        const record = snapshot.media.find(record => record.id === link.mediaId);
+        if (record?.linked_item_id === itemId)
+          await saveMediaConnection(record, link.previousLinkedItemId);
+        if (!cloud)
+          saveLocal(
+            snapshot.media.map(record =>
+              record.id === link.mediaId && record.linked_item_id === itemId
+                ? { ...record, linked_item_id: link.previousLinkedItemId }
+                : record
+            )
+          );
+        update(draft => removePublicationPostLink(draft, itemId, publicationId));
+        if (cloud) await refresh();
+        notify('Publication match removed. The original plan is restored.');
+      }),
     connect: platform =>
       run(`Connecting ${platform}`, async () => {
         const result = await mediaCommand({
@@ -122,8 +180,8 @@ export default function useMediaLibrary(onOpenLibrary: () => void): MediaControl
         await refresh();
         notify(
           older
-            ? 'Older posts added to your library.'
-            : `${platform} posts and available insights refreshed.`
+            ? 'Older posts added to your library and calendar.'
+            : `${platform} posts, calendar and available insights refreshed.`
         );
       }),
     disconnect: platform =>

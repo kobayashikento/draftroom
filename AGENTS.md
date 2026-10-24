@@ -10,12 +10,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Code formatting
 
-- Use `.tsx` for React components and `.ts` for other application code. Keep strict TypeScript checks passing with `pnpm typecheck`, including the separate Deno configuration for the Edge Function. Define explicit named data shapes instead of TypeScript `Pick<T, K>`.
+- Use `.tsx` for React components and `.ts` for other application code. Keep strict TypeScript checks passing with `yarn typecheck`, including the separate Deno configuration for the Edge Function. Define explicit named data shapes instead of TypeScript `Pick<T, K>`.
 
-- Keep source files readable with the project's Prettier configuration. Run `pnpm format` after edits and `pnpm format:check` before finishing. SQL and TOML are included; generated output, dependencies, lockfiles, binary assets and environment files are excluded.
+- Keep source files readable with the project's Prettier configuration. Run `yarn format` after edits and `yarn format:check` before finishing. SQL and TOML are included; generated output, dependencies, lockfiles, binary assets and environment files are excluded.
 - Keep feature entry components focused on composition. Put related editors, calendar pieces, account screens and layout components in their feature folders, and import them directly. Use the single workspace context in `components/workspace/workspace-context.tsx`; avoid circular dependencies between feature components.
 - Each major feature keeps its exported props, input/result types, selectors, validation and update functions in a neighboring `*.helpers.ts` module. Split focused editor helpers when needed. Keep JSX and event wiring in components and React state/effects in `use-*.ts` hooks; helpers must not import their consuming components or hooks. Keep shared domain records in `lib/types.ts` and retain runtime validation at external boundaries.
-- Use the configured Prettier preferences: no trailing commas, semicolons, single quotes, LF endings and no parentheses around a single arrow-function parameter. `pnpm tsc` aliases the complete `pnpm typecheck` check. This repository uses pnpm; do not introduce a second lockfile.
+- Use the configured Prettier preferences: no trailing commas, semicolons, single quotes, LF endings and no parentheses around a single arrow-function parameter. `yarn tsc` aliases the complete `yarn typecheck` check. This repository uses Yarn Classic 1.22.22 with `yarn.lock`; do not introduce a second lockfile.
 
 ## Draftroom design direction
 

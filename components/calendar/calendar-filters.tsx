@@ -36,7 +36,7 @@ export default function CalendarFilters({
           <Input
             type="search"
             aria-label="Search calendar"
-            placeholder="Search ideas and tasks…"
+            placeholder="Search ideas, posts and tasks…"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
@@ -64,7 +64,7 @@ export default function CalendarFilters({
       <div className="planner-extra-filters" id="calendar-filters" hidden={!showFilters}>
         <Select
           aria-label="Calendar format"
-          options={[['', 'All formats'], 'Reel', 'Carousel']}
+          options={[['', 'All formats'], 'Reel', 'Photo', 'Carousel']}
           value={format}
           onChange={setFormat}
         />
@@ -79,6 +79,7 @@ export default function CalendarFilters({
           options={[
             ['', 'All publication statuses'],
             ['planned', 'Planned'],
+            ['synced', 'Synced posts'],
             ['manually_posted', 'Manually posted']
           ]}
           value={status}
@@ -90,7 +91,8 @@ export default function CalendarFilters({
           </Button>
         )}
         <p className="w-full text-xs text-muted">
-          Content filters apply to ideas. Your day tasks stay visible and can be searched by name.
+          Content filters apply to ideas and synced posts. Series include posts linked to an idea.
+          Your day tasks stay visible and can be searched by name.
         </p>
       </div>
     </>

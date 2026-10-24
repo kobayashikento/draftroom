@@ -11,11 +11,13 @@ import { PublicationCards } from './publication-card';
 import IdeaSketch from '../workspace/idea-sketch';
 import CalendarProductionCards from './calendar-production-cards';
 import DayTaskCards from './day-task-cards';
+import { CalendarPostCards } from './calendar-post-card';
 
 export default function CalendarAgenda({
   content,
   days,
   entries,
+  posts,
   tasks,
   dayTasks,
   start,
@@ -31,6 +33,7 @@ export default function CalendarAgenda({
         .filter(
           date =>
             entries.some(e => e.pub.date === date) ||
+            posts.some(post => post.date === date) ||
             tasks.some(({ t }) => t.due === date) ||
             dayTasks.some(task => task.date === date)
         )
@@ -63,14 +66,15 @@ export default function CalendarAgenda({
                 </div>
               )}
               <PublicationCards entries={entries.filter(e => e.pub.date === date)} />
+              <CalendarPostCards posts={posts.filter(post => post.date === date)} />
             </div>
           </section>
         ))}
-      {!entries.length && !tasks.length && !dayTasks.length && (
+      {!entries.length && !posts.length && !tasks.length && !dayTasks.length && (
         <div className="planner-empty">
           <IdeaSketch />
           <h3>A little room for something good.</h3>
-          <p>No ideas or tasks match this week and these filters.</p>
+          <p>No ideas, synced posts or tasks match this week and these filters.</p>
           <Button className="primary" onClick={() => onAddTask(start)}>
             <AppIcon icon={ListTodo} />
             Add day task

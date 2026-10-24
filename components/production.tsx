@@ -15,7 +15,7 @@ import { AppIcon } from './icons';
 import { useWorkspace } from './workspace/workspace-context';
 import { fmt, today } from '../lib/display.ts';
 import Checklist from './production/checklist';
-import Artwork from './workspace/artwork';
+import ItemPostArtwork from './media/item-post-artwork';
 import IdeaSketch from './workspace/idea-sketch';
 
 export default function Production() {
@@ -66,7 +66,7 @@ export default function Production() {
         {tab === 'active' && next && (
           <section className="panel production-next" aria-label="Up next">
             <div className="next-art">
-              <Artwork item={next.p} />
+              <ItemPostArtwork item={next.p} />
             </div>
             <div className="next-copy" aria-live="polite">
               <div className="meta">

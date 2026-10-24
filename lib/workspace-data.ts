@@ -26,6 +26,21 @@ function records(
 }
 
 const included = (choices: readonly unknown[], value: unknown) => choices.includes(value);
+function validPublishedPostLink(value: unknown): boolean {
+  return (
+    value === undefined ||
+    (object(value) &&
+      string(value.mediaId) &&
+      Boolean(value.mediaId) &&
+      string(value.previousStageId) &&
+      string(value.previousLinkedItemId) &&
+      object(value.previous) &&
+      string(value.previous.url) &&
+      string(value.previous.postId) &&
+      included(['planned', 'manually_posted'], value.previous.state) &&
+      (value.previous.publishedAt === null || string(value.previous.publishedAt)))
+  );
+}
 export function validateWorkspace(data: unknown): Workspace {
   const stages = object(data) && records(data.stages, () => true) ? data.stages : [];
   const series = object(data) && records(data.series, () => true) ? data.series : [];
@@ -132,7 +147,8 @@ export function validateWorkspace(data: unknown): Workspace {
             date(publication.date) &&
             ['caption', 'url', 'postId'].every(key => string(publication[key])) &&
             included(['planned', 'manually_posted'], publication.state) &&
-            (publication.publishedAt === null || string(publication.publishedAt))
+            (publication.publishedAt === null || string(publication.publishedAt)) &&
+            validPublishedPostLink(publication.linkedPost)
         )
     );
   if (!valid)

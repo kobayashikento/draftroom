@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  calendarDays,
-  calendarEntries,
-  calendarRange,
-  calendarTasks
-} from './calendar/calendar.helpers.ts';
+import { calendarDays, calendarRange, calendarTasks } from './calendar/calendar.helpers.ts';
 import { useWorkspace } from './workspace/workspace-context';
 import CalendarToolbar from './calendar/calendar-toolbar';
 import CalendarFilters from './calendar/calendar-filters';
@@ -20,22 +15,28 @@ import { calendarDayTasks } from './calendar/day-task.helpers.ts';
 import { today } from '../lib/display.ts';
 import CalendarMoveEditor from './calendar/calendar-move-editor';
 import CalendarDragProvider from './calendar/calendar-drag-provider';
+import { useMedia } from './media/media-context';
+import { calendarTimeline } from './calendar/calendar-posts.helpers.ts';
 
 export default function Calendar() {
   const { state, week, setWeek, platform, setPlatform } = useWorkspace();
+  const library = useMedia();
   const view = useCalendarView();
   const { mode, content, showFilters, showUnscheduled, taskEditor, moveTarget } = view;
   const filters = useCalendarFilters(platform, setPlatform);
   const range = calendarRange(week, mode);
   const days = calendarDays(range);
   const currentDate = today();
-  const entries = calendarEntries(state, { ...range, ...filters.values });
+  const { entries, posts, unscheduled } = calendarTimeline(state, library.media, {
+    ...range,
+    ...filters.values
+  });
   const tasks = calendarTasks(state, { ...range, ...filters.values });
   const dayTasks = calendarDayTasks(state, range, filters.values.query);
   const visibleEntries = content === 'Tasks' ? [] : entries;
+  const visiblePosts = content === 'Tasks' ? [] : posts;
   const visibleTasks = content === 'Tasks' ? [] : tasks;
   const visibleDayTasks = content === 'Ideas' ? [] : dayTasks;
-  const unscheduled = calendarEntries(state, { ...filters.values, unscheduled: true });
 
   return (
     <CalendarDragProvider>
@@ -59,6 +60,7 @@ export default function Calendar() {
         />
         <CalendarSummary
           entries={entries}
+          posts={posts}
           tasks={tasks}
           dayTasks={dayTasks}
           mode={mode}
@@ -71,6 +73,7 @@ export default function Calendar() {
               content={content}
               days={days}
               entries={visibleEntries}
+              posts={visiblePosts}
               tasks={visibleTasks}
               dayTasks={visibleDayTasks}
               start={range.start}
@@ -86,6 +89,7 @@ export default function Calendar() {
               mode={mode}
               days={days}
               entries={visibleEntries}
+              posts={visiblePosts}
               tasks={visibleTasks}
               dayTasks={visibleDayTasks}
               platform={platform}
@@ -104,8 +108,15 @@ export default function Calendar() {
         </div>
         <p className="planner-footnote">
           Day tasks are for your routine. Ideas appear on checklist due dates and publishing days.
-          Open an idea for its full checklist. Posts are published manually.
+          Synced posts appear on their published dates with their original thumbnails. Use Sync
+          posts in Library to refresh, or Import older posts for more history.
         </p>
+        {library.partial && (
+          <p className="warning" role="status">
+            The calendar shows the latest 1,000 library records. Some imported history is not
+            loaded.
+          </p>
+        )}
         {moveTarget && (
           <CalendarMoveEditor target={moveTarget} onClose={() => view.setMoveTarget(null)} />
         )}

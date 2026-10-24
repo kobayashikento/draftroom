@@ -5,6 +5,7 @@ import type {
   PublicationCollection,
   CalendarEntryOptions,
   CalendarFilters,
+  Item,
   ProductionTask,
   ProductionGroup
 } from '../../lib/types.ts';
@@ -15,6 +16,7 @@ import { addDays, dateString, monday, parseDate } from '../../lib/model.ts';
 import { CalendarDays, CalendarRange, List } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { fmt } from '../../lib/display.ts';
+import type { MediaRecord, SocialPlatform } from '../../supabase/functions/_shared/social-types.ts';
 
 export type CalendarFilterController = {
   values: CalendarFilters;
@@ -26,6 +28,24 @@ export type CalendarFilterController = {
 export type CalendarDateRange = { start: string; end: string; days: number };
 export type CalendarPlanCounts = { planned: number; posted: number };
 export type CalendarContent = 'All' | 'Ideas' | 'Tasks';
+export type CalendarPublishedMedia = MediaRecord & {
+  source: 'api';
+  platform: SocialPlatform;
+  published_at: string;
+};
+export type CalendarSyncedPost = {
+  record: CalendarPublishedMedia;
+  date: string;
+  item: Item | null;
+  issues: string[];
+};
+export type CalendarTimeline = {
+  entries: PublicationEntry[];
+  posts: CalendarSyncedPost[];
+  unscheduled: PublicationEntry[];
+};
+export type CalendarPostCardProps = { post: CalendarSyncedPost; compact?: boolean };
+export type CalendarPostCardsProps = { posts: CalendarSyncedPost[]; compact?: boolean };
 export type CalendarProductionCardsProps = {
   tasks: ProductionTask[];
   date: string;
@@ -79,6 +99,7 @@ export type CalendarAgendaProps = {
   content: CalendarContent;
   days: string[];
   entries: PublicationEntry[];
+  posts: CalendarSyncedPost[];
   tasks: ProductionTask[];
   dayTasks: DayTaskOccurrence[];
   start: string;
@@ -103,6 +124,7 @@ export type CalendarGridProps = {
   mode: CalendarMode;
   days: string[];
   entries: PublicationEntry[];
+  posts: CalendarSyncedPost[];
   tasks: ProductionTask[];
   dayTasks: DayTaskOccurrence[];
   platform: string;
@@ -113,6 +135,7 @@ export type CalendarGridProps = {
 
 export type CalendarSummaryProps = {
   entries: PublicationEntry[];
+  posts: CalendarSyncedPost[];
   tasks: ProductionTask[];
   dayTasks: DayTaskOccurrence[];
   mode: CalendarMode;

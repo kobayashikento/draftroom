@@ -6,8 +6,9 @@ import { PlatformIcon } from '../icons';
 import { useWorkspace } from './workspace-context';
 import { Button } from '../ui';
 import StagePill from './stage-pill';
-import Artwork from './artwork';
+import ItemPostArtwork from '../media/item-post-artwork';
 import { fmt } from '../../lib/display.ts';
+import { LivePostBadges } from '../media/item-post-connection';
 
 export default function ContentCard({ item }: ContentCardProps) {
   const { state, open } = useWorkspace();
@@ -15,11 +16,12 @@ export default function ContentCard({ item }: ContentCardProps) {
   return (
     <article className="card">
       <Button className="open-card" aria-label={`Open ${item.title}`} onClick={() => open(item.id)}>
-        <Artwork item={item} />
+        <ItemPostArtwork item={item} />
         <div className="card-body">
           <div className="meta">{series || 'A new little idea'}</div>
           <h3>{item.title}</h3>
           <StagePill item={item} />
+          <LivePostBadges item={item} />
           <div className="card-foot">
             <span className="card-progress">
               {dates.length ? (

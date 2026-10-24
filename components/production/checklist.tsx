@@ -10,6 +10,7 @@ import { useWorkspace } from '../workspace/workspace-context';
 import StagePill from '../workspace/stage-pill';
 import TaskRow from '../workspace/task-row';
 import TaskProgress from '../workspace/task-progress';
+import ItemPostConnection from '../media/item-post-connection';
 
 export default function Checklist({ item, tasks, finished }: ChecklistProps) {
   const { updateItem, open } = useWorkspace();
@@ -47,6 +48,9 @@ export default function Checklist({ item, tasks, finished }: ChecklistProps) {
             onClick={() => updateItem(item.id, toggleProjectPriority)}
           />
         </div>
+      </div>
+      <div className="mt-4">
+        <ItemPostConnection item={item} />
       </div>
       <div id={contentId} hidden={!expanded}>
         <div className="checklist-body">

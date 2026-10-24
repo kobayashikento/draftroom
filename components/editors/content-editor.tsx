@@ -54,7 +54,9 @@ export default function ContentEditor({ item, initialTab, close }: ContentEditor
         </Tabs.List>
         <Tabs.Content value={tab}>
           {tab === 'Storyboard' && <Storyboard item={item} />}
-          {tab === 'Production' && <TaskEditor item={item} />}
+          {tab === 'Production' && (
+            <TaskEditor item={item} onOpenPublish={() => setTab('Publish')} />
+          )}
           {tab === 'Publish' && <PublishEditor item={item} />}
           {tab === 'Notes' && <NotesEditor item={item} />}
           {tab === 'Analytics' && <Analytics item={item} />}

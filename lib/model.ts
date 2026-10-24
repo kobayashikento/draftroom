@@ -205,7 +205,10 @@ export function productionQueue(
   const completed: ProductionGroup[] = [];
   for (const item of state.items) {
     if (!item.tasks.length) continue;
-    const finished = item.tasks.every(task => task.done);
+    const linkedAndPosted =
+      kind(state, item) === 'posted' &&
+      item.publications.some(pub => pub.linkedPost && pub.state === 'manually_posted');
+    const finished = item.tasks.every(task => task.done) || linkedAndPosted;
     if (!finished && kind(state, item) !== 'prep') continue;
     const tasks = item.tasks
       .filter(

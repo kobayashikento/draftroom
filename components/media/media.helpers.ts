@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import type { Item, Publication } from '../../lib/types.ts';
 import { resolvePublicationMedia } from './publication-media.helpers.ts';
+import type { PublicationPostLinkInput } from './publication-link.helpers.ts';
 import type {
   MediaLibrarySnapshot,
   MediaRecord,
@@ -57,6 +58,8 @@ export type MediaController = MediaLibrarySnapshot & {
   disconnect: (platform: SocialPlatform) => Promise<void>;
   importLink: (url: string, title: string, linkedItemId: string) => Promise<string>;
   updateMedia: (record: MediaRecord, linkedItemId: string, archived: boolean) => Promise<void>;
+  linkPublication: (input: PublicationPostLinkInput) => Promise<void>;
+  unlinkPublication: (itemId: string, publicationId: string) => Promise<void>;
   openLibrary: () => void;
 };
 

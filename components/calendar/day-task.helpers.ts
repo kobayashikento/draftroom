@@ -1,6 +1,6 @@
 import type { CalendarTask, Workspace } from '../../lib/types.ts';
 import type { CalendarDateRange } from './calendar.helpers.ts';
-import type { CalendarDrag, CalendarMoveTarget } from './calendar-move.helpers.ts';
+import type { CalendarMoveTarget } from './calendar-move.helpers.ts';
 import { addDays, dateString, parseDate, uid } from '../../lib/model.ts';
 
 export type DayTaskDraft = {
@@ -19,7 +19,7 @@ export type DayTaskOccurrence = {
 export type DayTaskCardsProps = {
   tasks: DayTaskOccurrence[];
   onEdit: (task: DayTaskEditorState) => void;
-  drag?: CalendarDrag;
+  canDrag?: boolean;
   onMove: (target: CalendarMoveTarget) => void;
 };
 

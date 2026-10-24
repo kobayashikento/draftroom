@@ -13,8 +13,7 @@ export default function UnscheduledPlans({
   mode,
   hasFilters,
   visible,
-  onClose,
-  drag
+  onClose
 }: UnscheduledPlansProps) {
   const { setModal } = useWorkspace();
   return (
@@ -36,7 +35,7 @@ export default function UnscheduledPlans({
         </Button>
       </div>
       <div className="planner-draft-cards">
-        <PublicationCards entries={entries} drag={mode !== 'List' ? drag : undefined} />
+        <PublicationCards entries={entries} canDrag={mode !== 'List'} />
       </div>
       {!entries.length && (
         <div className="planner-drafts-empty">

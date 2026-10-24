@@ -1,6 +1,5 @@
 'use client';
 
-import { calendarDayClass } from './calendar.helpers.ts';
 import type { CalendarGridProps } from './calendar.helpers.ts';
 import { ListPlus, ListTodo, Plus } from 'lucide-react';
 import { AppIcon } from '../icons';
@@ -12,6 +11,7 @@ import { PublicationCards } from './publication-card';
 import IdeaSketch from '../workspace/idea-sketch';
 import CalendarProductionCards from './calendar-production-cards';
 import DayTaskCards from './day-task-cards';
+import CalendarDay from './calendar-day';
 
 export default function CalendarGrid({
   content,
@@ -22,7 +22,6 @@ export default function CalendarGrid({
   tasks,
   dayTasks: dayTaskEntries,
   platform,
-  drag,
   onAddTask,
   onEditTask,
   onMove
@@ -47,13 +46,7 @@ export default function CalendarGrid({
           const dayTasks = tasks.filter(({ t }) => t.due === date);
           const routineTasks = dayTaskEntries.filter(task => task.date === date);
           return (
-            <section
-              key={date}
-              aria-label={fmt(date, { dateStyle: 'full' })}
-              aria-current={date === today() ? 'date' : undefined}
-              className={calendarDayClass(date, anchor, mode, today(), drag.targetDate)}
-              data-calendar-date={date}
-            >
+            <CalendarDay key={date} date={date} anchor={anchor} mode={mode}>
               <header className="planner-day-head">
                 <div>
                   {mode === 'Week' && <span>{fmt(date, { weekday: 'short' })}</span>}
@@ -88,7 +81,7 @@ export default function CalendarGrid({
                     <DayTaskCards
                       tasks={routineTasks}
                       onEdit={onEditTask}
-                      drag={drag}
+                      canDrag
                       onMove={onMove}
                     />
                   </div>
@@ -96,18 +89,13 @@ export default function CalendarGrid({
                 {dayTasks.length > 0 && (
                   <div className="planner-day-tasks">
                     <span className="planner-day-label">In production</span>
-                    <CalendarProductionCards
-                      tasks={dayTasks}
-                      date={date}
-                      drag={drag}
-                      onMove={onMove}
-                    />
+                    <CalendarProductionCards tasks={dayTasks} date={date} canDrag onMove={onMove} />
                   </div>
                 )}
                 {dayEntries.length > 0 && (
                   <span className="planner-day-label">Publishing · {dayEntries.length}</span>
                 )}
-                <PublicationCards entries={dayEntries} compact={mode === 'Month'} drag={drag} />
+                <PublicationCards entries={dayEntries} compact={mode === 'Month'} canDrag />
               </div>
               {mode === 'Week' &&
                 content !== 'Tasks' &&
@@ -133,7 +121,7 @@ export default function CalendarGrid({
                   Add day task
                 </Button>
               )}
-            </section>
+            </CalendarDay>
           );
         })}
       </div>

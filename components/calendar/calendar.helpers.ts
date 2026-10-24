@@ -10,7 +10,7 @@ import type {
 } from '../../lib/types.ts';
 import type { DayTaskEditorState, DayTaskOccurrence } from './day-task.helpers.ts';
 import type { Dispatch, SetStateAction } from 'react';
-import type { CalendarDrag, CalendarMoveTarget } from './calendar-move.helpers.ts';
+import type { CalendarMoveTarget } from './calendar-move.helpers.ts';
 import { addDays, dateString, monday, parseDate } from '../../lib/model.ts';
 import { CalendarDays, CalendarRange, List } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -29,7 +29,7 @@ export type CalendarContent = 'All' | 'Ideas' | 'Tasks';
 export type CalendarProductionCardsProps = {
   tasks: ProductionTask[];
   date: string;
-  drag?: CalendarDrag;
+  canDrag?: boolean;
   onMove: (target: CalendarMoveTarget) => void;
 };
 
@@ -106,7 +106,6 @@ export type CalendarGridProps = {
   tasks: ProductionTask[];
   dayTasks: DayTaskOccurrence[];
   platform: string;
-  drag: CalendarDrag;
   onAddTask: (date: string) => void;
   onEditTask: (task: DayTaskEditorState) => void;
   onMove: (target: CalendarMoveTarget) => void;
@@ -132,12 +131,12 @@ export type CalendarToolbarProps = {
 export type PublicationCardsProps = {
   entries: PublicationEntry[];
   compact?: boolean;
-  drag?: CalendarDrag;
+  canDrag?: boolean;
 };
 
 export type PublicationCardProps = PublicationEntry & {
   compact: boolean;
-  drag?: CalendarDrag;
+  canDrag?: boolean;
 };
 
 export type UnscheduledPlansProps = {
@@ -146,7 +145,6 @@ export type UnscheduledPlansProps = {
   hasFilters: boolean;
   visible: boolean;
   onClose: () => void;
-  drag: CalendarDrag;
 };
 
 export type CalendarProps = {

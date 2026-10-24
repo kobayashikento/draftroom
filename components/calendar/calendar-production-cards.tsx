@@ -6,12 +6,13 @@ import { calendarProductionGroups } from './calendar.helpers.ts';
 import { Button } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import { AppIcon, FormatIcon } from '../icons';
-import { CalendarArrowUp, GripVertical } from 'lucide-react';
+import { CalendarArrowUp } from 'lucide-react';
+import CalendarDraggableCard from './calendar-draggable-card';
 
 export default function CalendarProductionCards({
   tasks,
   date,
-  drag,
+  canDrag = false,
   onMove
 }: CalendarProductionCardsProps) {
   const { open } = useWorkspace();
@@ -24,44 +25,49 @@ export default function CalendarProductionCards({
       date
     };
     return (
-      <article
+      <CalendarDraggableCard
         key={item.id}
         className="planner-production"
-        draggable={false}
-        data-movable={Boolean(drag && remaining)}
-        {...(remaining ? drag?.handlers(target) : {})}
+        target={target}
+        label={item.title}
+        kind="Production"
+        canDrag={canDrag && remaining > 0}
       >
-        <Button
-          className="planner-task-open"
-          draggable={false}
-          aria-label={`Work on ${item.title}`}
-          onClick={() => open(item.id, 'Production')}
-        >
-          <span className="flex items-center gap-1 text-xs text-muted">
-            <FormatIcon format={item.format} />
-            {item.format}
-          </span>
-          <span>{item.title}</span>
-          <span className="text-xs text-muted">
-            {remaining
-              ? `${remaining} ${remaining === 1 ? 'task' : 'tasks'} to work on`
-              : 'Today’s checklist done'}
-          </span>
-        </Button>
-        {remaining > 0 && (
-          <div className="planner-card-actions">
-            {drag && <AppIcon icon={GripVertical} className="planner-grip" />}
+        {handle => (
+          <>
             <Button
-              className="icon-button"
-              aria-label={`Move production work: ${item.title}`}
-              title="Choose a date"
-              onClick={() => onMove(target)}
+              className="planner-task-open"
+              draggable={false}
+              aria-label={`Work on ${item.title}`}
+              onClick={() => open(item.id, 'Production')}
             >
-              <AppIcon icon={CalendarArrowUp} />
+              <span className="flex items-center gap-1 text-xs text-muted">
+                <FormatIcon format={item.format} />
+                {item.format}
+              </span>
+              <span>{item.title}</span>
+              <span className="text-xs text-muted">
+                {remaining
+                  ? `${remaining} ${remaining === 1 ? 'task' : 'tasks'} to work on`
+                  : 'Today’s checklist done'}
+              </span>
             </Button>
-          </div>
+            {remaining > 0 && (
+              <div className="planner-card-actions">
+                {handle}
+                <Button
+                  className="icon-button"
+                  aria-label={`Move production work: ${item.title}`}
+                  title="Choose a date"
+                  onClick={() => onMove(target)}
+                >
+                  <AppIcon icon={CalendarArrowUp} />
+                </Button>
+              </div>
+            )}
+          </>
         )}
-      </article>
+      </CalendarDraggableCard>
     );
   });
 }

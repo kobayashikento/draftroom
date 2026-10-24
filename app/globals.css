@@ -1331,7 +1331,7 @@
     min-width: 1008px;
   }
   .planner-day {
-    @apply min-w-0;
+    @apply relative min-w-0;
     border-right: 1px solid var(--dr-border);
     transition: background var(--dr-motion-duration) var(--dr-motion-easing);
   }
@@ -1348,6 +1348,30 @@
   .planner-day.is-drop-target {
     background: var(--dr-highlight);
     box-shadow: inset 0 0 0 2px var(--dr-moss);
+  }
+  .planner-drop-cue {
+    @apply pointer-events-none absolute right-3 bottom-3 left-3 z-10 rounded-lg p-2 text-center text-xs font-medium;
+    border: 1px solid var(--dr-moss);
+    background: var(--dr-accent);
+    color: var(--dr-ink);
+  }
+  .planner-drag-overlay {
+    pointer-events: none;
+  }
+  .planner-drag-preview {
+    @apply grid w-60 max-w-[calc(100vw-2rem)] gap-2 rounded-xl p-4;
+    border: 1px solid var(--dr-moss);
+    background: var(--dr-surface);
+    color: var(--dr-ink);
+    box-shadow: 0 16px 48px var(--dr-shadow-strong);
+  }
+  .planner-drag-preview strong {
+    overflow-wrap: anywhere;
+  }
+  [data-dragging='true'] {
+    opacity: 0.35;
+    outline: 1px dashed var(--dr-moss);
+    outline-offset: 2px;
   }
   .planner-day-head {
     @apply flex items-center justify-between gap-1 px-3 py-3;
@@ -1431,7 +1455,7 @@
     border-color: var(--dr-moss);
   }
   .planner-card {
-    @apply min-w-0 overflow-hidden rounded-lg;
+    @apply relative min-w-0 overflow-hidden rounded-lg;
     border: 1px solid var(--dr-border);
     background: var(--dr-raised);
     box-shadow: 0 2px 4px var(--dr-shadow);
@@ -1459,7 +1483,25 @@
     color: var(--dr-muted);
   }
   .planner-card-actions .icon-button {
-    @apply ml-auto border-0 bg-transparent;
+    @apply border-0 bg-transparent;
+  }
+  .planner-card-actions .icon-button:not(.planner-drag-handle) {
+    @apply ml-auto;
+  }
+  .dr-button.planner-drag-handle {
+    @apply border-0 bg-transparent;
+    color: var(--dr-muted);
+    cursor: grab;
+    touch-action: none;
+  }
+  .dr-button.planner-drag-handle:active {
+    cursor: grabbing;
+  }
+  .planner-publication-handle {
+    @apply absolute top-1 right-1 z-1;
+  }
+  .planner-card[data-movable='true'] .planner-card-channel {
+    @apply min-h-10 pr-10;
   }
   .planner-card:focus-within {
     outline: 2px solid var(--dr-moss-strong);
@@ -1477,10 +1519,6 @@
   .planner-card-channel > .app-icon:last-child {
     @apply ml-auto;
     color: var(--dr-muted);
-  }
-  .planner-grip {
-    opacity: 0.55;
-    touch-action: none;
   }
   .planner-card-art {
     @apply mx-2 overflow-hidden rounded-md;
@@ -1545,7 +1583,7 @@
     border-left: 3px solid var(--dr-moss);
     box-shadow: none;
   }
-  .is-compact :is(.planner-card-format, .pill, footer, .planner-grip) {
+  .is-compact :is(.planner-card-format, .pill, footer) {
     @apply hidden;
   }
   .planner-card.is-compact footer {

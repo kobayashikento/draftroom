@@ -1,4 +1,3 @@
-import type { MouseEventHandler, PointerEventHandler } from 'react';
 import type { Workspace } from '../../lib/types.ts';
 import { dateString, parseDate } from '../../lib/model.ts';
 import { reschedulePublication } from './calendar.helpers.ts';
@@ -8,29 +7,6 @@ export type CalendarMoveTarget =
   | { type: 'publication'; itemId: string; publicationId: string }
   | { type: 'production'; itemId: string; taskIds: string[]; date: string }
   | { type: 'day-task'; taskId: string; scheduledDate: string; date: string };
-export type CalendarDrag = {
-  targetDate: string;
-  handlers: (target: CalendarMoveTarget) => CalendarDragHandlers;
-  clickGuard: CalendarClickGuard;
-  cancel: () => void;
-};
-export type CalendarDragHandlers = {
-  onPointerDown: PointerEventHandler<HTMLElement>;
-  onPointerMove: PointerEventHandler<HTMLElement>;
-  onPointerUp: PointerEventHandler<HTMLElement>;
-  onPointerCancel: PointerEventHandler<HTMLElement>;
-};
-export type CalendarClickGuard = {
-  onPointerDownCapture: PointerEventHandler<HTMLElement>;
-  onClickCapture: MouseEventHandler<HTMLElement>;
-};
-export type CalendarPointerDrag = {
-  target: CalendarMoveTarget;
-  pointerId: number;
-  x: number;
-  y: number;
-  moving: boolean;
-};
 export type CalendarMoveDetails = { title: string; date: string; description: string };
 export type CalendarMoveEditorProps = { target: CalendarMoveTarget; onClose: () => void };
 

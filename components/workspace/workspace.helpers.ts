@@ -108,15 +108,23 @@ export type WorkspaceContextProps = WorkspaceAccount & {
   storageStatus: string;
   storageTone: StorageStatus | 'local';
 };
-export type WorkspaceContextValue = WorkspaceAccount & {
-  state: Workspace | null;
-  update: WorkspaceUpdater;
-  updateItem: ItemUpdater;
-  storageStatus: string;
-  storageTone: StorageStatus | 'local';
-  message: string;
-  notify: (text: string) => void;
-  modal: WorkspaceModal | null;
-  setModal: Dispatch<SetStateAction<WorkspaceModal | null>>;
-  open: (id: string, tab?: EditorTab) => void;
+export type WorkspacePlanning = {
+  week: string;
+  setWeek: Dispatch<SetStateAction<string>>;
+  platform: string;
+  setPlatform: Dispatch<SetStateAction<string>>;
 };
+
+export type WorkspaceContextValue = WorkspaceAccount &
+  WorkspacePlanning & {
+    state: Workspace | null;
+    update: WorkspaceUpdater;
+    updateItem: ItemUpdater;
+    storageStatus: string;
+    storageTone: StorageStatus | 'local';
+    message: string;
+    notify: (text: string) => void;
+    modal: WorkspaceModal | null;
+    setModal: Dispatch<SetStateAction<WorkspaceModal | null>>;
+    open: (id: string, tab?: EditorTab) => void;
+  };

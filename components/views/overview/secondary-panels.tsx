@@ -4,12 +4,14 @@ import type { SecondaryPanelsProps } from './overview.helpers.ts';
 import { ArrowRight, Heart, Sparkles } from 'lucide-react';
 import { AppIcon } from '../../icons';
 import { Button } from '../../ui';
+import Link from 'next/link';
+import { viewPaths } from '../../../lib/navigation.ts';
 import { useWorkspace } from '../../workspace/workspace-context';
 import Artwork from '../../workspace/artwork';
 import TaskRow from '../../workspace/task-row';
 import IdeaSketch from '../../workspace/idea-sketch';
 
-export default function SecondaryPanels({ work, ready, navigate }: SecondaryPanelsProps) {
+export default function SecondaryPanels({ work, ready }: SecondaryPanelsProps) {
   const { state, open } = useWorkspace();
   return (
     <div className="lower">
@@ -28,8 +30,10 @@ export default function SecondaryPanels({ work, ready, navigate }: SecondaryPane
             </div>
           )}
           <div className="mt-4">
-            <Button className="link" onClick={() => navigate('Production')}>
-              See your production list <AppIcon icon={ArrowRight} />
+            <Button className="link" asChild>
+              <Link href={viewPaths.Production}>
+                See your production list <AppIcon icon={ArrowRight} />
+              </Link>
             </Button>
           </div>
         </div>

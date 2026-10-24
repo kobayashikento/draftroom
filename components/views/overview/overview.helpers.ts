@@ -7,7 +7,6 @@ import type {
   Workspace,
   Publication
 } from '../../../lib/types.ts';
-import type { Dispatch, SetStateAction } from 'react';
 import { addDays, kind, pending, scheduled } from '../../../lib/model.ts';
 import { CalendarDays, Check, ListChecks, CalendarClock } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -48,7 +47,6 @@ export type OverviewResultsProps = {
   summary: OverviewSummary;
   week: string;
   currentDate: string;
-  navigate: (view: View) => void;
 };
 
 export type PostResultsProps = {
@@ -61,7 +59,6 @@ export type PostResultsProps = {
 export type SecondaryPanelsProps = {
   work: ProductionTask[];
   ready: Item[];
-  navigate: (view: View) => void;
 };
 
 export type SummaryCardsProps = {
@@ -74,12 +71,6 @@ export function summaryPreview(summary: OverviewSummary, category: OverviewCateg
   const items = category === 'tasks' ? summary.tasks.map(task => task.p) : summary[category];
   return [...new Map(items.map(item => [item.id, item])).values()].slice(0, 2);
 }
-
-export type OverviewProps = {
-  week: string;
-  setWeek: Dispatch<SetStateAction<string>>;
-  navigate: (view: View) => void;
-};
 
 export function overduePublications(item: Item, currentDate: string) {
   return item.publications.filter(

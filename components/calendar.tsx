@@ -6,7 +6,6 @@ import {
   calendarRange,
   calendarTasks
 } from './calendar/calendar.helpers.ts';
-import type { CalendarProps } from './calendar/calendar.helpers.ts';
 import { useWorkspace } from './workspace/workspace-context';
 import CalendarToolbar from './calendar/calendar-toolbar';
 import CalendarFilters from './calendar/calendar-filters';
@@ -22,8 +21,8 @@ import { today } from '../lib/display.ts';
 import CalendarMoveEditor from './calendar/calendar-move-editor';
 import CalendarDragProvider from './calendar/calendar-drag-provider';
 
-export default function Calendar({ week, setWeek, platform, setPlatform }: CalendarProps) {
-  const { state } = useWorkspace();
+export default function Calendar() {
+  const { state, week, setWeek, platform, setPlatform } = useWorkspace();
   const view = useCalendarView();
   const { mode, content, showFilters, showUnscheduled, taskEditor, moveTarget } = view;
   const filters = useCalendarFilters(platform, setPlatform);

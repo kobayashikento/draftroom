@@ -147,13 +147,6 @@ export type UnscheduledPlansProps = {
   onClose: () => void;
 };
 
-export type CalendarProps = {
-  week: string;
-  setWeek: Dispatch<SetStateAction<string>>;
-  platform: string;
-  setPlatform: Dispatch<SetStateAction<string>>;
-};
-
 export function calendarRange(anchor: string, mode: CalendarMode = 'Week') {
   if (mode !== 'Month') {
     const start = monday(anchor);

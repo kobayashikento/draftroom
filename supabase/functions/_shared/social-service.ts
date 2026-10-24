@@ -258,8 +258,7 @@ export function createSocialService(
           400
         );
       const origin = allowedReturnOrigin(state.return_origin, env);
-      const destination = new URL(origin);
-      destination.searchParams.set('view', 'Library');
+      const destination = new URL('/library/', origin);
       if (denied) {
         destination.searchParams.set('social', 'cancelled');
         return destination.href;

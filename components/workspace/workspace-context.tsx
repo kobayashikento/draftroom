@@ -4,6 +4,7 @@ import { changeWorkspaceItem } from './workspace.helpers.ts';
 import type { WorkspaceContextProps, WorkspaceContextValue } from './workspace.helpers.ts';
 import type { WorkspaceModal, Item, EditorTab } from '../../lib/types.ts';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import useWorkspacePlanning from './use-workspace-planning.ts';
 
 const Context = createContext<WorkspaceContextValue | null>(null);
 export function useWorkspaceContext() {
@@ -26,6 +27,7 @@ export default function WorkspaceContext({
   storageTone,
   ...account
 }: WorkspaceContextProps) {
+  const planning = useWorkspacePlanning();
   const [message, setMessage] = useState('');
   const [modal, setModal] = useState<WorkspaceModal | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -52,6 +54,7 @@ export default function WorkspaceContext({
         modal,
         setModal,
         open,
+        ...planning,
         ...account
       }}
     >

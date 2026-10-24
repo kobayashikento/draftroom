@@ -3,6 +3,8 @@
 import { planningChannels, pages } from './layout.helpers.ts';
 import type { SidebarProps } from './layout.helpers.ts';
 import type { View } from '../../lib/types.ts';
+import Link from 'next/link';
+import { viewPaths } from '../../lib/navigation.ts';
 import { Sparkles, Sun, Shapes } from 'lucide-react';
 import { AppIcon, PlatformIcon } from '../icons';
 import { BrandLogo } from './brand-logo';
@@ -19,18 +21,20 @@ export default function Sidebar({ view, platform, onNavigate, onPlatformChange }
       <nav className="nav" aria-label="Workspace">
         {Object.entries(pages).map(([name, [Icon]]) => (
           <Button
+            asChild
             key={name}
             className={view === name ? 'active' : ''}
             aria-label={name}
             title={name}
             aria-current={view === name ? 'page' : undefined}
-            onClick={() => onNavigate(name as View)}
           >
-            <span className="ico">
-              <AppIcon icon={Icon} size="md" />
-            </span>
-            <span className="nav-label">{name}</span>
-            {name === 'Ideas' && <span className="nav-count">{state.items.length}</span>}
+            <Link href={viewPaths[name as View]}>
+              <span className="ico">
+                <AppIcon icon={Icon} size="md" />
+              </span>
+              <span className="nav-label">{name}</span>
+              {name === 'Ideas' && <span className="nav-count">{state.items.length}</span>}
+            </Link>
           </Button>
         ))}
       </nav>

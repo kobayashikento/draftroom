@@ -1,5 +1,5 @@
 import type { View, CalendarMode, StorageStatus } from '../../lib/types.ts';
-import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import {
   LayoutDashboard,
   CalendarDays,
@@ -37,6 +37,7 @@ export function weekBarLabel(week: string, mode: CalendarMode): string {
 }
 
 export type PageHeadingProps = { view: View };
+export type DraftroomAppProps = { children: ReactNode };
 
 export type SidebarProps = {
   view: View;

@@ -207,6 +207,7 @@ test('OAuth callbacks use a single owner-bound state and never return tokens in 
   assert.equal(response.status, 303);
   const redirect = response.headers.get('Location') || '';
   assert.ok(redirect.startsWith(env.appUrl));
+  assert.equal(new URL(redirect).pathname, '/library/');
   assert.ok(redirect.includes('social=connected'));
   assert.ok(!redirect.includes('private-provider'));
   assert.equal(memory.states.length, 0);

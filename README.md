@@ -42,7 +42,7 @@ Use two-space indentation, single quotes in TypeScript, semicolons, no trailing 
 
 ## Architecture
 
-- `app/layout.tsx`, `app/page.tsx`: Next.js App Router entry points and metadata.
+- `app/layout.tsx`: root Next.js layout and metadata. `app/(workspace)/layout.tsx` keeps the workspace, media library, assistant and navigation mounted across the seven page routes. `app/page.tsx` replaces the root URL with `/calendar/` and forwards legacy `?view=Library` links to `/library/`, preserving connection results.
 - `app/globals.css`: responsive workspace layouts and component geometry.
 - `lib/design-tokens.ts`: the working Pistachio & Oat palette, semantic color roles, typography and motion tokens.
 - `postcss.config.json`: Tailwind CSS v4 through the official PostCSS plugin.
@@ -50,7 +50,7 @@ Use two-space indentation, single quotes in TypeScript, semicolons, no trailing 
 - `components/ui.tsx`: Chakra buttons, accessible fields, inputs, textareas, native selects, checkboxes and badges.
 - `components/icons.tsx`: shared Lucide icons for controls, navigation, status, content formats, platforms, series and branding.
 - Editors use Chakra Dialog and Tabs for focus handling and keyboard navigation.
-- `components/DraftroomApp.tsx`: app composition and view navigation; `components/layout/` contains the sidebar, top bar, page heading and sync notice adapter.
+- `components/DraftroomApp.tsx`: shared workspace composition around the active page; `components/layout/` contains the sidebar, top bar, page heading and sync notice adapter. `lib/navigation.ts` maps workspace views to their routes; sidebar and overview shortcuts use Next.js links for browser history and opening pages in new tabs.
 - `components/workspace/`: shared content cards, task rows, stage badges and original cover illustrations, plus the single workspace context and separate local, cloud and authentication boundaries.
 - `components/workspace-provider.tsx`: selects the local or authenticated workspace implementation.
 - `components/account/`: login, account layout, connection notices, conflict recovery and sign-out confirmation.
@@ -222,7 +222,7 @@ Deferred: reference photo uploads (reference URLs can be saved), board/storyboar
 
 ## Calendar planning
 
-Draftroom uses an original, Buffer-inspired planning layout with compact, collapsible navigation and the existing Pistachio & Oat tokens. Calendar is the landing view. Week and month grids share the same publication records as the weekly list; Monday is the first day, month navigation handles short months and year boundaries, and Today uses the local date.
+Draftroom uses an original, Buffer-inspired planning layout with compact, collapsible navigation and the existing Pistachio & Oat tokens. Calendar is the landing page at `/calendar/`. Overview, Ideas, Production, Library, Series and Analytics each have their own URL, with browser back/forward, refresh and direct links supported. The selected calendar date, planning channel and sidebar size persist while navigating between workspace pages. Week and month grids share the same publication records as the weekly list; Monday is the first day, month navigation handles short months and year boundaries, and Today uses the local date.
 
 The calendar combines standalone **day tasks**, ideas to work on, and publishing plans in Week, Month and List views. Switch between All, Ideas and Tasks. Ideas with checklist tasks due on a day appear together in a compact production card; opening one shows its full checklist. These cards appear once per idea and day even when the idea has multiple channels. Publishing cards keep their own channel-specific dates.
 

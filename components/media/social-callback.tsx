@@ -2,6 +2,8 @@
 
 import { BrandMark } from '../layout/brand-logo';
 import useSocialCallback from './use-social-callback.ts';
+import Link from 'next/link';
+import { viewPaths } from '../../lib/navigation.ts';
 
 export default function SocialCallback() {
   const error = useSocialCallback();
@@ -12,7 +14,7 @@ export default function SocialCallback() {
       <p role={error ? 'alert' : 'status'}>
         {error || 'Finishing your secure account connection.'}
       </p>
-      {error && <a href="/?view=Library">Return to your library</a>}
+      {error && <Link href={viewPaths.Library}>Return to your library</Link>}
     </main>
   );
 }

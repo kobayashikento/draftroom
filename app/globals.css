@@ -204,20 +204,22 @@
     border-right: 1px solid var(--dr-border);
   }
   .brand {
-    @apply flex items-center gap-3 font-brand text-2xl font-extrabold tracking-tight;
+    @apply flex min-h-9 items-center;
+  }
+  .brand-name {
+    @apply block h-auto w-full max-w-50;
+  }
+  .brand .brandmark {
+    @apply hidden;
   }
   .app-icon {
     @apply inline-block shrink-0 align-middle;
   }
   .brandmark {
-    color: var(--dr-moss-strong);
-    transition: transform var(--dr-motion-duration) var(--dr-motion-easing);
-  }
-  .brand:hover .brandmark {
-    transform: rotate(30deg);
+    @apply shrink-0 object-contain;
   }
   .tagline {
-    @apply mt-1 mb-8 ml-11 text-xs;
+    @apply mt-1 mb-8 text-xs;
     color: var(--dr-muted);
   }
   .workspace {
@@ -1060,7 +1062,7 @@
   }
   @keyframes unfurl {
     to {
-      transform: rotate(30deg) scale(1.08);
+      transform: scale(1.08);
     }
   }
 
@@ -1126,11 +1128,8 @@
   .studio-shell .sidebar {
     @apply p-4;
   }
-  .studio-shell .brand {
-    @apply gap-2 text-xl;
-  }
   .studio-shell .tagline {
-    @apply mb-8 ml-10;
+    @apply mb-8;
   }
   .studio-shell .main {
     @apply max-w-none px-6 pt-4;
@@ -1203,6 +1202,9 @@
   }
   .is-nav-compact .brand {
     @apply justify-center;
+  }
+  .is-nav-compact .brand .brandmark {
+    @apply block;
   }
   .is-nav-compact
     :is(
@@ -1707,6 +1709,9 @@
     .is-nav-compact .nav-label {
       @apply inline;
     }
+    .is-nav-compact .brand .brandmark {
+      @apply hidden;
+    }
     .studio-shell.is-nav-compact {
       @apply block;
     }
@@ -1949,8 +1954,7 @@
       transition: none !important;
       scroll-behavior: auto !important;
     }
-    .card:hover,
-    .brand:hover .brandmark {
+    .card:hover {
       transform: none;
     }
   }

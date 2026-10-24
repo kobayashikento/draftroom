@@ -7,7 +7,6 @@ import type {
   SeriesIconProps,
   AppIconProps
 } from './icons.helpers.ts';
-import { Asterisk } from 'lucide-react';
 import { iconStyle } from '../lib/design-tokens.ts';
 
 export function AppIcon({ icon: Glyph, size = 'sm', className = '', ...props }: AppIconProps) {
@@ -22,10 +21,6 @@ export function AppIcon({ icon: Glyph, size = 'sm', className = '', ...props }: 
       {...props}
     />
   );
-}
-
-export function BrandMark() {
-  return <AppIcon icon={Asterisk} size="brand" className="brandmark" />;
 }
 
 export function FormatIcon({ format, ...props }: FormatIconProps) {

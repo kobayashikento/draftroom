@@ -31,6 +31,14 @@ export default function ConnectionSetup({ setup, close }: ConnectionSetupProps) 
             ? 'Your professional Instagram account can bring its Reels, posts and available insights into Draftroom.'
             : 'Connect TikTok to bring your public videos, views, likes, comments and shares into Draftroom.'}
         </p>
+        {instagram && (
+          <p className="text-xs text-muted">
+            Developer access is separate from your Instagram login. Meta offers Facebook or an
+            organization-provided managed Meta Account for app setup. A personal Meta Account for
+            Instagram is different. Draftroom’s Instagram Login connection does not require a linked
+            Facebook Page. The developer creating the app can handle this setup.
+          </p>
+        )}
         <ol>
           <li>
             <b>Create the developer app.</b>

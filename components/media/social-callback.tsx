@@ -1,6 +1,6 @@
 'use client';
 
-import { BrandMark } from '../icons';
+import { BrandMark } from '../layout/brand-logo';
 import useSocialCallback from './use-social-callback.ts';
 
 export default function SocialCallback() {

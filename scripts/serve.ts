@@ -8,6 +8,7 @@ const types: Record<string, string> = {
   '.js': 'application/javascript',
   '.css': 'text/css',
   '.svg': 'image/svg+xml',
+  '.ico': 'image/vnd.microsoft.icon',
   '.png': 'image/png',
   '.json': 'application/json',
   '.txt': 'text/plain',

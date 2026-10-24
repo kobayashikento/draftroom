@@ -2,7 +2,7 @@
 
 import type { AccountShellProps } from './account.helpers.ts';
 import { Box, Card, Heading } from '@chakra-ui/react';
-import { BrandMark } from '../icons';
+import { BrandLogo } from '../layout/brand-logo';
 
 export default function AccountShell({ title, children }: AccountShellProps) {
   return (
@@ -14,10 +14,7 @@ export default function AccountShell({ title, children }: AccountShellProps) {
         borderRadius="16px"
       >
         <Card.Body gap="6" padding={{ base: '6', md: '8' }}>
-          <div className="brand">
-            <BrandMark />
-            draftroom
-          </div>
+          <BrandLogo />
           <Heading as="h1">{title}</Heading>
           {children}
         </Card.Body>

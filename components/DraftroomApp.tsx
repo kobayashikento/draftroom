@@ -2,7 +2,7 @@
 
 import type { View } from '../lib/types.ts';
 import { useEffect, useState } from 'react';
-import { BrandMark } from './icons';
+import { BrandMark } from './layout/brand-logo';
 import { WorkspaceProvider } from './workspace-provider';
 import { useWorkspaceContext } from './workspace/workspace-context';
 import { today } from '../lib/display.ts';

@@ -4,7 +4,8 @@ import { planningChannels, pages } from './layout.helpers.ts';
 import type { SidebarProps } from './layout.helpers.ts';
 import type { View } from '../../lib/types.ts';
 import { Sparkles, Sun, Shapes } from 'lucide-react';
-import { AppIcon, BrandMark, PlatformIcon } from '../icons';
+import { AppIcon, PlatformIcon } from '../icons';
+import { BrandLogo } from './brand-logo';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 
@@ -12,10 +13,7 @@ export default function Sidebar({ view, platform, onNavigate, onPlatformChange }
   const { state, authUser } = useWorkspace();
   return (
     <aside className="sidebar">
-      <div className="brand">
-        <BrandMark />
-        <span className="brand-name">draftroom</span>
-      </div>
+      <BrandLogo />
       <div className="tagline">a little space to create</div>
       <p className="workspace">YOUR WORKSPACE</p>
       <nav className="nav" aria-label="Workspace">

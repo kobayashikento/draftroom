@@ -1,17 +1,12 @@
 'use client';
-import type { Item, View, ProductionTask } from '../../../lib/types.ts';
+
+import type { SecondaryPanelsProps } from './overview.helpers.ts';
 import { ArrowRight, Heart, Sparkles } from 'lucide-react';
 import { AppIcon } from '../../icons';
 import { Button } from '../../ui';
 import { useWorkspace } from '../../workspace/workspace-context';
 import Artwork from '../../workspace/artwork';
 import TaskRow from '../../workspace/task-row';
-
-type SecondaryPanelsProps = {
-  work: ProductionTask[];
-  ready: Item[];
-  navigate: (view: View) => void;
-};
 
 export default function SecondaryPanels({ work, ready, navigate }: SecondaryPanelsProps) {
   const { state, open } = useWorkspace();
@@ -43,7 +38,7 @@ export default function SecondaryPanels({ work, ready, navigate }: SecondaryPane
         <div className="panel readybox">
           <p className="subtitle">The making is done. Your next post is waiting.</p>
           {ready.length ? (
-            ready.map((p) => (
+            ready.map(p => (
               <div key={p.id}>
                 <div className="ready-entry">
                   <div className="miniart">
@@ -53,7 +48,7 @@ export default function SecondaryPanels({ work, ready, navigate }: SecondaryPane
                     <h3>{p.title}</h3>
                     <span className="tiny muted">
                       {p.format} ·{' '}
-                      {state.series.find((s) => s.id === p.seriesId)?.name || 'No series'}
+                      {state.series.find(s => s.id === p.seriesId)?.name || 'No series'}
                     </span>
                   </div>
                 </div>

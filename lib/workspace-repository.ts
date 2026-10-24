@@ -12,7 +12,7 @@ export class WorkspaceConflictError extends Error {
 
 export function createWorkspaceRepository(
   client: SupabaseClient<Database>,
-  ownerId: string,
+  ownerId: string
 ): WorkspaceRepository {
   return {
     async load() {
@@ -24,11 +24,11 @@ export function createWorkspaceRepository(
       if (error)
         throw new Error(
           'Could not load your cloud workspace. Check your connection and try again.',
-          { cause: error },
+          { cause: error }
         );
       if (!data)
         throw new Error(
-          'This account does not have access to draftroom yet. Ask the project owner to finish your workspace setup.',
+          'This account does not have access to draftroom yet. Ask the project owner to finish your workspace setup.'
         );
       if (data.data !== null) validateWorkspace(data.data);
       return { data: data.data, revision: Number(data.revision) };
@@ -45,10 +45,10 @@ export function createWorkspaceRepository(
       if (error)
         throw new Error(
           'Your latest changes have not reached the cloud. Check your connection and retry.',
-          { cause: error },
+          { cause: error }
         );
       if (!data) throw new WorkspaceConflictError();
       return { data: data.data, revision: Number(data.revision) };
-    },
+    }
   };
 }

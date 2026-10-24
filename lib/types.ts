@@ -3,7 +3,7 @@ export type {
   AssistantMessage,
   Format,
   Priority,
-  TaskCategory,
+  TaskCategory
 } from '../supabase/functions/_shared/types.ts';
 export type StageKind = 'prep' | 'ready' | 'posted';
 export type Platform = 'Instagram' | 'TikTok';
@@ -73,6 +73,13 @@ export type ItemOptions = { title: string; format?: Format; seriesId?: string };
 export type ProductionTask = { p: Item; t: Task };
 export type PublicationEntry = { p: Item; pub: Publication };
 export type ProductionGroup = { item: Item; tasks: ProductionTask[] };
+export type ProductionQueueOptions = { start?: string; end?: string };
+export type ProductionQueue = {
+  active: ProductionGroup[];
+  completed: ProductionGroup[];
+  next: ProductionTask | null;
+  remaining: number;
+};
 export type CalendarMode = 'Week' | 'Month' | 'List';
 export type View = 'Overview' | 'Calendar' | 'Ideas' | 'Production' | 'Series' | 'Analytics';
 export type EditorTab = 'Storyboard' | 'Production' | 'Publish' | 'Notes' | 'Analytics';
@@ -91,6 +98,8 @@ export type OverviewSummary = {
   overdue: Item[];
 };
 export type WorkspaceUpdater = (change: (draft: Workspace) => void) => void;
+export type ItemChange = (draft: Item) => void;
+export type ItemUpdater = (id: string, change: ItemChange) => void;
 export type StorageStatus = 'loading' | 'pending' | 'saving' | 'saved' | 'error' | 'conflict';
 export type WorkspaceRow = { data: Workspace | null; revision: number };
 export type WorkspaceCache = { data: Workspace; revision: number; dirty: boolean };

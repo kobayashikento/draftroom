@@ -1,4 +1,13 @@
 'use client';
+
+import {
+  assistantBlockedReason,
+  userAssistantMessage,
+  conversationWithMessage,
+  assistantErrorMessage,
+  clearAssistantConversation
+} from './assistant.helpers.ts';
+import type { AssistantController, FailedAssistantRequest } from './assistant.helpers.ts';
 import type { AssistantMessage, EditorTab } from '../../lib/types.ts';
 import { useEffect, useRef, useState } from 'react';
 import { useWorkspace } from '../workspace/workspace-context';
@@ -7,17 +16,14 @@ import {
   assistantMessages,
   appendAssistantMessage,
   prepareAssistantTurn,
-  applyAssistantTurn,
+  applyAssistantTurn
 } from '../../lib/assistant-actions.ts';
 
-export type SendAssistant = (text: string, retryId?: string) => boolean;
-export type AssistantController = ReturnType<typeof useAssistant>;
-
-export default function useAssistant() {
+export default function useAssistant(): AssistantController {
   const { state, update, cloud, conflict, storageStatus, open } = useWorkspace();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [failed, setFailed] = useState<{ text: string; id: string } | null>(null);
+  const [failed, setFailed] = useState<FailedAssistantRequest | null>(null);
   const request = useRef<AbortController | null>(null);
   const latest = useRef(state);
   const hasConflict = useRef(conflict);
@@ -28,35 +34,20 @@ export default function useAssistant() {
   function send(text: string, retryId?: string): boolean {
     text = text.trim();
     if (!text || request.current) return false;
-    if (!cloud) {
-      setError(
-        'The assistant needs your signed-in workspace. Open the connected app to chat with Gemini.',
-      );
+    const blockedReason = assistantBlockedReason(cloud, conflict);
+    if (blockedReason) {
+      setError(blockedReason);
       return false;
     }
-    if (conflict) {
-      setError(
-        'Choose which workspace version to keep before asking the assistant to make changes.',
-      );
-      return false;
-    }
-    const id = retryId || crypto.randomUUID();
-    const message: AssistantMessage = {
-      id,
-      role: 'user',
-      text,
-      createdAt: new Date().toISOString(),
-    };
-    const messages = [
-      ...assistantMessages(latest.current).filter((entry) => entry.id !== id),
-      message,
-    ];
+    const message = userAssistantMessage(text, retryId);
+    const { id } = message;
+    const messages = conversationWithMessage(latest.current, message);
     const controller = new AbortController();
     request.current = controller;
     setBusy(true);
     setError('');
     setFailed(null);
-    update((draft) => appendAssistantMessage(draft, message));
+    update(draft => appendAssistantMessage(draft, message));
     void respond(id, text, messages, controller);
     return true;
   }
@@ -64,24 +55,20 @@ export default function useAssistant() {
     id: string,
     text: string,
     messages: AssistantMessage[],
-    controller: AbortController,
+    controller: AbortController
   ) {
     try {
       const response = await requestAssistant(latest.current, messages, controller.signal);
       if (controller.signal.aborted) return;
       if (hasConflict.current)
         throw new Error(
-          'Your workspace changed on another device. Resolve the sync conflict, then try again. No assistant actions were applied.',
+          'Your workspace changed on another device. Resolve the sync conflict, then try again. No assistant actions were applied.'
         );
       const turn = prepareAssistantTurn(latest.current, id, response);
-      update((draft) => applyAssistantTurn(draft, turn));
+      update(draft => applyAssistantTurn(draft, turn));
     } catch (error) {
       if (!controller.signal.aborted) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : 'The assistant couldn’t respond. Please try again.',
-        );
+        setError(assistantErrorMessage(error));
         setFailed({ text, id });
       }
     } finally {
@@ -93,14 +80,12 @@ export default function useAssistant() {
   }
   function newChat() {
     if (request.current) return;
-    update((draft) => {
-      draft.assistant = { messages: [] };
-    });
+    update(clearAssistantConversation);
     setError('');
     setFailed(null);
   }
   function openReceipt(id: string, tab?: EditorTab) {
-    if (latest.current.items.some((item) => item.id === id)) open(id, tab);
+    if (latest.current.items.some(item => item.id === id)) open(id, tab);
     else setError('That idea has since been removed. Your conversation is still here.');
   }
   return {
@@ -112,6 +97,6 @@ export default function useAssistant() {
     open: openReceipt,
     send,
     newChat,
-    retry: failed ? () => send(failed.text, failed.id) : null,
+    retry: failed ? () => send(failed.text, failed.id) : null
   };
 }

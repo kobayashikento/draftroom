@@ -1,22 +1,14 @@
 'use client';
-import type { PublicationEntry, CalendarMode } from '../../lib/types.ts';
-import type { PublicationDrag } from './use-publication-drag.ts';
+
+import { calendarDayClass } from './calendar.helpers.ts';
+import type { CalendarGridProps } from './calendar.helpers.ts';
 import { Plus } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import { fmt, today } from '../../lib/display.ts';
-import { parseDate } from '../../lib/model';
+import { parseDate } from '../../lib/model.ts';
 import { PublicationCards } from './publication-card';
-
-type CalendarGridProps = {
-  anchor: string;
-  mode: CalendarMode;
-  days: string[];
-  entries: PublicationEntry[];
-  platform: string;
-  drag: PublicationDrag;
-};
 
 export default function CalendarGrid({
   anchor,
@@ -24,7 +16,7 @@ export default function CalendarGrid({
   days,
   entries,
   platform,
-  drag,
+  drag
 }: CalendarGridProps) {
   const { setModal } = useWorkspace();
   return (
@@ -36,22 +28,22 @@ export default function CalendarGrid({
     >
       <div className={`planner-grid planner-${mode.toLowerCase()}`}>
         {mode === 'Month' &&
-          ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+          ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
             <div className="planner-weekday" key={day}>
               {day}
             </div>
           ))}
-        {days.map((date) => {
-          const dayEntries = entries.filter((e) => e.pub.date === date);
+        {days.map(date => {
+          const dayEntries = entries.filter(e => e.pub.date === date);
           return (
             <section
               key={date}
               aria-label={fmt(date, { dateStyle: 'full' })}
               aria-current={date === today() ? 'date' : undefined}
-              className={`planner-day ${date === today() ? 'is-today' : ''} ${mode === 'Month' && date.slice(0, 7) !== anchor.slice(0, 7) ? 'is-outside' : ''} ${drag.targetDate === date ? 'is-drop-target' : ''}`}
-              onDragOver={(event) => drag.over(date, event)}
+              className={calendarDayClass(date, anchor, mode, today(), drag.targetDate)}
+              onDragOver={event => drag.over(date, event)}
               onDragLeave={drag.leave}
-              onDrop={(event) => drag.drop(date, event)}
+              onDrop={event => drag.drop(date, event)}
             >
               <header className="planner-day-head">
                 <div>

@@ -1,5 +1,7 @@
 'use client';
-import type { Item, EditorTab } from '../../lib/types.ts';
+
+import { editorTabs, isEditorTab } from './editors.helpers.ts';
+import type { ContentEditorProps } from './editors.helpers.ts';
 import { useState } from 'react';
 import { Tabs } from '@chakra-ui/react';
 import { Button } from '../ui';
@@ -12,11 +14,9 @@ import Storyboard from './storyboard-editor';
 import TaskEditor from './task-editor';
 import PublishEditor from './publish-editor';
 
-type ContentEditorProps = { item: Item; initialTab?: EditorTab; close: () => void };
-
 export default function ContentEditor({ item, initialTab, close }: ContentEditorProps) {
-  const [tab, setTab] = useState(initialTab || 'Storyboard'),
-    [deleting, setDeleting] = useState(false);
+  const [tab, setTab] = useState(initialTab || 'Storyboard');
+  const [deleting, setDeleting] = useState(false);
   if (deleting)
     return <DeleteIdeaDialog item={item} onCancel={() => setDeleting(false)} close={close} />;
   return (
@@ -39,12 +39,14 @@ export default function ContentEditor({ item, initialTab, close }: ContentEditor
       <ContentFields item={item} />
       <Tabs.Root
         value={tab}
-        onValueChange={({ value }) => setTab(value as EditorTab)}
+        onValueChange={({ value }) => {
+          if (isEditorTab(value)) setTab(value);
+        }}
         colorPalette="pistachio"
         variant="subtle"
       >
         <Tabs.List className="tabs" aria-label="Content details">
-          {['Storyboard', 'Production', 'Publish', 'Notes', 'Analytics'].map((x) => (
+          {editorTabs.map(x => (
             <Tabs.Trigger key={x} value={x} className={tab === x ? 'active' : ''}>
               {x}
             </Tabs.Trigger>

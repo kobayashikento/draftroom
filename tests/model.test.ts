@@ -8,7 +8,7 @@ import {
   pending,
   productionTasks,
   monday,
-  addDays,
+  addDays
 } from '../lib/model.ts';
 test('seed dates use accurate weeks across month boundary', () => {
   const s = seed();
@@ -17,55 +17,55 @@ test('seed dates use accurate weeks across month boundary', () => {
   assert.equal(scheduled(s, '2026-10-26', '2026-11-01').length, 5);
 });
 test('scheduling and task completion never change workflow', () => {
-  const s = seed(),
-    p = s.items[0];
+  const s = seed();
+  const p = s.items[0];
   p.publications[1].date = '2026-10-31';
-  p.tasks.forEach((t) => (t.done = true));
+  p.tasks.forEach(t => (t.done = true));
   assert.equal(p.stageId, 'editing');
-  assert.equal(pending(s).filter((x) => x.p.id === p.id).length, 0);
+  assert.equal(pending(s).filter(x => x.p.id === p.id).length, 0);
   assert.equal(scheduled(s, '2026-10-31', '2026-10-31')[0].p, p);
 });
 test('production keeps completed tasks and a fully checked post visible in the same order', () => {
-  const s = seed(),
-    p = s.items[0];
+  const s = seed();
+  const p = s.items[0];
   const taskIds = () =>
     productionTasks(s)
-      .filter((x) => x.p.id === p.id)
+      .filter(x => x.p.id === p.id)
       .map(({ t }) => t.id);
   const original = taskIds();
   p.tasks[2].done = true;
   assert.deepEqual(taskIds(), original);
-  p.tasks.forEach((t) => (t.done = true));
+  p.tasks.forEach(t => (t.done = true));
   assert.deepEqual(taskIds(), original);
-  assert.equal(pending(s).filter((x) => x.p.id === p.id).length, 0);
+  assert.equal(pending(s).filter(x => x.p.id === p.id).length, 0);
   const restored = JSON.parse(JSON.stringify(s));
   assert.equal(
-    productionTasks(restored).filter((x) => x.p.id === p.id && x.t.done).length,
-    p.tasks.length,
+    productionTasks(restored).filter(x => x.p.id === p.id && x.t.done).length,
+    p.tasks.length
   );
   p.tasks[2].done = false;
   assert.deepEqual(taskIds(), original);
   assert.deepEqual(
     pending(s)
-      .filter((x) => x.p.id === p.id)
+      .filter(x => x.p.id === p.id)
       .map(({ t }) => t.id),
-    [p.tasks[2].id],
+    [p.tasks[2].id]
   );
 });
 test('ready posts excluded, with task history preserved', () => {
-  const s = seed(),
-    p = s.items[0];
+  const s = seed();
+  const p = s.items[0];
   p.stageId = 'ready';
-  assert.ok(p.tasks.some((t) => !t.done));
-  assert.equal(pending(s).filter((x) => x.p === p).length, 0);
-  assert.equal(productionTasks(s).filter((x) => x.p === p).length, 0);
+  assert.ok(p.tasks.some(t => !t.done));
+  assert.equal(pending(s).filter(x => x.p === p).length, 0);
+  assert.equal(productionTasks(s).filter(x => x.p === p).length, 0);
 });
 test('episode inherits independent templates and has no schedule', () => {
-  const s = seed(),
-    p = createItem(s, { title: 'November joys', seriesId: 'joys' });
+  const s = seed();
+  const p = createItem(s, { title: 'November joys', seriesId: 'joys' });
   assert.equal(p.storyboard.length, 6);
   assert.equal(p.format, 'Carousel');
-  assert.ok(p.publications.every((x) => !x.date));
+  assert.ok(p.publications.every(x => !x.date));
   p.storyboard[0].title = 'Changed';
   assert.notEqual(s.series[3].storyboard[0], 'Changed');
   assert.equal(p.stageId, 'idea');
@@ -78,17 +78,17 @@ test('local serialization preserves stable shared records', () => {
   assert.equal(scheduled(restored, '2026-10-26', '2026-10-26')[0].p.id, s.items[0].id);
 });
 test('custom stage names retain production behavior', () => {
-  const s = seed(),
-    p = s.items[0];
-  required(s.stages.find((x) => x.id === 'editing')).name = 'Finishing touches';
-  assert.ok(pending(s).some((x) => x.p.id === p.id));
-  required(s.stages.find((x) => x.id === 'editing')).kind = 'ready';
-  assert.ok(!pending(s).some((x) => x.p.id === p.id));
+  const s = seed();
+  const p = s.items[0];
+  required(s.stages.find(x => x.id === 'editing')).name = 'Finishing touches';
+  assert.ok(pending(s).some(x => x.p.id === p.id));
+  required(s.stages.find(x => x.id === 'editing')).kind = 'ready';
+  assert.ok(!pending(s).some(x => x.p.id === p.id));
   assert.equal(p.tasks[2].done, false);
 });
 test('platform schedules and manual publication states remain independent', () => {
-  const s = seed(),
-    p = s.items[0];
+  const s = seed();
+  const p = s.items[0];
   p.publications[1].date = '2026-10-31';
   p.publications[0].state = 'manually_posted';
   assert.equal(p.publications[0].date, '2026-10-26');

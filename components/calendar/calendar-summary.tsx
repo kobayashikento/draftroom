@@ -1,20 +1,21 @@
 'use client';
-import type { PublicationEntry, CalendarMode } from '../../lib/types.ts';
+
+import { calendarPlanCounts } from './calendar.helpers.ts';
+import type { CalendarSummaryProps } from './calendar.helpers.ts';
 import { Check } from 'lucide-react';
 import { AppIcon } from '../icons';
 
-type CalendarSummaryProps = { entries: PublicationEntry[]; mode: CalendarMode };
-
 export default function CalendarSummary({ entries, mode }: CalendarSummaryProps) {
+  const counts = calendarPlanCounts(entries);
   return (
     <div className="planner-summary">
       <span>
         <span className="status-dot" />
-        {entries.filter((e) => e.pub.state === 'planned').length} planned
+        {counts.planned} planned
       </span>
       <span>
         <AppIcon icon={Check} />
-        {entries.filter((e) => e.pub.state === 'manually_posted').length} manually posted
+        {counts.posted} manually posted
       </span>
       <span className="planner-summary-hint">
         {mode === 'List'

@@ -1,6 +1,7 @@
 'use client';
-import type { DragEventHandler, DragEvent } from 'react';
-import type { Item, Publication, PublicationEntry } from '../../lib/types.ts';
+
+import { completedTaskCount } from '../production/production.helpers.ts';
+import type { PublicationCardsProps, PublicationCardProps } from './calendar.helpers.ts';
 import { CalendarArrowUp, Check, GripVertical } from 'lucide-react';
 import { AppIcon, PlatformIcon, FormatIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
@@ -8,26 +9,12 @@ import { Button } from '../ui';
 import StagePill from '../workspace/stage-pill';
 import Artwork from '../workspace/artwork';
 
-type PublicationCardsProps = {
-  entries: PublicationEntry[];
-  compact?: boolean;
-  canDrag?: boolean;
-  onDragStart?: (event: DragEvent<HTMLElement>, item: Item, publication: Publication) => void;
-  onDragEnd?: DragEventHandler<HTMLElement>;
-};
-type PublicationCardProps = PublicationEntry & {
-  compact: boolean;
-  canDrag: boolean;
-  onDragStart?: DragEventHandler<HTMLElement>;
-  onDragEnd?: DragEventHandler<HTMLElement>;
-};
-
 export function PublicationCards({
   entries,
   compact = false,
   canDrag = false,
   onDragStart,
-  onDragEnd,
+  onDragEnd
 }: PublicationCardsProps) {
   return entries.map(({ p, pub }) => (
     <PublicationCard
@@ -36,7 +23,7 @@ export function PublicationCards({
       pub={pub}
       compact={compact}
       canDrag={canDrag}
-      onDragStart={(event) => onDragStart?.(event, p, pub)}
+      onDragStart={event => onDragStart?.(event, p, pub)}
       onDragEnd={onDragEnd}
     />
   ));
@@ -48,7 +35,7 @@ export default function PublicationCard({
   compact,
   canDrag,
   onDragStart,
-  onDragEnd,
+  onDragEnd
 }: PublicationCardProps) {
   const { open, setModal } = useWorkspace();
   const posted = pub.state === 'manually_posted';
@@ -88,9 +75,7 @@ export default function PublicationCard({
       </Button>
       <footer>
         <span>
-          {posted
-            ? 'Manually posted'
-            : `${p.tasks.filter((t) => t.done).length}/${p.tasks.length} tasks`}
+          {posted ? 'Manually posted' : `${completedTaskCount(p)}/${p.tasks.length} tasks`}
         </span>
         {!posted && (
           <Button

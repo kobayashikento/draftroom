@@ -10,8 +10,8 @@ test('assistant planning replies render readable emphasis and lists', () => {
     createElement(
       Markdown,
       assistantMarkdown,
-      'Two ideas:\n\n1. **Film the opening**\n2. Edit the ending',
-    ),
+      'Two ideas:\n\n1. **Film the opening**\n2. Edit the ending'
+    )
   );
   assert.match(html, /<ol>/);
   assert.match(html, /<strong>Film the opening<\/strong>/);
@@ -21,8 +21,8 @@ test('untrusted assistant text cannot inject HTML, remote images or executable l
     createElement(
       Markdown,
       assistantMarkdown,
-      '<script>alert(1)</script>\n\n![tracker](https://tracking.example/pixel)\n\n[Unsafe link](javascript:alert)\n\n[External link](https://example.com)',
-    ),
+      '<script>alert(1)</script>\n\n![tracker](https://tracking.example/pixel)\n\n[Unsafe link](javascript:alert)\n\n[External link](https://example.com)'
+    )
   );
   assert.doesNotMatch(html, /<script|<img|<a\b|href=|src=/);
   assert.match(html, /Unsafe link/);

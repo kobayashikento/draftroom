@@ -4,8 +4,8 @@ import {
   calendarEntries,
   calendarRange,
   moveCalendarAnchor,
-  reschedulePublication,
-} from '../lib/calendar.ts';
+  reschedulePublication
+} from '../components/calendar/calendar.helpers.ts';
 import { seed } from '../lib/model.ts';
 import { validateWorkspace } from '../lib/workspace-data.ts';
 
@@ -13,27 +13,27 @@ test('calendar periods align Monday through Sunday, including month and year bou
   assert.deepEqual(calendarRange('2026-11-01'), {
     start: '2026-10-26',
     end: '2026-11-01',
-    days: 7,
+    days: 7
   });
   assert.deepEqual(calendarRange('2026-11-18', 'Month'), {
     start: '2026-10-26',
     end: '2026-12-06',
-    days: 42,
+    days: 42
   });
   assert.deepEqual(calendarRange('2027-02-28', 'Month'), {
     start: '2027-02-01',
     end: '2027-02-28',
-    days: 28,
+    days: 28
   });
   assert.deepEqual(calendarRange('2028-02-29', 'Month'), {
     start: '2028-01-31',
     end: '2028-03-05',
-    days: 35,
+    days: 35
   });
   assert.deepEqual(calendarRange('2027-01-01', 'List'), {
     start: '2026-12-28',
     end: '2027-01-03',
-    days: 7,
+    days: 7
   });
   assert.equal(moveCalendarAnchor('2026-01-31', 'Month', 1), '2026-02-01');
   assert.equal(moveCalendarAnchor('2026-12-31', 'Month', 1), '2027-01-01');
@@ -47,21 +47,21 @@ test('calendar filters operate on individual channel plans and combine with cont
   emi.publications[0].state = 'manually_posted';
   assert.equal(
     calendarEntries(state, { ...range, platform: 'TikTok', query: 'Emi' })[0].pub.id,
-    emi.publications[1].id,
+    emi.publications[1].id
   );
   assert.equal(
     calendarEntries(state, { ...range, platform: 'TikTok', status: 'manually_posted' }).length,
-    0,
+    0
   );
   assert.equal(
     calendarEntries(state, { ...range, platform: 'Instagram', status: 'manually_posted' })[0].pub
       .id,
-    emi.publications[0].id,
+    emi.publications[0].id
   );
   assert.equal(calendarEntries(state, { ...range, format: 'Carousel', seriesId: 'emi' }).length, 0);
   assert.equal(
     calendarEntries(state, { ...range, seriesId: 'obsessed', query: '  OBSESSED  ' }).length,
-    1,
+    1
   );
 });
 
@@ -71,12 +71,12 @@ test('unscheduled tray includes only undated, unposted channel plans, including 
   item.publications[1].date = '';
   const drafts = calendarEntries(state, { unscheduled: true, query: 'Emi' });
   assert.deepEqual(
-    drafts.map((entry) => entry.pub.id),
-    [item.publications[1].id],
+    drafts.map(entry => entry.pub.id),
+    [item.publications[1].id]
   );
   assert.equal(
     calendarEntries(state, { unscheduled: true, platform: 'Instagram', query: 'Emi' }).length,
-    0,
+    0
   );
   item.publications[1].state = 'manually_posted';
   assert.equal(calendarEntries(state, { unscheduled: true, query: 'Emi' }).length, 0);

@@ -5,7 +5,7 @@ import type {
   WorkspaceSnapshot,
   CacheStorage,
   ConflictChoice,
-  StorageStatus,
+  StorageStatus
 } from './types.ts';
 import { readCache, validateWorkspace } from './workspace-data.ts';
 import { WorkspaceConflictError } from './workspace-repository.ts';
@@ -34,7 +34,7 @@ export class WorkspaceSync {
     storage,
     cacheKey,
     onChange,
-    delay = 600,
+    delay = 600
   }: {
     repository: WorkspaceRepository;
     storage: CacheStorage;
@@ -66,7 +66,7 @@ export class WorkspaceSync {
         status: this.status,
         error: this.error,
         cacheError: this.cacheError,
-        conflict: this.conflict,
+        conflict: this.conflict
       });
   }
 
@@ -74,7 +74,7 @@ export class WorkspaceSync {
     try {
       this.storage.setItem(
         this.cacheKey,
-        JSON.stringify({ data: this.data, revision: this.revision, dirty: this.dirty }),
+        JSON.stringify({ data: this.data, revision: this.revision, dirty: this.dirty })
       );
       this.cacheError = '';
     } catch {

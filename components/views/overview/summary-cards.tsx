@@ -1,22 +1,10 @@
 'use client';
-import type { LucideIcon } from 'lucide-react';
-import type { OverviewSummary, OverviewCategory } from '../../../lib/types.ts';
-import { ArrowRight, CalendarDays, CalendarClock, Check, ListChecks } from 'lucide-react';
+
+import { cards } from './overview.helpers.ts';
+import type { SummaryCardsProps } from './overview.helpers.ts';
+import { ArrowRight } from 'lucide-react';
 import { AppIcon } from '../../icons';
 import { Button } from '../../ui';
-
-type SummaryCardsProps = {
-  summary: OverviewSummary;
-  selected: OverviewCategory;
-  onSelect: (category: OverviewCategory) => void;
-};
-
-const cards: [OverviewCategory, string, string, LucideIcon][] = [
-  ['planned', 'Posts planned', 'In your selected week', CalendarDays],
-  ['ready', 'Ready to publish', 'Across your workspace', Check],
-  ['tasks', 'Tasks to work on', 'One small step at a time', ListChecks],
-  ['overdue', 'Need a new date', 'Past dates, still unposted', CalendarClock],
-];
 
 export default function SummaryCards({ summary, selected, onSelect }: SummaryCardsProps) {
   return (

@@ -1,22 +1,22 @@
 'use client';
-import type { Item, Publication } from '../../lib/types.ts';
+
+import { canReschedulePublication } from './publication.helpers.ts';
+import type { RescheduleEditorProps } from './editors.helpers.ts';
 import { useState } from 'react';
 import { Input, Button, Field } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
-import { reschedulePublication } from '../../lib/calendar';
+import { reschedulePublication } from '../calendar/calendar.helpers.ts';
 import Modal from './modal';
-
-type RescheduleEditorProps = { item: Item; publication: Publication; close: () => void };
 
 export default function RescheduleEditor({ item, publication, close }: RescheduleEditorProps) {
   const { updateItem, notify } = useWorkspace();
   const [date, setDate] = useState(publication.date);
   function save(nextDate: string) {
-    if (!reschedulePublication({ publications: [{ ...publication }] }, publication.id, nextDate)) {
+    if (!canReschedulePublication(publication, nextDate)) {
       notify('Choose a valid date for an unposted plan.');
       return;
     }
-    updateItem(item.id, (draft) => reschedulePublication(draft, publication.id, nextDate));
+    updateItem(item.id, draft => reschedulePublication(draft, publication.id, nextDate));
     close();
     notify(nextDate ? 'Your plan has a new date.' : 'Plan moved to Unscheduled.');
   }
@@ -48,7 +48,7 @@ export default function RescheduleEditor({ item, publication, close }: Reschedul
     >
       <form
         id="reschedule-plan"
-        onSubmit={(event) => {
+        onSubmit={event => {
           event.preventDefault();
           if (date) save(date);
         }}
@@ -60,8 +60,8 @@ export default function RescheduleEditor({ item, publication, close }: Reschedul
             type="date"
             max="9999-12-31"
             value={date}
-            onInput={(e) => setDate(e.currentTarget.value)}
-            onChange={(e) => setDate(e.target.value)}
+            onInput={e => setDate(e.currentTarget.value)}
+            onChange={e => setDate(e.target.value)}
           />
         </Field>
         <p className="footnote">

@@ -3,5 +3,5 @@ import type { Options } from 'react-markdown';
 export const assistantMarkdown: Options = {
   skipHtml: true,
   unwrapDisallowed: true,
-  allowedElements: ['p', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'pre', 'br', 'blockquote'],
+  allowedElements: ['p', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'pre', 'br', 'blockquote']
 };

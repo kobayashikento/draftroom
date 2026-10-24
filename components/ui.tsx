@@ -1,9 +1,14 @@
 'use client';
-import type { ComponentProps, ReactNode, CSSProperties, RefAttributes } from 'react';
+
+import { isPrimaryButton, selectChoice } from './ui.helpers.ts';
 import type {
-  ButtonProps as ChakraButtonProps,
-  TextareaProps as ChakraTextareaProps,
-} from '@chakra-ui/react';
+  ButtonProps,
+  PriorityButtonProps,
+  FieldProps,
+  TextareaProps,
+  InputProps,
+  SelectProps
+} from './ui.helpers.ts';
 import {
   Button as ChakraButton,
   Field as ChakraField,
@@ -11,17 +16,13 @@ import {
   Textarea as ChakraTextarea,
   NativeSelect,
   Checkbox,
-  Badge,
+  Badge
 } from '@chakra-ui/react';
 import { Flag, Check, ChevronDown } from 'lucide-react';
 import { AppIcon } from './icons';
 
-export function Button({
-  children,
-  className = '',
-  ...props
-}: ChakraButtonProps & RefAttributes<HTMLButtonElement>) {
-  const primary = className.split(' ').includes('primary');
+export function Button({ children, className = '', ...props }: ButtonProps) {
+  const primary = isPrimaryButton(className);
   return (
     <ChakraButton
       type="button"
@@ -35,15 +36,7 @@ export function Button({
     </ChakraButton>
   );
 }
-export function PriorityButton({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
+export function PriorityButton({ active, label, onClick }: PriorityButtonProps) {
   return (
     <Button
       className="icon-button priority-button"
@@ -56,15 +49,7 @@ export function PriorityButton({
     </Button>
   );
 }
-export function Field({
-  label,
-  wide = false,
-  children,
-}: {
-  label: string;
-  wide?: boolean;
-  children: ReactNode;
-}) {
+export function Field({ label, wide = false, children }: FieldProps) {
   return (
     <ChakraField.Root className={`field ${wide ? 'wide' : ''}`}>
       <ChakraField.Label className="field-label" color="draftroom.muted">
@@ -74,10 +59,7 @@ export function Field({
     </ChakraField.Root>
   );
 }
-type InputChange = { target: { checked: boolean; value: string } };
-type InputProps = Omit<ComponentProps<'input'>, 'onChange' | 'size'> & {
-  onChange?: (event: InputChange) => void;
-};
+
 export function Input({ type, checked, onChange, className = '', ...props }: InputProps) {
   if (type === 'checkbox')
     return (
@@ -107,10 +89,7 @@ export function Input({ type, checked, onChange, className = '', ...props }: Inp
     />
   );
 }
-export function Textarea({
-  className = '',
-  ...props
-}: ChakraTextareaProps & RefAttributes<HTMLTextAreaElement>) {
+export function Textarea({ className = '', ...props }: TextareaProps) {
   return (
     <ChakraTextarea
       colorPalette="pistachio"
@@ -120,13 +99,7 @@ export function Textarea({
     />
   );
 }
-type SelectOption = string | readonly string[];
-type SelectProps = Omit<ComponentProps<'select'>, 'onChange' | 'value'> & {
-  options: SelectOption[];
-  value: string;
-  onChange: (value: string) => void;
-  style?: CSSProperties;
-};
+
 export function Select({ options, value, onChange, style, className = '', ...props }: SelectProps) {
   return (
     <NativeSelect.Root
@@ -138,14 +111,14 @@ export function Select({ options, value, onChange, style, className = '', ...pro
       <NativeSelect.Field
         className="dr-select"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={e => onChange(e.target.value)}
         {...props}
       >
-        {options.map((x) => {
-          const [v, n] = typeof x === 'string' ? [x, x] : x;
+        {options.map(x => {
+          const { value, label } = selectChoice(x);
           return (
-            <option key={v} value={v}>
-              {n}
+            <option key={value} value={value}>
+              {label}
             </option>
           );
         })}

@@ -7,12 +7,12 @@ import { dateString } from './model.ts';
 export async function requestAssistant(
   state: Workspace,
   messages: AssistantMessage[],
-  signal: AbortSignal,
+  signal: AbortSignal
 ) {
   const client = getSupabaseClient();
   if (!client)
     throw new Error(
-      'The assistant needs a signed-in Supabase workspace. Open the connected app to use Gemini.',
+      'The assistant needs a signed-in Supabase workspace. Open the connected app to use Gemini.'
     );
   const { data, error } = await client.functions.invoke('draftroom-assistant', {
     body: {
@@ -20,11 +20,11 @@ export async function requestAssistant(
       context: assistantContext(
         state,
         dateString(new Date()),
-        Intl.DateTimeFormat().resolvedOptions().timeZone,
-      ),
+        Intl.DateTimeFormat().resolvedOptions().timeZone
+      )
     },
     signal,
-    timeout: 55_000,
+    timeout: 55_000
   });
   if (error) {
     let message;
@@ -34,7 +34,7 @@ export async function requestAssistant(
       /* Network and gateway errors have no JSON body. */
     }
     throw new Error(
-      message || 'Couldn’t reach the assistant. Check your connection and try again.',
+      message || 'Couldn’t reach the assistant. Check your connection and try again.'
     );
   }
   return validateReply(data);

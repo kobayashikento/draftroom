@@ -1,10 +1,14 @@
 'use client';
-import type { Item } from '../../lib/types.ts';
+
+import {
+  analyticsPlatforms,
+  metricLabels,
+  publicationRecordLabel
+} from './analytics/analytics.helpers.ts';
+import type { AnalyticsProps } from './analytics/analytics.helpers.ts';
 import { Badge, Button } from '../ui';
 import { PlatformIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
-
-type AnalyticsProps = { item?: Item };
 
 export default function Analytics({ item }: AnalyticsProps) {
   const { state, open } = useWorkspace();
@@ -15,13 +19,13 @@ export default function Analytics({ item }: AnalyticsProps) {
         after an authorized integration is added.
       </div>
       <div className="analytics-grid">
-        {['Instagram', 'TikTok'].map((platform) => (
+        {analyticsPlatforms.map(platform => (
           <section className="panel analytics-card" key={platform}>
             <PlatformIcon platform={platform} size="lg" />
             <h2>{platform}</h2>
             <Badge className="pill">Not connected</Badge>
             <div className="no-metrics">
-              {['Views', 'Likes', 'Comments'].map((x) => (
+              {metricLabels.map(x => (
                 <div key={x}>
                   <strong>—</strong>
                   <span className="tiny muted">{x}</span>
@@ -42,16 +46,14 @@ export default function Analytics({ item }: AnalyticsProps) {
             <h2>Your publication records</h2>
           </div>
           <div className="panel">
-            {state.items.map((p) => (
+            {state.items.map(p => (
               <div key={p.id} className="list-item">
                 <Button className="link grow" onClick={() => open(p.id, 'Publish')}>
                   {p.title}
                 </Button>
-                {p.publications.map((pub) => (
+                {p.publications.map(pub => (
                   <span key={pub.id} className="tiny">
-                    {pub.platform}:{' '}
-                    {pub.state === 'manually_posted' ? 'Manually posted' : 'Planned'}
-                    {pub.url ? ' · Link saved' : ''}
+                    {publicationRecordLabel(pub)}
                   </span>
                 ))}
               </div>

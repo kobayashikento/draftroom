@@ -9,11 +9,11 @@ const date = (value: unknown) =>
 
 function records(
   value: unknown,
-  check: (record: Record<string, unknown>) => boolean,
+  check: (record: Record<string, unknown>) => boolean
 ): value is Record<string, unknown>[] {
   if (!Array.isArray(value)) return false;
   const ids = new Set<string>();
-  return value.every((record) => {
+  return value.every(record => {
     if (!object(record) || !string(record.id) || !record.id || ids.has(record.id) || !check(record))
       return false;
     ids.add(record.id);
@@ -32,7 +32,7 @@ export function validateWorkspace(data: unknown): Workspace {
       (object(data.assistant) &&
         records(
           data.assistant.messages,
-          (message) =>
+          message =>
             included(['user', 'assistant'], message.role) &&
             string(message.text) &&
             message.text.length <= 6000 &&
@@ -41,18 +41,18 @@ export function validateWorkspace(data: unknown): Workspace {
               (Array.isArray(message.receipts) &&
                 message.receipts.length <= 10 &&
                 message.receipts.every(
-                  (receipt) => object(receipt) && string(receipt.itemId) && string(receipt.label),
-                ))),
+                  receipt => object(receipt) && string(receipt.itemId) && string(receipt.label)
+                )))
         ) &&
         data.assistant.messages.length <= 60)) &&
     records(
       data.stages,
-      (stage) => string(stage.name) && included(['prep', 'ready', 'posted'], stage.kind),
+      stage => string(stage.name) && included(['prep', 'ready', 'posted'], stage.kind)
     ) &&
     data.stages.length > 0 &&
     records(
       data.series,
-      (series) =>
+      series =>
         string(series.name) &&
         included(['Reel', 'Carousel'], series.format) &&
         string(series.cadence) &&
@@ -60,46 +60,46 @@ export function validateWorkspace(data: unknown): Workspace {
         Array.isArray(series.storyboard) &&
         series.storyboard.every(string) &&
         Array.isArray(series.tasks) &&
-        series.tasks.every(string),
+        series.tasks.every(string)
     ) &&
     records(
       data.items,
-      (item) =>
+      item =>
         string(item.title) &&
         included(['Reel', 'Carousel'], item.format) &&
-        stages.some((stage) => stage.id === item.stageId) &&
-        (item.seriesId === '' || series.some((series) => series.id === item.seriesId)) &&
-        ['hook', 'notes', 'tags', 'priority', 'cadence', 'createdAt', 'updatedAt'].every((key) =>
-          string(item[key]),
+        stages.some(stage => stage.id === item.stageId) &&
+        (item.seriesId === '' || series.some(series => series.id === item.seriesId)) &&
+        ['hook', 'notes', 'tags', 'priority', 'cadence', 'createdAt', 'updatedAt'].every(key =>
+          string(item[key])
         ) &&
         records(
           item.storyboard,
-          (entry) =>
-            ['title', 'notes', 'overlay', 'reference'].every((key) => string(entry[key])) &&
-            typeof entry.done === 'boolean',
+          entry =>
+            ['title', 'notes', 'overlay', 'reference'].every(key => string(entry[key])) &&
+            typeof entry.done === 'boolean'
         ) &&
         records(
           item.tasks,
-          (task) =>
+          task =>
             string(task.title) &&
             string(task.category) &&
             typeof task.done === 'boolean' &&
             date(task.due) &&
-            (task.priority === undefined || included(['Normal', 'High'], task.priority)),
+            (task.priority === undefined || included(['Normal', 'High'], task.priority))
         ) &&
         records(
           item.publications,
-          (publication) =>
+          publication =>
             included(['Instagram', 'TikTok'], publication.platform) &&
             date(publication.date) &&
-            ['caption', 'url', 'postId'].every((key) => string(publication[key])) &&
+            ['caption', 'url', 'postId'].every(key => string(publication[key])) &&
             included(['planned', 'manually_posted'], publication.state) &&
-            (publication.publishedAt === null || string(publication.publishedAt)),
-        ),
+            (publication.publishedAt === null || string(publication.publishedAt))
+        )
     );
   if (!valid)
     throw new Error(
-      'This workspace file is incomplete or uses an unsupported format. Your existing drafts have not been replaced.',
+      'This workspace file is incomplete or uses an unsupported format. Your existing drafts have not been replaced.'
     );
   return data as Workspace;
 }
@@ -129,7 +129,7 @@ export function readCache(storage: CacheStorage, key: string): WorkspaceCache | 
     typeof cache.dirty !== 'boolean'
   ) {
     throw new Error(
-      'The saved browser copy could not be read. It has been preserved for recovery.',
+      'The saved browser copy could not be read. It has been preserved for recovery.'
     );
   }
   return { data: validateWorkspace(cache.data), revision: cache.revision, dirty: cache.dirty };
@@ -137,7 +137,7 @@ export function readCache(storage: CacheStorage, key: string): WorkspaceCache | 
 
 export function downloadWorkspace(data: Workspace) {
   const url = URL.createObjectURL(
-    new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
+    new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   );
   const link = document.createElement('a');
   link.href = url;

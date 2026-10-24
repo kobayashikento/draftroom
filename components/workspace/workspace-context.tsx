@@ -1,5 +1,7 @@
 'use client';
-import type { WorkspaceContextProps, WorkspaceContextValue } from './workspace-types';
+
+import { changeWorkspaceItem } from './workspace.helpers.ts';
+import type { WorkspaceContextProps, WorkspaceContextValue } from './workspace.helpers.ts';
 import type { WorkspaceModal, Item, EditorTab } from '../../lib/types.ts';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
@@ -29,13 +31,7 @@ export default function WorkspaceContext({
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
   const updateItem = (id: string, fn: (item: Item) => void) =>
-    update((draft) => {
-      const item = draft.items.find((item) => item.id === id);
-      if (item) {
-        fn(item);
-        item.updatedAt = new Date().toISOString();
-      }
-    });
+    update(draft => changeWorkspaceItem(draft, id, fn));
   const notify = (text: string) => {
     setMessage(text);
     clearTimeout(timer.current);
@@ -56,7 +52,7 @@ export default function WorkspaceContext({
         modal,
         setModal,
         open,
-        ...account,
+        ...account
       }}
     >
       {children}

@@ -1,20 +1,11 @@
 'use client';
-import type { PublicationEntry, CalendarMode } from '../../lib/types.ts';
-import type { PublicationDrag } from './use-publication-drag.ts';
+
+import type { UnscheduledPlansProps } from './calendar.helpers.ts';
 import { X, ArrowRight } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import { PublicationCards } from './publication-card';
-
-type UnscheduledPlansProps = {
-  entries: PublicationEntry[];
-  mode: CalendarMode;
-  hasFilters: boolean;
-  visible: boolean;
-  onClose: () => void;
-  drag: PublicationDrag;
-};
 
 export default function UnscheduledPlans({
   entries,
@@ -22,7 +13,7 @@ export default function UnscheduledPlans({
   hasFilters,
   visible,
   onClose,
-  drag,
+  drag
 }: UnscheduledPlansProps) {
   const { setModal } = useWorkspace();
   return (

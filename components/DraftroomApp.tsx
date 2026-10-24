@@ -1,11 +1,12 @@
 'use client';
+
 import type { View } from '../lib/types.ts';
 import { useState } from 'react';
 import { BrandMark } from './icons';
 import { WorkspaceProvider } from './workspace-provider';
 import { useWorkspaceContext } from './workspace/workspace-context';
 import { today } from '../lib/display.ts';
-import { monday } from '../lib/model';
+import { monday } from '../lib/model.ts';
 import Overview from './views/overview';
 import Ideas from './views/ideas';
 import Calendar from './calendar';
@@ -27,7 +28,7 @@ function Draftroom() {
   const [compactNav, setCompactNav] = useState(false);
   const navigate = (name: View) => {
     setView(name);
-    if (name === 'Overview') setWeek((w) => monday(w));
+    if (name === 'Overview') setWeek(w => monday(w));
   };
   if (!state)
     return (

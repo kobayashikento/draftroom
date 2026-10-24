@@ -1,8 +1,8 @@
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
-const root = resolve('out'),
-  port = Number(process.env.PORT || 3000);
+const root = resolve('out');
+const port = Number(process.env.PORT || 3000);
 const types: Record<string, string> = {
   '.html': 'text/html',
   '.js': 'application/javascript',
@@ -11,13 +11,13 @@ const types: Record<string, string> = {
   '.png': 'image/png',
   '.json': 'application/json',
   '.txt': 'text/plain',
-  '.woff2': 'font/woff2',
+  '.woff2': 'font/woff2'
 };
 createServer(async (req, res) => {
   try {
     let file = resolve(
       root,
-      '.' + decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname),
+      '.' + decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname)
     );
     if (file !== root && !file.startsWith(root + sep)) {
       res.writeHead(403);

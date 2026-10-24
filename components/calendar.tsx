@@ -1,25 +1,18 @@
 'use client';
+
+import { calendarDays, calendarEntries, calendarRange } from './calendar/calendar.helpers.ts';
+import type { CalendarProps } from './calendar/calendar.helpers.ts';
 import type { CalendarMode } from '../lib/types.ts';
-import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 import { useWorkspace } from './workspace/workspace-context';
-import { addDays } from '../lib/model';
-import { calendarEntries, calendarRange } from '../lib/calendar';
 import CalendarToolbar from './calendar/calendar-toolbar';
 import CalendarFilters from './calendar/calendar-filters';
 import CalendarSummary from './calendar/calendar-summary';
 import CalendarGrid from './calendar/calendar-grid';
 import CalendarAgenda from './calendar/calendar-agenda';
 import UnscheduledPlans from './calendar/unscheduled-plans';
-import useCalendarFilters from './calendar/use-calendar-filters';
-import usePublicationDrag from './calendar/use-publication-drag';
-
-type CalendarProps = {
-  week: string;
-  setWeek: Dispatch<SetStateAction<string>>;
-  platform: string;
-  setPlatform: Dispatch<SetStateAction<string>>;
-};
+import useCalendarFilters from './calendar/use-calendar-filters.ts';
+import usePublicationDrag from './calendar/use-publication-drag.ts';
 
 export default function Calendar({ week, setWeek, platform, setPlatform }: CalendarProps) {
   const { state } = useWorkspace();
@@ -29,7 +22,7 @@ export default function Calendar({ week, setWeek, platform, setPlatform }: Calen
   const filters = useCalendarFilters(platform, setPlatform);
   const drag = usePublicationDrag();
   const range = calendarRange(week, mode);
-  const days = Array.from({ length: range.days }, (_, i) => addDays(range.start, i));
+  const days = calendarDays(range);
   const entries = calendarEntries(state, { ...range, ...filters.values });
   const unscheduled = calendarEntries(state, { ...filters.values, unscheduled: true });
   function changeMode(value: CalendarMode) {

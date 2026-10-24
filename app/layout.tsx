@@ -7,7 +7,7 @@ type RootLayoutProps = { children: ReactNode };
 
 export const metadata = {
   title: 'draftroom — your little creative workspace',
-  description: 'A calm, connected content workspace for your next good idea.',
+  description: 'A calm, connected content workspace for your next good idea.'
 };
 export default function RootLayout({ children }: RootLayoutProps) {
   return (

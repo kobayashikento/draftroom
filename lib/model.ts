@@ -6,7 +6,9 @@ import type {
   Series,
   ProductionTask,
   ProductionGroup,
-  Platform,
+  ProductionQueue,
+  ProductionQueueOptions,
+  Platform
 } from './types.ts';
 export const uid = () => crypto.randomUUID();
 export const dateString = (d: Date) =>
@@ -27,7 +29,7 @@ export function seed(): Workspace {
     ['progress', 'In progress', 'prep'],
     ['editing', 'Editing', 'prep'],
     ['ready', 'Ready', 'ready'],
-    ['posted', 'Posted', 'posted'],
+    ['posted', 'Posted', 'posted']
   ];
   const stages: Stage[] = stageSpecs.map(([id, name, kind]) => ({ id, name, kind }));
   const seriesSpecs: [string, string, Series['format'], string, string, string][] = [
@@ -38,10 +40,10 @@ export function seed(): Workspace {
       'Carousel',
       'Monthly',
       'A few favourites worth sharing.',
-      '✧',
+      '✧'
     ],
     ['matcha', 'Matcha Mornings', 'Reel', 'Weekly', 'A slower start, one cup at a time.', '♧'],
-    ['joys', 'Little Joys Lately', 'Carousel', 'Monthly', 'Collect the good in the everyday.', '☼'],
+    ['joys', 'Little Joys Lately', 'Carousel', 'Monthly', 'Collect the good in the everyday.', '☼']
   ];
   const series: Series[] = seriesSpecs.map(([id, name, format, cadence, description, icon]) => ({
     id,
@@ -59,7 +61,7 @@ export function seed(): Workspace {
             'A moment with Emi',
             'A cozy game',
             'Something delicious',
-            'A little question for you',
+            'A little question for you'
           ],
     tasks:
       format === 'Reel'
@@ -68,8 +70,8 @@ export function seed(): Workspace {
             'Plan slides',
             'Photograph / select images',
             'Write slide notes',
-            'Design / export carousel',
-          ],
+            'Design / export carousel'
+          ]
   }));
   const specs: [string, string, string, string, string[]][] = [
     [
@@ -77,29 +79,29 @@ export function seed(): Workspace {
       'emi',
       'editing',
       '2026-10-26',
-      ['Choose pretty clip', 'Find silly clips', 'Edit clips', 'Write caption'],
+      ['Choose pretty clip', 'Find silly clips', 'Edit clips', 'Write caption']
     ],
     [
       'Currently obsessed with lately',
       'obsessed',
       'idea',
       '2026-10-28',
-      ['Pick six favourites', 'Photograph favourites', 'Write slide notes', 'Design carousel'],
+      ['Pick six favourites', 'Photograph favourites', 'Write slide notes', 'Design carousel']
     ],
     [
       'Matcha mornings',
       'matcha',
       'ready',
       '2026-10-30',
-      ['Film prep', 'Film finished drink', 'Edit video', 'Write caption'],
+      ['Film prep', 'Film finished drink', 'Edit video', 'Write caption']
     ],
     [
       'Little joys lately',
       'joys',
       'progress',
       '2026-11-01',
-      ['Collect photos', 'Write notes', 'Select cover', 'Design carousel'],
-    ],
+      ['Collect photos', 'Write notes', 'Select cover', 'Design carousel']
+    ]
   ];
   const state: Workspace = { version: 1, stages, series, items: [] };
   state.items = specs.map(([title, sid, stage, date, tasks], i) => {
@@ -112,14 +114,14 @@ export function seed(): Workspace {
       title,
       category: ['plan', 'film', 'edit', 'caption'][j],
       done: i === 2 || j < (i === 0 ? 2 : i === 3 ? 1 : 0),
-      due: addDays(date, -2),
+      due: addDays(date, -2)
     }));
     return p;
   });
   return state;
 }
 export function createItem(state: Workspace, { title, format, seriesId = '' }: ItemOptions): Item {
-  const s = state.series.find((x) => x.id === seriesId);
+  const s = state.series.find(x => x.id === seriesId);
   format = format || s?.format || 'Reel';
   return {
     id: uid(),
@@ -139,7 +141,7 @@ export function createItem(state: Workspace, { title, format, seriesId = '' }: I
       (format === 'Reel'
         ? ['Opening hook', 'Main moment', 'Closing shot']
         : ['Cover', 'Photo 1', 'Photo 2', 'Photo 3', 'Photo 4', 'Closing question'])
-    ).map((title) => ({ id: uid(), title, notes: '', overlay: '', reference: '', done: false })),
+    ).map(title => ({ id: uid(), title, notes: '', overlay: '', reference: '', done: false })),
     tasks: (
       s?.tasks ||
       (format === 'Reel'
@@ -148,16 +150,16 @@ export function createItem(state: Workspace, { title, format, seriesId = '' }: I
             'Plan slides',
             'Photograph / select images',
             'Write slide notes',
-            'Design / export carousel',
+            'Design / export carousel'
           ])
     ).map((title, i) => ({
       id: uid(),
       title,
       category: ['plan', format === 'Reel' ? 'film' : 'photo', 'edit', 'caption'][i],
       done: false,
-      due: '',
+      due: ''
     })),
-    publications: (['Instagram', 'TikTok'] as Platform[]).map((platform) => ({
+    publications: (['Instagram', 'TikTok'] as Platform[]).map(platform => ({
       id: uid(),
       platform,
       date: '',
@@ -165,23 +167,23 @@ export function createItem(state: Workspace, { title, format, seriesId = '' }: I
       url: '',
       postId: '',
       state: 'planned',
-      publishedAt: null,
-    })),
+      publishedAt: null
+    }))
   };
 }
 export const kind = (state: Workspace, p: Item) =>
-  state.stages.find((x) => x.id === p.stageId)?.kind || 'prep';
+  state.stages.find(x => x.id === p.stageId)?.kind || 'prep';
 export const scheduled = (state: Workspace, start: string, end: string) =>
   state.items
-    .flatMap((p) =>
+    .flatMap(p =>
       p.publications
-        .filter((x) => x.date && x.date >= start && x.date <= end)
-        .map((pub) => ({ p, pub })),
+        .filter(x => x.date && x.date >= start && x.date <= end)
+        .map(pub => ({ p, pub }))
     )
     .sort((a, b) => a.pub.date.localeCompare(b.pub.date));
 function compareProductionTasks(a: ProductionTask, b: ProductionTask) {
   const due = ({ p, t }: ProductionTask) =>
-    t.due || p.publications.find((x) => x.date)?.date || '9999';
+    t.due || p.publications.find(x => x.date)?.date || '9999';
   return (
     Number(b.t.priority === 'High') - Number(a.t.priority === 'High') ||
     Number(b.p.priority === 'High') - Number(a.p.priority === 'High') ||
@@ -190,40 +192,40 @@ function compareProductionTasks(a: ProductionTask, b: ProductionTask) {
 }
 export const productionTasks = (state: Workspace) =>
   state.items
-    .filter((p) => kind(state, p) === 'prep')
-    .flatMap((p) => p.tasks.map((t) => ({ p, t })))
+    .filter(p => kind(state, p) === 'prep')
+    .flatMap(p => p.tasks.map(t => ({ p, t })))
     .sort(compareProductionTasks);
 export const pending = (state: Workspace) => productionTasks(state).filter(({ t }) => !t.done);
 
 export function productionQueue(
   state: Workspace,
-  { start = '', end = '' }: { start?: string; end?: string } = {},
-) {
-  const active: ProductionGroup[] = [],
-    completed: ProductionGroup[] = [];
+  { start = '', end = '' }: ProductionQueueOptions = {}
+): ProductionQueue {
+  const active: ProductionGroup[] = [];
+  const completed: ProductionGroup[] = [];
   for (const item of state.items) {
     if (!item.tasks.length) continue;
-    const finished = item.tasks.every((task) => task.done);
+    const finished = item.tasks.every(task => task.done);
     if (!finished && kind(state, item) !== 'prep') continue;
     const tasks = item.tasks
       .filter(
-        (task) =>
+        task =>
           (!start && !end) ||
-          Boolean(task.due && (!start || task.due >= start) && (!end || task.due <= end)),
+          Boolean(task.due && (!start || task.due >= start) && (!end || task.due <= end))
       )
-      .map((t) => ({ p: item, t }))
+      .map(t => ({ p: item, t }))
       .sort((a, b) => Number(a.t.done) - Number(b.t.done) || compareProductionTasks(a, b));
     if (tasks.length) (finished ? completed : active).push({ item, tasks });
   }
   active.sort((a, b) => {
-    const first = a.tasks.find(({ t }) => !t.done),
-      second = b.tasks.find(({ t }) => !t.done);
+    const first = a.tasks.find(({ t }) => !t.done);
+    const second = b.tasks.find(({ t }) => !t.done);
     return first && second
       ? compareProductionTasks(first, second)
       : Number(!first) - Number(!second);
   });
   const work = active
-    .flatMap((group) => group.tasks)
+    .flatMap(group => group.tasks)
     .filter(({ t }) => !t.done)
     .sort(compareProductionTasks);
   return { active, completed, next: work[0] || null, remaining: work.length };

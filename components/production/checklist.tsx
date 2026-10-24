@@ -1,5 +1,7 @@
 'use client';
-import type { Item, ProductionTask } from '../../lib/types.ts';
+
+import { completedTaskCount, toggleProjectPriority } from './production.helpers.ts';
+import type { ChecklistProps } from './production.helpers.ts';
 import { useId, useState } from 'react';
 import { ArrowRight, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button, PriorityButton } from '../ui';
@@ -8,13 +10,11 @@ import { useWorkspace } from '../workspace/workspace-context';
 import StagePill from '../workspace/stage-pill';
 import TaskRow from '../workspace/task-row';
 
-type ChecklistProps = { item: Item; tasks: ProductionTask[]; finished: boolean };
-
 export default function Checklist({ item, tasks, finished }: ChecklistProps) {
   const { updateItem, open } = useWorkspace();
   const [expanded, setExpanded] = useState(!finished);
   const contentId = useId();
-  const done = item.tasks.filter((task) => task.done).length;
+  const done = completedTaskCount(item);
   return (
     <section className="panel production-checklist">
       <div className="checklist-header">
@@ -23,7 +23,7 @@ export default function Checklist({ item, tasks, finished }: ChecklistProps) {
           aria-label={`${expanded ? 'Collapse' : 'Expand'} checklist for ${item.title}`}
           aria-expanded={expanded}
           aria-controls={contentId}
-          onClick={() => setExpanded((value) => !value)}
+          onClick={() => setExpanded(value => !value)}
         >
           <AppIcon icon={expanded ? ChevronDown : ChevronRight} />
           <span className="checklist-heading">
@@ -38,9 +38,7 @@ export default function Checklist({ item, tasks, finished }: ChecklistProps) {
           <PriorityButton
             label={`project: ${item.title}`}
             active={item.priority === 'High'}
-            onClick={() =>
-              updateItem(item.id, (p) => (p.priority = p.priority === 'High' ? 'Normal' : 'High'))
-            }
+            onClick={() => updateItem(item.id, toggleProjectPriority)}
           />
         </div>
       </div>

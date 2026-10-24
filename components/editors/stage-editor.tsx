@@ -1,14 +1,19 @@
 'use client';
-import type { StageKind } from '../../lib/types.ts';
+
+import {
+  addStage,
+  removeStage,
+  setStageField,
+  stageBehaviors,
+  isStageKind
+} from './stage.helpers.ts';
+import type { StageEditorProps } from './editors.helpers.ts';
 import { ArrowUp, ArrowDown, Plus, X } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Input, Button, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import { reorder } from '../../lib/reorder.ts';
-import { uid } from '../../lib/model';
 import Modal from './modal';
-
-type StageEditorProps = { close: () => void };
 
 export default function StageEditor({ close }: StageEditorProps) {
   const { state, update, notify } = useWorkspace();
@@ -17,9 +22,8 @@ export default function StageEditor({ close }: StageEditorProps) {
       notify('Keep at least one stage.');
       return;
     }
-    update((s) => {
-      s.stages = s.stages.filter((x) => x.id !== id);
-      s.items.filter((p) => p.stageId === id).forEach((p) => (p.stageId = s.stages[0].id));
+    update(s => {
+      removeStage(s, id);
     });
   }
   return (
@@ -44,28 +48,24 @@ export default function StageEditor({ close }: StageEditorProps) {
           <Input
             aria-label="Stage name"
             value={s.name}
-            onChange={(e) => {
+            onChange={e => {
               const name = e.target.value;
-              update((d) => (d.stages.find((x) => x.id === s.id)!.name = name));
+              update(d => setStageField(d, s.id, 'name', name));
             }}
           />
           <Select
             aria-label="Stage behavior"
-            options={[
-              ['prep', 'Needs prep'],
-              ['ready', 'Ready'],
-              ['posted', 'Posted'],
-            ]}
+            options={stageBehaviors}
             value={s.kind}
-            onChange={(v) =>
-              update((d) => (d.stages.find((x) => x.id === s.id)!.kind = v as StageKind))
-            }
+            onChange={v => {
+              if (isStageKind(v)) update(d => setStageField(d, s.id, 'kind', v));
+            }}
           />
           <Button
             className="icon-button"
             aria-label="Move stage up"
             disabled={i === 0}
-            onClick={() => update((d) => reorder(d.stages, s.id, -1))}
+            onClick={() => update(d => reorder(d.stages, s.id, -1))}
           >
             <AppIcon icon={ArrowUp} />
           </Button>
@@ -73,7 +73,7 @@ export default function StageEditor({ close }: StageEditorProps) {
             className="icon-button"
             aria-label="Move stage down"
             disabled={i === state.stages.length - 1}
-            onClick={() => update((d) => reorder(d.stages, s.id, 1))}
+            onClick={() => update(d => reorder(d.stages, s.id, 1))}
           >
             <AppIcon icon={ArrowDown} />
           </Button>
@@ -82,9 +82,7 @@ export default function StageEditor({ close }: StageEditorProps) {
           </Button>
         </div>
       ))}
-      <Button
-        onClick={() => update((s) => s.stages.push({ id: uid(), name: 'New stage', kind: 'prep' }))}
-      >
+      <Button onClick={() => update(addStage)}>
         <AppIcon icon={Plus} />
         Add stage
       </Button>

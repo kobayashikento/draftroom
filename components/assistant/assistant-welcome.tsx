@@ -1,16 +1,11 @@
 'use client';
-import type { SendAssistant } from './use-assistant.ts';
+
+import { suggestions } from './assistant.helpers.ts';
+import type { AssistantWelcomeProps } from './assistant.helpers.ts';
 import { Sparkles, ArrowUpRight } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 
-type AssistantWelcomeProps = { onSend: SendAssistant; disabled: boolean };
-
-const suggestions = [
-  'What should I work on next?',
-  'Help me plan next week',
-  'Help me create a new reel',
-];
 export default function AssistantWelcome({ onSend, disabled }: AssistantWelcomeProps) {
   return (
     <div className="assistant-welcome">
@@ -23,7 +18,7 @@ export default function AssistantWelcome({ onSend, disabled }: AssistantWelcomeP
         Talk through an idea, find your next step, or ask me to add tasks to your projects.
       </p>
       <div className="assistant-suggestions">
-        {suggestions.map((text) => (
+        {suggestions.map(text => (
           <Button key={text} onClick={() => onSend(text)} disabled={disabled}>
             {text}
             <AppIcon icon={ArrowUpRight} />

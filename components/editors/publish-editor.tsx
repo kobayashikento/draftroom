@@ -1,24 +1,24 @@
 'use client';
-import type { Item, Publication } from '../../lib/types.ts';
+
+import {
+  publicationFieldSetter,
+  togglePublicationPosted,
+  hasInvalidPublicationUrl
+} from './publication.helpers.ts';
+import type { PublishEditorProps } from './editors.helpers.ts';
 import { Input, Textarea, Badge, Button, Field } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 
-type PublishEditorProps = { item: Item };
-
 export default function PublishEditor({ item }: PublishEditorProps) {
   const { updateItem } = useWorkspace();
-  const set = <K extends keyof Publication>(id: string, key: K, value: Publication[K]) =>
-    updateItem(item.id, (draft) => {
-      const target = draft.publications.find((entry) => entry.id === id);
-      if (target) target[key] = value;
-    });
+  const set = publicationFieldSetter(item.id, updateItem);
   return (
     <>
       <p className="banner">
         Plan each platform separately. Marking a publication posted records your manual update; it
         does not publish online or change the idea’s workflow stage.
       </p>
-      {item.publications.map((pub) => (
+      {item.publications.map(pub => (
         <section className="entry" key={pub.id} aria-label={pub.platform}>
           <div className="section-head mt-0 mb-4">
             <h2>{pub.platform}</h2>
@@ -31,8 +31,8 @@ export default function PublishEditor({ item }: PublishEditorProps) {
               <Input
                 type="date"
                 value={pub.date}
-                onInput={(e) => set(pub.id, 'date', e.currentTarget.value)}
-                onChange={(e) => set(pub.id, 'date', e.target.value)}
+                onInput={e => set(pub.id, 'date', e.currentTarget.value)}
+                onChange={e => set(pub.id, 'date', e.target.value)}
               />
             </Field>
             <Field label="Published post URL">
@@ -40,35 +40,27 @@ export default function PublishEditor({ item }: PublishEditorProps) {
                 type="url"
                 value={pub.url}
                 placeholder="https://…"
-                onChange={(e) => set(pub.id, 'url', e.target.value)}
+                onChange={e => set(pub.id, 'url', e.target.value)}
               />
             </Field>
             <Field label="Platform post ID (optional)">
-              <Input value={pub.postId} onChange={(e) => set(pub.id, 'postId', e.target.value)} />
+              <Input value={pub.postId} onChange={e => set(pub.id, 'postId', e.target.value)} />
             </Field>
             <Field label="Final caption & hashtags" wide>
               <Textarea
                 placeholder="Your words, your voice…"
                 value={pub.caption}
-                onChange={(e) => set(pub.id, 'caption', e.target.value)}
+                onChange={e => set(pub.id, 'caption', e.target.value)}
               />
             </Field>
           </div>
-          {pub.url && !/^https?:\/\//i.test(pub.url) && (
+          {hasInvalidPublicationUrl(pub) && (
             <p className="warning">Use a full http or https link.</p>
           )}
           <div className="mt-4">
             <Button
               className="small"
-              onClick={() =>
-                updateItem(item.id, (p) => {
-                  const target = p.publications.find((x) => x.id === pub.id);
-                  if (!target) return;
-                  target.state = target.state === 'planned' ? 'manually_posted' : 'planned';
-                  target.publishedAt =
-                    target.state === 'manually_posted' ? new Date().toISOString() : null;
-                })
-              }
+              onClick={() => updateItem(item.id, p => togglePublicationPosted(p, pub.id))}
             >
               {pub.state === 'manually_posted' ? 'Undo posted status' : 'Mark manually posted'}
             </Button>

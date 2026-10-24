@@ -1,10 +1,10 @@
 'use client';
-import type { Item } from '../../lib/types.ts';
+
+import { deleteIdea } from './editors.helpers.ts';
+import type { DeleteIdeaDialogProps } from './editors.helpers.ts';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import Modal from './modal';
-
-type DeleteIdeaDialogProps = { item: Item; onCancel: () => void; close: () => void };
 
 export default function DeleteIdeaDialog({ item, onCancel, close }: DeleteIdeaDialogProps) {
   const { update, notify } = useWorkspace();
@@ -18,7 +18,7 @@ export default function DeleteIdeaDialog({ item, onCancel, close }: DeleteIdeaDi
           <Button
             className="danger"
             onClick={() => {
-              update((s) => (s.items = s.items.filter((p) => p.id !== item.id)));
+              update(s => deleteIdea(s, item.id));
               close();
               notify('Idea deleted.');
             }}

@@ -9,7 +9,7 @@ export function getSupabaseConfig() {
   if (!url && !key) return null;
   if (!url || !key)
     throw new Error(
-      'Supabase setup is incomplete. Add the project URL and publishable key to .env.local.',
+      'Supabase setup is incomplete. Add the project URL and publishable key to .env.local.'
     );
   const parsed = new URL(url);
   if (
@@ -20,7 +20,7 @@ export function getSupabaseConfig() {
   }
   if (!key.startsWith('sb_publishable_'))
     throw new Error(
-      'Use a Supabase publishable key. Secret and service-role keys must never be used in the browser.',
+      'Use a Supabase publishable key. Secret and service-role keys must never be used in the browser.'
     );
   return { url, key };
 }
@@ -32,8 +32,8 @@ export function getSupabaseClient() {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
     global: {
       fetch: (input, options) =>
-        fetch(input, { ...options, signal: options?.signal || AbortSignal.timeout(15_000) }),
-    },
+        fetch(input, { ...options, signal: options?.signal || AbortSignal.timeout(15_000) })
+    }
   });
   return client;
 }

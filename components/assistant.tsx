@@ -1,10 +1,11 @@
 'use client';
+
 import { useRef, useState } from 'react';
 import { Sparkles, ChevronUp } from 'lucide-react';
 import { AppIcon } from './icons';
 import { Button } from './ui';
 import { useWorkspace } from './workspace/workspace-context';
-import useAssistant from './assistant/use-assistant';
+import useAssistant from './assistant/use-assistant.ts';
 import AssistantPanel from './assistant/assistant-panel';
 
 export default function Assistant() {

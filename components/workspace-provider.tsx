@@ -1,11 +1,10 @@
 'use client';
-import type { ReactNode } from 'react';
+
+import type { WorkspaceProviderProps } from './workspace/workspace.helpers.ts';
 import { getSupabaseClient } from '../lib/supabase.ts';
 import WorkspaceProblem from './account/workspace-problem';
 import LocalWorkspace from './workspace/local-workspace';
 import AuthenticatedWorkspace from './workspace/authenticated-workspace';
-
-type WorkspaceProviderProps = { children: ReactNode };
 
 export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   let client;

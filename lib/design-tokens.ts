@@ -5,7 +5,7 @@ export const palette = {
   oat: '#E9E4D9',
   pistachio: '#D5DEBC',
   moss: '#79866A',
-  ink: '#2C3029',
+  ink: '#2C3029'
 };
 
 const color = (name: string) => `var(--dr-${name})`;
@@ -42,13 +42,13 @@ export const colorRoles = {
   artAccent: color('moss'),
   artDark: mix(color('ink'), color('moss'), 50),
   artCream: mix(color('oat'), color('ivory'), 60),
-  artGlint: mix(color('ivory'), 'transparent', 65),
+  artGlint: mix(color('ivory'), 'transparent', 65)
 };
 
 export const fonts = {
   body: "'DM Sans', system-ui, sans-serif",
   heading: "'DM Serif Display', Georgia, serif",
-  brand: "'Manrope', system-ui, sans-serif",
+  brand: "'Manrope', system-ui, sans-serif"
 };
 
 // Tailwind and Chakra share these sizes. Use text-sm for interface copy,
@@ -61,7 +61,7 @@ export const typeScale = {
   xl: { size: '1.25rem', leading: '1.75rem' },
   '2xl': { size: '1.5rem', leading: '2rem' },
   '3xl': { size: '1.875rem', leading: '2.25rem' },
-  '4xl': { size: '2.25rem', leading: '2.75rem' },
+  '4xl': { size: '2.25rem', leading: '2.75rem' }
 };
 export const spacingUnit = '0.25rem';
 export const iconStyle = { strokeWidth: 1.75, sizes: { sm: 16, md: 20, lg: 24, brand: 32 } };
@@ -79,8 +79,8 @@ export const cssCustomProperties = Object.fromEntries([
   ...Object.entries(fonts).map(([name, value]) => [`--dr-font-${name}`, value]),
   ...Object.entries(typeScale).flatMap(([name, { size, leading }]) => [
     [`--dr-text-${name}`, size],
-    [`--dr-leading-${name}`, leading],
+    [`--dr-leading-${name}`, leading]
   ]),
   ['--dr-space', spacingUnit],
-  ...Object.entries(motion).map(([name, value]) => [`--dr-motion-${name}`, value]),
+  ...Object.entries(motion).map(([name, value]) => [`--dr-motion-${name}`, value])
 ]);

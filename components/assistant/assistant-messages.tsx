@@ -1,17 +1,12 @@
 'use client';
-import type { EditorTab, AssistantMessage } from '../../lib/types.ts';
+
+import type { AssistantMessagesProps } from './assistant.helpers.ts';
 import { useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
 import { CheckCheck, ArrowUpRight } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 import { assistantMarkdown } from '../../lib/assistant-markdown.ts';
-
-type AssistantMessagesProps = {
-  messages: AssistantMessage[];
-  busy: boolean;
-  onOpen: (id: string, tab?: EditorTab) => void;
-};
 
 export default function AssistantMessages({ messages, busy, onOpen }: AssistantMessagesProps) {
   const end = useRef<HTMLDivElement | null>(null);
@@ -27,7 +22,7 @@ export default function AssistantMessages({ messages, busy, onOpen }: AssistantM
       aria-relevant="additions"
       className="assistant-messages"
     >
-      {messages.map((message) => (
+      {messages.map(message => (
         <article key={message.id} className={`assistant-message is-${message.role}`}>
           <p className="text-xs font-medium text-muted">
             {message.role === 'user' ? 'You' : 'Draftroom'}

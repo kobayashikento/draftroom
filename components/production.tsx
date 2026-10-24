@@ -1,4 +1,12 @@
 'use client';
+
+import {
+  productionView,
+  productionRanges,
+  isProductionTab,
+  setTaskField
+} from './production/production.helpers.ts';
+import type { ProductionRange, ProductionTab } from './production/production.helpers.ts';
 import { useState } from 'react';
 import { Tabs } from '@chakra-ui/react';
 import { ArrowRight, Check, FolderCheck, ListTodo } from 'lucide-react';
@@ -6,22 +14,21 @@ import { Button } from './ui';
 import { AppIcon } from './icons';
 import { useWorkspace } from './workspace/workspace-context';
 import { fmt, today } from '../lib/display.ts';
-import { addDays, monday, kind, productionQueue } from '../lib/model';
 import Checklist from './production/checklist';
 
 export default function Production() {
   const { state, updateItem, open } = useWorkspace();
-  const [range, setRange] = useState('All'),
-    [tab, setTab] = useState('active');
-  const start = range === 'All' ? '' : range === 'Today' ? today() : monday(today());
-  const end = range === 'All' ? '' : range === 'Today' ? today() : addDays(start, 6);
-  const queue = productionQueue(state, { start, end });
+  const [range, setRange] = useState<ProductionRange>('All');
+  const [tab, setTab] = useState<ProductionTab>('active');
+  const { queue, unfinishedReady } = productionView(state, range, today());
   const groups = tab === 'active' ? queue.active : queue.completed;
   const next = queue.next;
   return (
     <Tabs.Root
       value={tab}
-      onValueChange={({ value }) => setTab(value)}
+      onValueChange={({ value }) => {
+        if (isProductionTab(value)) setTab(value);
+      }}
       colorPalette="pistachio"
       variant="subtle"
     >
@@ -37,7 +44,7 @@ export default function Production() {
           </Tabs.Trigger>
         </Tabs.List>
         <div className="segmented" role="group" aria-label="Task due date">
-          {['All', 'Today', 'This week'].map((value) => (
+          {productionRanges.map(value => (
             <Button
               key={value}
               className={range === value ? 'active' : ''}
@@ -74,12 +81,7 @@ export default function Production() {
             </div>
             <Button
               className="primary"
-              onClick={() =>
-                updateItem(
-                  next.p.id,
-                  (p) => (p.tasks.find((task) => task.id === next.t.id)!.done = true),
-                )
-              }
+              onClick={() => updateItem(next.p.id, p => setTaskField(p, next.t.id, 'done', true))}
             >
               <AppIcon icon={Check} />
               Complete & next
@@ -110,16 +112,14 @@ export default function Production() {
           </p>
         )}
       </Tabs.Content>
-      {state.items
-        .filter((p) => kind(state, p) === 'ready' && p.tasks.some((task) => !task.done))
-        .map((p) => (
-          <p className="warning" key={p.id}>
-            {p.title} is Ready with unfinished tasks.{' '}
-            <Button className="link" onClick={() => open(p.id, 'Production')}>
-              Review checklist
-            </Button>
-          </p>
-        ))}
+      {unfinishedReady.map(p => (
+        <p className="warning" key={p.id}>
+          {p.title} is Ready with unfinished tasks.{' '}
+          <Button className="link" onClick={() => open(p.id, 'Production')}>
+            Review checklist
+          </Button>
+        </p>
+      ))}
     </Tabs.Root>
   );
 }

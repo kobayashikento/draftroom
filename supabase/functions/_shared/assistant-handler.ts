@@ -26,7 +26,7 @@ async function requestBody(request: Request): Promise<unknown> {
       await reader.cancel();
       throw new AssistantError(
         'This conversation is too large. Start a new chat or shorten your message.',
-        413,
+        413
       );
     }
     chunks.push(value);
@@ -45,7 +45,7 @@ export function createAssistantHandler({
   apiKey,
   model = 'gemini-3.5-flash-lite',
   fetcher = fetch,
-  corsHeaders = {},
+  corsHeaders = {}
 }: {
   authorize: (request: Request) => Promise<string | null>;
   apiKey?: string;
@@ -67,12 +67,12 @@ export function createAssistantHandler({
       if (!apiKey)
         throw new AssistantError(
           'Gemini isn’t connected yet. Add GEMINI_API_KEY in Supabase Edge Function secrets.',
-          503,
+          503
         );
       if (apiKey.startsWith('sb_'))
         throw new AssistantError(
           'GEMINI_API_KEY contains a Supabase key. Replace it with a Gemini API key from Google AI Studio.',
-          503,
+          503
         );
       const body = await requestBody(request);
       if (!body || typeof body !== 'object' || !('messages' in body) || !('context' in body))
@@ -80,7 +80,7 @@ export function createAssistantHandler({
       const messages = validateMessages(body.messages);
       const context = validateContext(body.context);
       const now = Date.now();
-      const recent = (calls.get(userId) || []).filter((time) => time > now - 60_000);
+      const recent = (calls.get(userId) || []).filter(time => time > now - 60_000);
       if (recent.length >= 6)
         throw new AssistantError('A little breather—please try again in a minute.', 429);
       calls.set(userId, [...recent, now]);
@@ -92,8 +92,8 @@ export function createAssistantHandler({
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
             body: JSON.stringify(geminiRequest(context, messages)),
-            signal: AbortSignal.timeout(45_000),
-          },
+            signal: AbortSignal.timeout(45_000)
+          }
         );
       } catch {
         throw new AssistantError('Gemini took too long to respond. Please try again.', 504);
@@ -101,14 +101,14 @@ export function createAssistantHandler({
       if (response.status === 429)
         throw new AssistantError(
           'Gemini’s free quota is busy or used up. Please try again later.',
-          429,
+          429
         );
       if (response.status === 503)
         throw new AssistantError('Gemini is busy right now. Please try again in a moment.', 503);
       if (!response.ok) {
         const error = new AssistantError(
           'Gemini couldn’t respond. Check the API key, model access and quota in Google AI Studio.',
-          502,
+          502
         );
         error.providerStatus = response.status;
         throw error;
@@ -118,15 +118,15 @@ export function createAssistantHandler({
         const candidate = result.candidates?.[0];
         if (candidate?.finishReason !== 'STOP') throw new Error('Incomplete response');
         const text = candidate.content?.parts
-          ?.filter((part) => !part.thought)
-          .map((part) => part.text || '')
+          ?.filter(part => !part.thought)
+          .map(part => part.text || '')
           .join('');
         if (!text) throw new Error('Empty response');
         return json(validateReply(JSON.parse(text)));
       } catch {
         throw new AssistantError(
           'Gemini couldn’t finish a usable response. No changes were made. Try a smaller request.',
-          502,
+          502
         );
       }
     } catch (error) {
@@ -134,13 +134,13 @@ export function createAssistantHandler({
         return json(
           {
             error: error.message,
-            ...(error.providerStatus ? { providerStatus: error.providerStatus } : {}),
+            ...(error.providerStatus ? { providerStatus: error.providerStatus } : {})
           },
-          error.status,
+          error.status
         );
       return json(
         { error: 'The request could not be read. Please shorten your message and try again.' },
-        400,
+        400
       );
     }
   };

@@ -1,27 +1,21 @@
 'use client';
-import type { PublicationEntry } from '../../lib/types.ts';
+
+import type { CalendarAgendaProps } from './calendar.helpers.ts';
 import { CalendarDays, Plus } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import { fmt } from '../../lib/display.ts';
-import { parseDate } from '../../lib/model';
+import { parseDate } from '../../lib/model.ts';
 import { PublicationCards } from './publication-card';
-
-type CalendarAgendaProps = {
-  days: string[];
-  entries: PublicationEntry[];
-  start: string;
-  platform: string;
-};
 
 export default function CalendarAgenda({ days, entries, start, platform }: CalendarAgendaProps) {
   const { setModal } = useWorkspace();
   return (
     <div className="planner-agenda">
       {days
-        .filter((date) => entries.some((e) => e.pub.date === date))
-        .map((date) => (
+        .filter(date => entries.some(e => e.pub.date === date))
+        .map(date => (
           <section className="agenda-day" key={date} aria-label={fmt(date, { dateStyle: 'full' })}>
             <div className="agenda-date">
               <span>{fmt(date, { weekday: 'short' })}</span>
@@ -29,7 +23,7 @@ export default function CalendarAgenda({ days, entries, start, platform }: Calen
               <span>{fmt(date, { month: 'short' })}</span>
             </div>
             <div className="agenda-cards">
-              <PublicationCards entries={entries.filter((e) => e.pub.date === date)} />
+              <PublicationCards entries={entries.filter(e => e.pub.date === date)} />
             </div>
           </section>
         ))}

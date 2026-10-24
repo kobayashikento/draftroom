@@ -1,36 +1,21 @@
 'use client';
-import type { View } from '../../lib/types.ts';
-import {
-  CloudCheck,
-  CloudUpload,
-  HardDrive,
-  TriangleAlert,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Download,
-  LogOut,
-} from 'lucide-react';
+
+import { workspaceSaveIcon } from './layout.helpers.ts';
+import type { WorkspaceTopbarProps } from './layout.helpers.ts';
+import { PanelLeftClose, PanelLeftOpen, Download, LogOut } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import { downloadWorkspace } from '../../lib/workspace-data.ts';
 
-type WorkspaceTopbarProps = { view: View; compactNav: boolean; onToggleNavigation: () => void };
-
 export default function WorkspaceTopbar({
   view,
   compactNav,
-  onToggleNavigation,
+  onToggleNavigation
 }: WorkspaceTopbarProps) {
   const { state, storageTone, storageStatus, cloud, signOut } = useWorkspace();
   const exportData = () => downloadWorkspace(state);
-  const SaveIcon = ['error', 'conflict'].includes(storageTone)
-    ? TriangleAlert
-    : ['pending', 'saving'].includes(storageTone)
-      ? CloudUpload
-      : cloud
-        ? CloudCheck
-        : HardDrive;
+  const SaveIcon = workspaceSaveIcon(storageTone, cloud);
   return (
     <div className="topbar">
       <div className="workspace-breadcrumb">

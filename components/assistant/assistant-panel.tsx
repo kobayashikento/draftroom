@@ -1,6 +1,6 @@
 'use client';
-import type { RefObject } from 'react';
-import type { AssistantController } from './use-assistant.ts';
+
+import type { AssistantPanelProps } from './assistant.helpers.ts';
 import { ChevronDown, MessageSquarePlus, Sparkles } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
@@ -8,18 +8,11 @@ import AssistantWelcome from './assistant-welcome';
 import AssistantMessages from './assistant-messages';
 import AssistantComposer from './assistant-composer';
 
-type AssistantPanelProps = {
-  assistant: AssistantController;
-  onClose: () => void;
-  inputRef: RefObject<HTMLTextAreaElement | null>;
-  hidden: boolean;
-};
-
 export default function AssistantPanel({
   assistant,
   onClose,
   inputRef,
-  hidden,
+  hidden
 }: AssistantPanelProps) {
   return (
     <section
@@ -29,7 +22,7 @@ export default function AssistantPanel({
       aria-labelledby="assistant-title"
       className="assistant-panel"
       hidden={hidden}
-      onKeyDown={(event) => {
+      onKeyDown={event => {
         if (event.key === 'Escape') {
           event.stopPropagation();
           onClose();

@@ -1,57 +1,53 @@
 'use client';
-import type { Item, Format } from '../../lib/types.ts';
+
+import { itemFieldSetter, assignItemSeries, isFormat } from './editors.helpers.ts';
+import type { ContentFieldsProps } from './editors.helpers.ts';
 import { Input, Field, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 
-type ContentFieldsProps = { item: Item };
-
 export default function ContentFields({ item }: ContentFieldsProps) {
   const { state, updateItem } = useWorkspace();
-  const set = <K extends keyof Item>(key: K, value: Item[K]) =>
-    updateItem(item.id, (p) => (p[key] = value));
+  const set = itemFieldSetter(item.id, updateItem);
   return (
     <div className="fields">
       <Field label="Working title" wide>
-        <Input value={item.title} onChange={(e) => set('title', e.target.value)} />
+        <Input value={item.title} onChange={e => set('title', e.target.value)} />
       </Field>
       <Field label="Format">
         <Select
           options={['Reel', 'Carousel']}
           value={item.format}
-          onChange={(v) => set('format', v as Format)}
+          onChange={v => {
+            if (isFormat(v)) set('format', v);
+          }}
         />
       </Field>
       <Field label="Workflow stage">
         <Select
-          options={state.stages.map((s) => [s.id, s.name])}
+          options={state.stages.map(s => [s.id, s.name])}
           value={item.stageId}
-          onChange={(v) => set('stageId', v)}
+          onChange={v => set('stageId', v)}
         />
       </Field>
       <Field label="Series">
         <Select
-          options={[['', 'No series'], ...state.series.map((s) => [s.id, s.name])]}
+          options={[['', 'No series'], ...state.series.map(s => [s.id, s.name])]}
           value={item.seriesId}
-          onChange={(v) =>
-            updateItem(item.id, (p) => {
-              p.seriesId = v;
-              p.cadence = state.series.find((s) => s.id === v)?.cadence || p.cadence;
-            })
-          }
+          onChange={v => updateItem(item.id, p => assignItemSeries(p, v, state))}
         />
       </Field>
       <Field label="Cadence">
         <Input
           placeholder="Your own rhythm"
           value={item.cadence}
-          onChange={(e) => set('cadence', e.target.value)}
+          onChange={e => set('cadence', e.target.value)}
         />
       </Field>
       <Field label="Cover hook" wide>
         <Input
           placeholder="The first thing your audience sees…"
           value={item.hook}
-          onChange={(e) => set('hook', e.target.value)}
+          onChange={e => set('hook', e.target.value)}
         />
       </Field>
     </div>

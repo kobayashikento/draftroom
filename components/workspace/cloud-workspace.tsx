@@ -1,27 +1,21 @@
 'use client';
+
+import { storageLabels, changeWorkspace } from './workspace.helpers.ts';
+import type { CloudWorkspaceProps } from './workspace.helpers.ts';
 import type { WorkspaceSnapshot, WorkspaceUpdater } from '../../lib/types.ts';
-import type { ReactNode } from 'react';
-import type { SupabaseClient, Session } from '@supabase/supabase-js';
-import type { Database } from '../../lib/database.types.ts';
 import { useEffect, useRef, useState } from 'react';
 import { seed } from '../../lib/model.ts';
 import { getSupabaseConfig } from '../../lib/supabase.ts';
 import {
   readLegacyWorkspace,
   workspaceCacheKey,
-  downloadWorkspace,
+  downloadWorkspace
 } from '../../lib/workspace-data.ts';
 import { createWorkspaceRepository } from '../../lib/workspace-repository.ts';
 import { WorkspaceSync } from '../../lib/workspace-sync.ts';
 import WorkspaceProblem from '../account/workspace-problem';
 import SignOutConfirmation from '../account/sign-out-confirmation';
 import WorkspaceContext from './workspace-context';
-
-type CloudWorkspaceProps = {
-  client: SupabaseClient<Database>;
-  session: Session;
-  children: ReactNode;
-};
 
 export default function CloudWorkspace({ client, session, children }: CloudWorkspaceProps) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);
@@ -36,16 +30,16 @@ export default function CloudWorkspace({ client, session, children }: CloudWorks
       repository: createWorkspaceRepository(client, session.user.id),
       storage: localStorage,
       cacheKey: workspaceCacheKey(getSupabaseConfig()!.url, session.user.id),
-      onChange: (value) => {
+      onChange: value => {
         if (active) setSnapshot(value);
-      },
+      }
     });
     engine.current = sync;
     setSnapshot(null);
     setLoadError('');
     sync
       .start(() => readLegacyWorkspace(localStorage) || seed())
-      .catch((error) => {
+      .catch(error => {
         if (active) setLoadError(error.message);
       });
     const refresh = () => {
@@ -82,34 +76,25 @@ export default function CloudWorkspace({ client, session, children }: CloudWorks
     if (engine.current?.dirty && !(await engine.current.flush())) setSignOutRequested(true);
     else await signOutNow();
   }
-  const update: WorkspaceUpdater = (fn) => {
+  const update: WorkspaceUpdater = fn => {
     const sync = engine.current;
     if (!sync?.data) return;
-    const draft = structuredClone(sync.data);
-    fn(draft);
-    sync.change(draft);
+    sync.change(changeWorkspace(sync.data, fn));
   };
   if (loadError)
     return (
       <WorkspaceProblem
         message={loadError}
-        retry={() => setAttempt((value) => value + 1)}
+        retry={() => setAttempt(value => value + 1)}
         signOut={signOutNow}
       />
     );
-  const labels = {
-    loading: 'Loading your workspace',
-    pending: 'Changes waiting to sync',
-    saving: 'Saving to cloud…',
-    saved: 'Saved to cloud',
-    error: 'Cloud sync needs attention',
-    conflict: 'Choose a version to keep',
-  };
+
   return (
     <WorkspaceContext
       state={snapshot?.data || null}
       update={update}
-      storageStatus={labels[snapshot?.status || 'loading']}
+      storageStatus={storageLabels[snapshot?.status || 'loading']}
       storageTone={snapshot?.status || 'loading'}
       cloud
       authUser={session.user}
@@ -118,7 +103,7 @@ export default function CloudWorkspace({ client, session, children }: CloudWorks
       cacheError={snapshot?.cacheError}
       conflict={snapshot?.conflict}
       retrySync={() => engine.current!.refresh()}
-      resolveConflict={(choice) => engine.current!.resolve(choice)}
+      resolveConflict={choice => engine.current!.resolve(choice)}
     >
       {children}
       {signOutRequested && (

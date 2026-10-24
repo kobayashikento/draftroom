@@ -1,40 +1,22 @@
 'use client';
-import type { Item, OverviewCategory } from '../../../lib/types.ts';
+
+import { overviewPostDates } from './overview.helpers.ts';
+import type { PostResultsProps } from './overview.helpers.ts';
 import { ArrowRight } from 'lucide-react';
 import { AppIcon } from '../../icons';
 import { Button } from '../../ui';
 import { useWorkspace } from '../../workspace/workspace-context';
 import Artwork from '../../workspace/artwork';
 import StagePill from '../../workspace/stage-pill';
-import { addDays } from '../../../lib/model';
 import { fmt } from '../../../lib/display.ts';
-import { overduePublications } from '../../../lib/overview.ts';
-
-type PostResultsProps = {
-  items: Item[];
-  selected: OverviewCategory;
-  week: string;
-  currentDate: string;
-};
 
 export default function PostResults({ items, selected, week, currentDate }: PostResultsProps) {
   const { state, open } = useWorkspace();
   return (
     <div className="panel overview-post-list">
-      {items.map((item) => {
-        const series = state.series.find((series) => series.id === item.seriesId);
-        const dates =
-          selected === 'overdue'
-            ? overduePublications(item, currentDate)
-            : selected === 'planned'
-              ? item.publications.filter(
-                  (publication) =>
-                    publication.state !== 'manually_posted' &&
-                    publication.date &&
-                    publication.date >= week &&
-                    publication.date <= addDays(week, 6),
-                )
-              : [];
+      {items.map(item => {
+        const series = state.series.find(series => series.id === item.seriesId);
+        const dates = overviewPostDates(item, selected, week, currentDate);
         return (
           <Button
             key={item.id}
@@ -53,7 +35,7 @@ export default function PostResults({ items, selected, week, currentDate }: Post
               {dates.length > 0 && (
                 <span className="overview-post-dates">
                   {dates
-                    .map((publication) => `${publication.platform} · ${fmt(publication.date)}`)
+                    .map(publication => `${publication.platform} · ${fmt(publication.date)}`)
                     .join(' / ')}
                 </span>
               )}

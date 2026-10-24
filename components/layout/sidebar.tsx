@@ -1,17 +1,12 @@
 'use client';
+
+import { planningChannels, pages } from './layout.helpers.ts';
+import type { SidebarProps } from './layout.helpers.ts';
 import type { View } from '../../lib/types.ts';
 import { Sparkles, Sun, Shapes } from 'lucide-react';
 import { AppIcon, BrandMark, PlatformIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
-import { pages } from './pages';
-
-type SidebarProps = {
-  view: View;
-  platform: string;
-  onNavigate: (view: View) => void;
-  onPlatformChange: (platform: string) => void;
-};
 
 export default function Sidebar({ view, platform, onNavigate, onPlatformChange }: SidebarProps) {
   const { state, authUser } = useWorkspace();
@@ -43,11 +38,7 @@ export default function Sidebar({ view, platform, onNavigate, onPlatformChange }
       </nav>
       <div className="sidebar-channels">
         <p className="workspace">PLANNING CHANNELS</p>
-        {[
-          ['', 'All channels'],
-          ['Instagram', 'Instagram'],
-          ['TikTok', 'TikTok'],
-        ].map(([value, label]) => (
+        {planningChannels.map(({ value, label }) => (
           <Button
             key={label}
             className={`channel-button ${view === 'Calendar' && platform === value ? 'active' : ''}`}

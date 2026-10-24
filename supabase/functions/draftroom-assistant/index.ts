@@ -11,11 +11,11 @@ const handler = createAssistantHandler({
     if (!authorization?.startsWith('Bearer ')) return null;
     const client = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authorization } },
-      auth: { persistSession: false, autoRefreshToken: false },
+      auth: { persistSession: false, autoRefreshToken: false }
     });
     const {
       data: { user },
-      error,
+      error
     } = await client.auth.getUser(authorization.slice(7));
     if (error || !user) return null;
     // Use the caller's RLS-scoped client, never a service-role client.
@@ -28,7 +28,7 @@ const handler = createAssistantHandler({
       throw new AssistantError('Your workspace is unavailable. Try again shortly.', 503);
     if (!data) throw new AssistantError('This account does not have a Draftroom workspace.', 403);
     return user.id;
-  },
+  }
 });
 
 Deno.serve(handler);

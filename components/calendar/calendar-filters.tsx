@@ -1,19 +1,10 @@
 'use client';
-import type { Dispatch, SetStateAction } from 'react';
-import type { CalendarFilterController } from './use-calendar-filters.ts';
+
+import type { CalendarFiltersProps } from './calendar.helpers.ts';
 import { Search, SlidersHorizontal, Inbox } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Input, Button, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
-
-type CalendarFiltersProps = {
-  filters: CalendarFilterController;
-  showFilters: boolean;
-  setShowFilters: Dispatch<SetStateAction<boolean>>;
-  showUnscheduled: boolean;
-  setShowUnscheduled: Dispatch<SetStateAction<boolean>>;
-  unscheduledCount: number;
-};
 
 export default function CalendarFilters({
   filters,
@@ -21,7 +12,7 @@ export default function CalendarFilters({
   setShowFilters,
   showUnscheduled,
   setShowUnscheduled,
-  unscheduledCount,
+  unscheduledCount
 }: CalendarFiltersProps) {
   const { state } = useWorkspace();
   const { platform, query, format, seriesId, status } = filters.values;
@@ -47,7 +38,7 @@ export default function CalendarFilters({
             aria-label="Search calendar"
             placeholder="Search your plans…"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={e => setQuery(e.target.value)}
           />
         </div>
         <Button
@@ -79,7 +70,7 @@ export default function CalendarFilters({
         />
         <Select
           aria-label="Calendar series"
-          options={[['', 'All series'], ...state.series.map((s) => [s.id, s.name])]}
+          options={[['', 'All series'], ...state.series.map(s => [s.id, s.name])]}
           value={seriesId}
           onChange={setSeriesId}
         />
@@ -88,7 +79,7 @@ export default function CalendarFilters({
           options={[
             ['', 'All publication statuses'],
             ['planned', 'Planned'],
-            ['manually_posted', 'Manually posted'],
+            ['manually_posted', 'Manually posted']
           ]}
           value={status}
           onChange={setStatus}

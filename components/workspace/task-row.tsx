@@ -1,10 +1,10 @@
 'use client';
-import type { Item, Task } from '../../lib/types.ts';
+
+import { setTaskField, toggleTaskPriority } from '../production/production.helpers.ts';
+import type { TaskRowProps } from './workspace.helpers.ts';
 import { Input, PriorityButton, Button } from '../ui';
 import { useWorkspace } from './workspace-context';
 import { fmt } from '../../lib/display.ts';
-
-type TaskRowProps = { item: Item; task: Task; prioritizable?: boolean };
 
 export default function TaskRow({ item, task, prioritizable = false }: TaskRowProps) {
   const { updateItem, open } = useWorkspace();
@@ -14,9 +14,9 @@ export default function TaskRow({ item, task, prioritizable = false }: TaskRowPr
         type="checkbox"
         aria-label={task.title}
         checked={task.done}
-        onChange={(e) => {
+        onChange={e => {
           const done = e.target.checked;
-          updateItem(item.id, (p) => (p.tasks.find((t) => t.id === task.id)!.done = done));
+          updateItem(item.id, p => setTaskField(p, task.id, 'done', done));
         }}
       />
       <div className="tasktext">
@@ -32,13 +32,7 @@ export default function TaskRow({ item, task, prioritizable = false }: TaskRowPr
         <PriorityButton
           label={`task: ${task.title}`}
           active={task.priority === 'High'}
-          onClick={() =>
-            updateItem(item.id, (p) => {
-              const target = p.tasks.find((t) => t.id === task.id);
-              if (!target) return;
-              target.priority = target.priority === 'High' ? 'Normal' : 'High';
-            })
-          }
+          onClick={() => updateItem(item.id, p => toggleTaskPriority(p, task.id))}
         />
       )}
     </div>

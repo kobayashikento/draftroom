@@ -1,15 +1,14 @@
 'use client';
-import type { FormEvent } from 'react';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '../../lib/database.types.ts';
+
+import { signInToWorkspace } from './account.helpers.ts';
+import type { SignInProps } from './account.helpers.ts';
 import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Text, Stack } from '@chakra-ui/react';
 import { LogIn } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button, Field, Input } from '../ui';
 import AccountShell from './account-shell';
-
-type SignInProps = { client: SupabaseClient<Database>; sessionError?: string };
 
 export default function SignIn({ client, sessionError }: SignInProps) {
   const [email, setEmail] = useState('');
@@ -20,15 +19,8 @@ export default function SignIn({ client, sessionError }: SignInProps) {
     event.preventDefault();
     setBusy(true);
     setError('');
-    try {
-      const { error } = await client.auth.signInWithPassword({ email: email.trim(), password });
-      if (error)
-        setError('We couldn’t sign you in. Check your email and password, then try again.');
-    } catch {
-      setError('We couldn’t reach your workspace. Check your connection and try again.');
-    } finally {
-      setBusy(false);
-    }
+    setError(await signInToWorkspace(client, { email, password }));
+    setBusy(false);
   }
   return (
     <AccountShell title="Your ideas have a home.">
@@ -44,7 +36,7 @@ export default function SignIn({ client, sessionError }: SignInProps) {
               autoComplete="username"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
             />
           </Field>
           <Field label="Password">
@@ -53,7 +45,7 @@ export default function SignIn({ client, sessionError }: SignInProps) {
               autoComplete="current-password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
             />
           </Field>
           {error && (

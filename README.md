@@ -28,6 +28,8 @@ React components use `.tsx`; domain logic, tests, scripts and Supabase functions
 
 Run `pnpm typecheck` to regenerate Next.js declarations and check both the browser/Node code and the Supabase Edge Function. `tsconfig.json` configures Next.js and Node; `tsconfig.edge.json` checks the Deno entry point using the official Deno and Supabase types. The separate configurations keep runtime globals apart. `pnpm build` runs both checks before producing the static export.
 
+`pnpm tsc` is a shortcut for the same complete check. `yarn tsc` fails before TypeScript starts because `package.json` selects pnpm and the installed Yarn Classic refuses that package-manager setting. Use pnpm with the existing `pnpm-lock.yaml`; no global Yarn or Corepack change is required. For just the Next.js/Node configuration, use `pnpm exec tsc --noEmit`.
+
 `lib/types.ts` defines shared workspace records; `lib/database.types.ts` describes the database table. The assistant's request, response and planning types live in `supabase/functions/_shared/types.ts` so the client and Edge Function share their contract. Use explicit named shapes for smaller data structures rather than TypeScript `Pick`.
 
 Node.js 22.18 or newer runs the `.ts` tests and utility scripts directly. Next.js compiles React `.tsx` components. CSS, JSON, SQL and TOML retain their native formats. Next.js regenerates the ignored `next-env.d.ts` file.
@@ -36,7 +38,7 @@ Node.js 22.18 or newer runs the `.ts` tests and utility scripts directly. Next.j
 
 [Prettier](https://prettier.io/docs/) formats TypeScript, TSX, CSS, JSON, Markdown, SQL and TOML using the shared `.prettierrc.json` configuration. Run `pnpm format` to format the project, or `pnpm format:check` to check formatting without writing files. Generated output, dependencies, lockfiles, binary assets and environment files are excluded by `.prettierignore`.
 
-Use two-space indentation, single quotes in TypeScript, trailing commas and a 100-character print width. Editor integrations can use the installed project formatter and the same configuration.
+Use two-space indentation, single quotes in TypeScript, semicolons, no trailing commas, LF line endings and no parentheses around a single arrow-function parameter. The print width is 100 characters. Editor integrations can use the installed project formatter and the same configuration.
 
 ## Architecture
 
@@ -53,7 +55,7 @@ Use two-space indentation, single quotes in TypeScript, trailing commas and a 10
 - `components/workspace-provider.tsx`: selects the local or authenticated workspace implementation.
 - `components/account/`: login, account layout, connection notices, conflict recovery and sign-out confirmation.
 - `components/views/`: individual Overview, Ideas, Series and Analytics screens; `components/week-bar.tsx` supplies the shared period navigation.
-- `components/calendar.tsx`: calendar composition; `components/calendar/` contains the toolbar, filters, week/month grid, agenda, publication cards, unscheduled panel and focused filter/drag hooks. Date ranges and publication selectors live in `lib/calendar.ts`.
+- `components/calendar.tsx`: calendar composition; `components/calendar/` contains the toolbar, filters, week/month grid, agenda, publication cards, unscheduled panel and focused filter/drag hooks. Date ranges, publication selectors, view helpers and component/controller types live in `calendar.helpers.ts`.
 - `components/production.tsx`, `components/production/checklist.tsx`: To do/Completed queues, collapsible checklists, task/project priority flags and an advancing Up next card.
 - `components/editors.tsx`: selects the active dialog. `components/editors/` contains the shared modal, idea capture, content fields, notes, storyboard, tasks, publications, rescheduling, series templates, stages and delete confirmation.
 - `components/assistant.tsx`, `components/assistant/`: the persistent bottom-center Gemini chat, small conversation/composer components and request controller. Chat history is part of the owner’s workspace and uses its existing cloud sync.
@@ -68,6 +70,10 @@ Use two-space indentation, single quotes in TypeScript, trailing commas and a 10
 One versioned state object contains `stages`, `series`, and `items`. Each item owns stable-ID storyboard entries, tasks, and publication records. Series and stages are referenced by ID. There are no separate dashboard, calendar, production, or analytics post copies.
 
 Feature entry components compose smaller pieces with one clear responsibility. Import shared controls from `components/ui.tsx`, workspace state from `components/workspace/workspace-context.tsx`, and feature components directly from their files. This keeps component dependencies acyclic and avoids importing every screen through a shared hub. Components and hooks continue to use the same workspace state and persistence layer.
+
+Each major feature has a `*.helpers.ts` module next to its components: account, assistant, calendar, editors, layout, production, workspace, overview, ideas, series and analytics. These modules export component props, named inputs/results, selectors, validation and update functions. Editors have additional helpers for publications, storyboards, stages and series templates to keep each module focused. Shared controls and icons follow the same pattern in `components/ui.helpers.ts` and `components/icons.helpers.ts`.
+
+Keep JSX and event wiring in `.tsx` components, and React state/effects in `use-*.ts` hooks. Put reusable behavior in feature helpers and import their contracts with `import type`. Helpers must not import their consuming components or hooks. Core workspace records remain in `lib/types.ts`, persistence stays in `lib/`, and the assistant protocol remains shared with the Edge Function. Field setters expose only the editable fields for that feature and keep each field's value type connected to its key.
 
 Workflow stage, task completion, and publication status are intentionally independent. Each platform has its own date, caption, URL, external ID, and manual-posted flag. Dates are local calendar dates, not UTC timestamps. Seed dates cover October 26–November 1, 2026. The app opens to Calendar in the current week; Today returns to the current week or month.
 

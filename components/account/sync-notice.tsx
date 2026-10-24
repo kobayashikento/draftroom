@@ -1,20 +1,13 @@
 'use client';
-import type { WorkspaceRow, ConflictChoice } from '../../lib/types.ts';
+
+import { resolveWorkspaceConflict } from './account.helpers.ts';
+import type { SyncNoticeProps } from './account.helpers.ts';
+import type { ConflictChoice } from '../../lib/types.ts';
 import { useState } from 'react';
 import { Text, Stack, Alert } from '@chakra-ui/react';
 import { Info, TriangleAlert, Download, RefreshCw } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
-
-type SyncNoticeProps = {
-  cloud?: boolean;
-  error?: string;
-  cacheError?: string;
-  conflict?: WorkspaceRow | null;
-  retry?: () => void | Promise<void>;
-  resolve?: (choice: ConflictChoice) => Promise<void>;
-  exportData: () => void;
-};
 
 export default function SyncNotice({
   cloud,
@@ -23,20 +16,15 @@ export default function SyncNotice({
   conflict,
   retry,
   resolve,
-  exportData,
+  exportData
 }: SyncNoticeProps) {
   const [resolving, setResolving] = useState(false);
   const [resolutionError, setResolutionError] = useState('');
   async function choose(choice: ConflictChoice) {
     setResolving(true);
     setResolutionError('');
-    try {
-      await resolve?.(choice);
-    } catch {
-      setResolutionError('Could not preserve a recovery copy. Export your drafts, then try again.');
-    } finally {
-      setResolving(false);
-    }
+    setResolutionError(await resolveWorkspaceConflict(resolve, choice));
+    setResolving(false);
   }
   if (!cloud)
     return (

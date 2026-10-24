@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createAssistantHandler,
-  AssistantError,
+  AssistantError
 } from '../supabase/functions/_shared/assistant-handler.ts';
 import { assistantContext } from '../supabase/functions/_shared/assistant-context.ts';
 import { seed } from '../lib/model.ts';
@@ -10,12 +10,12 @@ type HandlerOptions = Parameters<typeof createAssistantHandler>[0];
 
 const payload = () => ({
   context: assistantContext(seed(), '2026-10-23', 'America/Toronto'),
-  messages: [{ role: 'user', text: 'What should I work on?' }],
+  messages: [{ role: 'user', text: 'What should I work on?' }]
 });
 const request = (body: unknown = payload(), method = 'POST') =>
   new Request('https://example.com/assistant', {
     method,
-    ...(method === 'POST' ? { body: JSON.stringify(body) } : {}),
+    ...(method === 'POST' ? { body: JSON.stringify(body) } : {})
   });
 const success = () =>
   Response.json({
@@ -23,17 +23,17 @@ const success = () =>
       {
         finishReason: 'STOP',
         content: {
-          parts: [{ text: JSON.stringify({ reply: 'Start with filming.', actions: [] }) }],
-        },
-      },
-    ],
+          parts: [{ text: JSON.stringify({ reply: 'Start with filming.', actions: [] }) }]
+        }
+      }
+    ]
   });
 const handler = (options: Partial<HandlerOptions> = {}) =>
   createAssistantHandler({
     authorize: async () => 'owner',
     apiKey: 'TEST-KEY',
     fetcher: async () => success(),
-    ...options,
+    ...options
   });
 
 test('a Supabase key mistakenly entered as the Gemini secret is never sent to Google', async () => {
@@ -43,7 +43,7 @@ test('a Supabase key mistakenly entered as the Gemini secret is never sent to Go
     fetcher: async () => {
       called = true;
       return success();
-    },
+    }
   })(request());
   const body = JSON.stringify(await response.json());
   assert.equal(response.status, 503);
@@ -58,14 +58,14 @@ test('anonymous users and non-owner accounts cannot invoke Gemini', async () => 
     async () => null,
     async () => {
       throw new AssistantError('No workspace.', 403);
-    },
+    }
   ]) {
     const response = await handler({
       authorize,
       fetcher: async () => {
         called = true;
         return success();
-      },
+      }
     })(request());
     assert.ok([401, 403].includes(response.status));
   }
@@ -81,7 +81,7 @@ test('private Gemini credentials only go to Google, with validated structured ou
       assert.match(body.systemInstruction.parts[0].text, /create_task needs itemId/);
       assert.equal(JSON.stringify(body).includes('TEST-KEY'), false);
       return success();
-    },
+    }
   })(request());
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { reply: 'Start with filming.', actions: [] });
@@ -93,27 +93,27 @@ test('missing configuration, provider failures and quota have safe actionable er
     [
       { fetcher: async () => new Response('SECRET-PROVIDER-DETAIL', { status: 429 }) },
       429,
-      /quota/,
+      /quota/
     ],
     [
       { fetcher: async () => new Response('SECRET-PROVIDER-DETAIL', { status: 403 }) },
       502,
-      /model access/,
+      /model access/
     ],
     [
       { fetcher: async () => new Response('SECRET-PROVIDER-DETAIL', { status: 503 }) },
       503,
-      /busy right now/,
+      /busy right now/
     ],
     [
       {
         fetcher: async () => {
           throw new Error('SECRET-PROVIDER-DETAIL');
-        },
+        }
       },
       504,
-      /too long/,
-    ],
+      /too long/
+    ]
   ];
   for (const [options, status, message] of cases) {
     const response = await handler(options)(request());
@@ -133,15 +133,15 @@ test('incomplete or unsupported model actions never reach the app', async () => 
           {
             text: JSON.stringify({
               reply: 'Deleted.',
-              actions: [{ type: 'delete_idea', itemId: 'x' }],
-            }),
-          },
-        ],
-      },
-    },
+              actions: [{ type: 'delete_idea', itemId: 'x' }]
+            })
+          }
+        ]
+      }
+    }
   ]) {
     const response = await handler({
-      fetcher: async () => Response.json({ candidates: [candidate] }),
+      fetcher: async () => Response.json({ candidates: [candidate] })
     })(request());
     assert.equal(response.status, 502);
     assert.match((await response.json()).error, /No changes were made/);
@@ -151,7 +151,7 @@ test('CORS, method checks, payload bounds and per-owner cooldown protect the end
   const run = handler({ corsHeaders: { 'Access-Control-Allow-Origin': '*' } });
   assert.equal(
     (await run(request(undefined, 'OPTIONS'))).headers.get('access-control-allow-origin'),
-    '*',
+    '*'
   );
   assert.equal((await run(request(undefined, 'GET'))).status, 405);
   assert.equal((await run(request({ messages: [], context: {} }))).status, 400);

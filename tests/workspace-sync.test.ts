@@ -10,7 +10,7 @@ import {
   LEGACY_STORAGE_KEY,
   parseWorkspace,
   readLegacyWorkspace,
-  workspaceCacheKey,
+  workspaceCacheKey
 } from '../lib/workspace-data.ts';
 
 class MemoryStorage {
@@ -26,7 +26,7 @@ class MemoryStorage {
 function fixture(
   t: TestContext,
   row: WorkspaceRow = { data: null, revision: 0 },
-  storage = new MemoryStorage(),
+  storage = new MemoryStorage()
 ) {
   const remote = { row: structuredClone(row), saves: [] as WorkspaceRow[], offline: false };
   const repository: WorkspaceRepository = {
@@ -40,7 +40,7 @@ function fixture(
       remote.row = { data: structuredClone(data), revision: revision + 1 };
       remote.saves.push(structuredClone(remote.row));
       return structuredClone(remote.row);
-    },
+    }
   };
   const snapshots: WorkspaceSnapshot[] = [];
   const sync = new WorkspaceSync({
@@ -48,13 +48,13 @@ function fixture(
     storage,
     cacheKey: 'test-owner',
     delay: 60_000,
-    onChange: (value) => snapshots.push(value),
+    onChange: value => snapshots.push(value)
   });
   t.after(() => sync.dispose());
   return { sync, remote, storage, repository, snapshots };
 }
 
-test('first sign-in migrates existing drafts with stable IDs and saves once', async (t) => {
+test('first sign-in migrates existing drafts with stable IDs and saves once', async t => {
   const { sync, remote, storage } = fixture(t);
   const original = seed();
   original.items[0].title = 'My existing draft';
@@ -68,7 +68,7 @@ test('first sign-in migrates existing drafts with stable IDs and saves once', as
   assert.equal(required(readLegacyWorkspace(storage)).items[0].id, original.items[0].id);
 });
 
-test('existing cloud records take priority over legacy drafts and demo seeds', async (t) => {
+test('existing cloud records take priority over legacy drafts and demo seeds', async t => {
   const cloud = seed();
   cloud.items[0].title = 'Cloud draft';
   const { sync, remote } = fixture(t, { data: cloud, revision: 5 });
@@ -80,7 +80,7 @@ test('existing cloud records take priority over legacy drafts and demo seeds', a
   assert.equal(remote.saves.length, 0);
 });
 
-test('a failed save retains a dirty browser copy and resumes after reconnecting', async (t) => {
+test('a failed save retains a dirty browser copy and resumes after reconnecting', async t => {
   const { sync, remote, storage } = fixture(t, { data: seed(), revision: 2 });
   await sync.start(seed);
   const changed = structuredClone(workspaceData(sync));
@@ -97,7 +97,7 @@ test('a failed save retains a dirty browser copy and resumes after reconnecting'
   assert.equal(JSON.parse(required(storage.getItem('test-owner'))).dirty, false);
 });
 
-test('reload restores and saves unsynced edits when the cloud revision still matches', async (t) => {
+test('reload restores and saves unsynced edits when the cloud revision still matches', async t => {
   const cloud = seed();
   const local = structuredClone(cloud);
   local.items[0].title = 'Unsynced title';
@@ -110,7 +110,7 @@ test('reload restores and saves unsynced edits when the cloud revision still mat
   assert.equal(workspaceData(remote.row).items[0].title, 'Unsynced title');
 });
 
-test('stale device changes cannot overwrite a newer cloud version', async (t) => {
+test('stale device changes cannot overwrite a newer cloud version', async t => {
   const { sync, remote, storage } = fixture(t, { data: seed(), revision: 1 });
   await sync.start(seed);
   const local = structuredClone(workspaceData(sync));
@@ -129,7 +129,7 @@ test('stale device changes cannot overwrite a newer cloud version', async (t) =>
   assert.equal(JSON.parse(required(recovery)[1]).items[0].title, 'This device');
 });
 
-test('keeping local changes uses the current revision and retains a cloud recovery copy', async (t) => {
+test('keeping local changes uses the current revision and retains a cloud recovery copy', async t => {
   const cloud = seed();
   const local = structuredClone(cloud);
   local.items[0].title = 'Local choice';
@@ -145,12 +145,12 @@ test('keeping local changes uses the current revision and retains a cloud recove
   assert.deepEqual(JSON.parse(required(recovery)[1]), cloud);
 });
 
-test('edits made during an in-flight save are written serially with the new revision', async (t) => {
+test('edits made during an in-flight save are written serially with the new revision', async t => {
   const { sync, repository, remote } = fixture(t, { data: seed(), revision: 6 });
   await sync.start(seed);
   const originalSave = repository.save;
   let release: (() => void) | undefined;
-  const wait = new Promise<void>((resolve) => {
+  const wait = new Promise<void>(resolve => {
     release = resolve;
   });
   let first = true;
@@ -176,7 +176,7 @@ test('edits made during an in-flight save are written serially with the new revi
   assert.equal(sync.dirty, false);
 });
 
-test('a lost successful save response is recovered without inventing a conflict', async (t) => {
+test('a lost successful save response is recovered without inventing a conflict', async t => {
   const { sync, repository, remote } = fixture(t, { data: seed(), revision: 1 });
   await sync.start(seed);
   const originalSave = repository.save;
@@ -200,7 +200,7 @@ test('a lost successful save response is recovered without inventing a conflict'
   assert.equal(sync.revision, 2);
 });
 
-test('unreadable browser cache is preserved instead of being overwritten by demo data', async (t) => {
+test('unreadable browser cache is preserved instead of being overwritten by demo data', async t => {
   const { sync, storage, remote } = fixture(t);
   storage.setItem('test-owner', '{broken');
   await assert.rejects(sync.start(seed));
@@ -208,7 +208,7 @@ test('unreadable browser cache is preserved instead of being overwritten by demo
   assert.equal(remote.saves.length, 0);
 });
 
-test('local storage failure is surfaced while a successful cloud save stays truthful', async (t) => {
+test('local storage failure is surfaced while a successful cloud save stays truthful', async t => {
   const { sync, storage } = fixture(t, { data: seed(), revision: 0 });
   storage.setItem = () => {
     throw new Error('Quota exceeded');
@@ -236,13 +236,13 @@ test('malformed workspaces and dangling references are rejected before saving', 
   assert.throws(() => parseWorkspace(JSON.stringify(data)), /incomplete/);
 });
 
-test('a slow cloud read cannot roll back a save completed while it was in flight', async (t) => {
+test('a slow cloud read cannot roll back a save completed while it was in flight', async t => {
   const { sync, repository } = fixture(t, { data: seed(), revision: 1 });
   await sync.start(seed);
   const old = await repository.load();
   let release: (() => void) | undefined;
   repository.load = () =>
-    new Promise((resolve) => {
+    new Promise(resolve => {
       release = () => resolve(old);
     });
   const refresh = sync.refresh();

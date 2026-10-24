@@ -1,17 +1,12 @@
 'use client';
-import type { FormEvent } from 'react';
-import type { RefObject } from 'react';
-import type { SendAssistant } from './use-assistant.ts';
+
+import { shouldSubmitAssistantMessage } from './assistant.helpers.ts';
+import type { AssistantComposerProps } from './assistant.helpers.ts';
 import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button, Textarea } from '../ui';
-
-type AssistantComposerProps = {
-  busy: boolean;
-  onSend: SendAssistant;
-  inputRef: RefObject<HTMLTextAreaElement | null>;
-};
 
 export default function AssistantComposer({ busy, onSend, inputRef }: AssistantComposerProps) {
   const [draft, setDraft] = useState('');
@@ -27,12 +22,11 @@ export default function AssistantComposer({ busy, onSend, inputRef }: AssistantC
         aria-label="Message Draftroom"
         placeholder="Plan something, or ask me to add a task…"
         value={draft}
-        onChange={(event) => setDraft(event.target.value)}
+        onChange={event => setDraft(event.target.value)}
         maxLength={4000}
         rows={2}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing)
-            submit(event);
+        onKeyDown={event => {
+          if (shouldSubmitAssistantMessage(event)) submit(event);
         }}
       />
       <Button

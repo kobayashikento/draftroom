@@ -1,21 +1,20 @@
 'use client';
-import type { Item, StoryboardEntry } from '../../lib/types.ts';
+
+import {
+  storyboardFieldSetter,
+  addStoryboardEntry,
+  removeStoryboardEntry
+} from './storyboard.helpers.ts';
+import type { StoryboardProps } from './editors.helpers.ts';
 import { ArrowUp, ArrowDown, Plus, X } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Input, Textarea, Button, Field } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import { reorder } from '../../lib/reorder.ts';
-import { uid } from '../../lib/model';
-
-type StoryboardProps = { item: Item };
 
 export default function Storyboard({ item }: StoryboardProps) {
   const { updateItem } = useWorkspace();
-  const set = <K extends keyof StoryboardEntry>(id: string, key: K, value: StoryboardEntry[K]) =>
-    updateItem(item.id, (draft) => {
-      const target = draft.storyboard.find((entry) => entry.id === id);
-      if (target) target[key] = value;
-    });
+  const set = storyboardFieldSetter(item.id, updateItem);
   const noun = item.format === 'Reel' ? 'shot' : 'slide';
   return (
     <>
@@ -32,20 +31,20 @@ export default function Storyboard({ item }: StoryboardProps) {
               type="checkbox"
               aria-label={`Complete ${noun} ${i + 1}`}
               checked={entry.done}
-              onChange={(e) => set(entry.id, 'done', e.target.checked)}
+              onChange={e => set(entry.id, 'done', e.target.checked)}
             />
             <Input
               aria-label={`Entry ${i + 1} title`}
               type="text"
               value={entry.title}
-              onChange={(e) => set(entry.id, 'title', e.target.value)}
+              onChange={e => set(entry.id, 'title', e.target.value)}
             />
             <div className="entry-controls">
               <Button
                 className="icon-button"
                 aria-label="Move entry up"
                 disabled={i === 0}
-                onClick={() => updateItem(item.id, (p) => reorder(p.storyboard, entry.id, -1))}
+                onClick={() => updateItem(item.id, p => reorder(p.storyboard, entry.id, -1))}
               >
                 <AppIcon icon={ArrowUp} />
               </Button>
@@ -53,19 +52,14 @@ export default function Storyboard({ item }: StoryboardProps) {
                 className="icon-button"
                 aria-label="Move entry down"
                 disabled={i === item.storyboard.length - 1}
-                onClick={() => updateItem(item.id, (p) => reorder(p.storyboard, entry.id, 1))}
+                onClick={() => updateItem(item.id, p => reorder(p.storyboard, entry.id, 1))}
               >
                 <AppIcon icon={ArrowDown} />
               </Button>
               <Button
                 className="icon-button"
                 aria-label="Remove entry"
-                onClick={() =>
-                  updateItem(
-                    item.id,
-                    (p) => (p.storyboard = p.storyboard.filter((x) => x.id !== entry.id)),
-                  )
-                }
+                onClick={() => updateItem(item.id, p => removeStoryboardEntry(p, entry.id))}
               >
                 <AppIcon icon={X} />
               </Button>
@@ -76,7 +70,7 @@ export default function Storyboard({ item }: StoryboardProps) {
               <Input
                 placeholder="A few words on screen"
                 value={entry.overlay}
-                onChange={(e) => set(entry.id, 'overlay', e.target.value)}
+                onChange={e => set(entry.id, 'overlay', e.target.value)}
               />
             </Field>
             <Field label="Reference image / inspiration URL">
@@ -84,7 +78,7 @@ export default function Storyboard({ item }: StoryboardProps) {
                 type="url"
                 placeholder="https://…"
                 value={entry.reference}
-                onChange={(e) => set(entry.id, 'reference', e.target.value)}
+                onChange={e => set(entry.id, 'reference', e.target.value)}
               />
             </Field>
             <Field
@@ -97,26 +91,13 @@ export default function Storyboard({ item }: StoryboardProps) {
             >
               <Textarea
                 value={entry.notes}
-                onChange={(e) => set(entry.id, 'notes', e.target.value)}
+                onChange={e => set(entry.id, 'notes', e.target.value)}
               />
             </Field>
           </div>
         </div>
       ))}
-      <Button
-        onClick={() =>
-          updateItem(item.id, (p) =>
-            p.storyboard.push({
-              id: uid(),
-              title: 'A new moment',
-              overlay: '',
-              notes: '',
-              reference: '',
-              done: false,
-            }),
-          )
-        }
-      >
+      <Button onClick={() => updateItem(item.id, addStoryboardEntry)}>
         <AppIcon icon={Plus} />
         Add {noun}
       </Button>

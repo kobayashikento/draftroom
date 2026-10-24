@@ -1,32 +1,31 @@
 'use client';
+
+import { emptyCalendarFilters, calendarFilterState } from './calendar.helpers.ts';
+import type { CalendarFilterController } from './calendar.helpers.ts';
+import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { CalendarFilters } from '../../lib/types.ts';
-import { useState } from 'react';
-
-export type CalendarFilterController = ReturnType<typeof useCalendarFilters>;
-
-const emptyFilters = { format: '', seriesId: '', status: '', query: '' };
 
 export default function useCalendarFilters(
   platform: string,
-  setPlatform: Dispatch<SetStateAction<string>>,
-) {
-  const [localFilters, setLocalFilters] = useState(emptyFilters);
+  setPlatform: Dispatch<SetStateAction<string>>
+): CalendarFilterController {
+  const [localFilters, setLocalFilters] = useState(emptyCalendarFilters);
   const values = { ...localFilters, platform };
-  const activeCount = [values.format, values.seriesId, values.status].filter(Boolean).length;
+  const { activeCount, hasFilters } = calendarFilterState(values);
   function setValue(key: keyof CalendarFilters, value: string) {
     if (key === 'platform') setPlatform(value);
-    else setLocalFilters((current) => ({ ...current, [key]: value }));
+    else setLocalFilters(current => ({ ...current, [key]: value }));
   }
   function reset() {
-    setLocalFilters(emptyFilters);
+    setLocalFilters(emptyCalendarFilters);
     setPlatform('');
   }
   return {
     values,
     activeCount,
-    hasFilters: !!(activeCount || platform || values.query),
+    hasFilters,
     setValue,
-    reset,
+    reset
   };
 }

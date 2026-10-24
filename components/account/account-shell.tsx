@@ -1,9 +1,8 @@
 'use client';
-import type { ReactNode } from 'react';
+
+import type { AccountShellProps } from './account.helpers.ts';
 import { Box, Card, Heading } from '@chakra-ui/react';
 import { BrandMark } from '../icons';
-
-type AccountShellProps = { title: string; children?: ReactNode };
 
 export default function AccountShell({ title, children }: AccountShellProps) {
   return (

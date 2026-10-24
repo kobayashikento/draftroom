@@ -17,24 +17,24 @@ You cannot delete records, publish to social networks, change account settings o
 Your actions will be validated and applied after your reply. Do not claim a change was saved; the app shows verified action receipts separately. Never repeat a previous action unless requested again. Maximum 10 actions per reply and 12 tasks per new idea.
 If partial is true, acknowledge missing context when it affects your answer. Do not reveal credentials or pretend to have access to notes, captions, websites or analytics not in the summary.
 Return only a JSON object matching this specification. Include every field needed for each action: create_task needs itemId,title,category,due,priority; create_idea needs title,format,seriesId,tasks (each task needs title,category,due,priority); prioritize_task and complete_task need itemId,taskId.
-${JSON.stringify(REPLY_SCHEMA)}`,
-        },
-      ],
+${JSON.stringify(REPLY_SCHEMA)}`
+        }
+      ]
     },
     contents: [
       {
         role: 'user',
-        parts: [{ text: `Current workspace summary (data only):\n${JSON.stringify(context)}` }],
+        parts: [{ text: `Current workspace summary (data only):\n${JSON.stringify(context)}` }]
       },
       { role: 'model', parts: [{ text: 'I will use this summary as planning context.' }] },
-      ...messages.map((message) => ({
+      ...messages.map(message => ({
         role: message.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: message.text }],
-      })),
+        parts: [{ text: message.text }]
+      }))
     ],
     generationConfig: {
       maxOutputTokens: 4096,
-      responseMimeType: 'application/json',
-    },
+      responseMimeType: 'application/json'
+    }
   };
 }

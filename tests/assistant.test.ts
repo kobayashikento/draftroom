@@ -7,20 +7,20 @@ import { validateWorkspace } from '../lib/workspace-data.ts';
 import { WorkspaceSync } from '../lib/workspace-sync.ts';
 import {
   assistantContext,
-  validateContext,
+  validateContext
 } from '../supabase/functions/_shared/assistant-context.ts';
 import {
   validateReply,
-  validateMessages,
+  validateMessages
 } from '../supabase/functions/_shared/assistant-protocol.ts';
 import {
   prepareAssistantTurn,
   applyAssistantTurn,
-  appendAssistantMessage,
+  appendAssistantMessage
 } from '../lib/assistant-actions.ts';
 
 const task = { title: 'Film the opening', category: 'film', due: '2026-10-26', priority: 'High' };
-test('chat and created tasks save together and reload through revision-aware cloud sync', async (t) => {
+test('chat and created tasks save together and reload through revision-aware cloud sync', async t => {
   let row = { data: seed(), revision: 1 };
   const saves: WorkspaceRow[] = [];
   const repository: WorkspaceRepository = {
@@ -30,19 +30,19 @@ test('chat and created tasks save together and reload through revision-aware clo
       row = { data: structuredClone(data), revision: revision + 1 };
       saves.push(row);
       return structuredClone(row);
-    },
+    }
   };
   const values = new Map<string, string>();
   const storage: CacheStorage = {
-    getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => values.set(key, value),
+    getItem: key => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value)
   };
   const options = {
     repository,
     storage,
     cacheKey: 'assistant-owner',
     delay: 60_000,
-    onChange: () => {},
+    onChange: () => {}
   };
   const sync = new WorkspaceSync(options);
   t.after(() => sync.dispose());
@@ -52,11 +52,11 @@ test('chat and created tasks save together and reload through revision-aware clo
     id: 'sync-turn',
     role: 'user',
     text: 'Add a filming task.',
-    createdAt: new Date().toISOString(),
+    createdAt: new Date().toISOString()
   });
   const turn = prepareAssistantTurn(draft, 'sync-turn', {
     reply: 'Here is your next step.',
-    actions: [{ type: 'create_task', itemId: draft.items[0].id, ...task }],
+    actions: [{ type: 'create_task', itemId: draft.items[0].id, ...task }]
   });
   applyAssistantTurn(draft, turn);
   sync.change(draft);
@@ -81,17 +81,17 @@ test('assistant creates requested tasks and ideas through the workspace model', 
         title: 'Autumn routine',
         format: 'Reel',
         seriesId: 'matcha',
-        tasks: [task],
-      },
-    ],
+        tasks: [task]
+      }
+    ]
   });
   applyAssistantTurn(state, turn);
   assert.equal(required(state.items[0].tasks.at(-1)).title, task.title);
   assert.equal(required(state.items.at(-1)).tasks.length, 1);
   assert.equal(required(state.items.at(-1)).seriesId, 'matcha');
   assert.equal(
-    required(state.items.at(-1)).publications.every((publication) => !publication.date),
-    true,
+    required(state.items.at(-1)).publications.every(publication => !publication.date),
+    true
   );
   assert.deepEqual(state.items[0].publications, original.publications);
   assert.equal(required(state.assistant).messages[0].receipts!.length, 2);
@@ -103,8 +103,8 @@ test('applying a response twice never duplicates tasks or ideas', () => {
     reply: 'A plan.',
     actions: [
       { type: 'create_task', itemId: state.items[0].id, ...task },
-      { type: 'create_idea', title: 'Morning routine', format: 'Reel', seriesId: '', tasks: [] },
-    ],
+      { type: 'create_idea', title: 'Morning routine', format: 'Reel', seriesId: '', tasks: [] }
+    ]
   });
   applyAssistantTurn(state, turn);
   const once = structuredClone(state);
@@ -121,8 +121,8 @@ test('a stale response applies no actions when one target has disappeared', () =
     reply: 'A plan.',
     actions: [
       { type: 'create_task', itemId: state.items[0].id, ...task },
-      { type: 'complete_task', itemId: state.items[1].id, taskId: state.items[1].tasks[0].id },
-    ],
+      { type: 'complete_task', itemId: state.items[1].id, taskId: state.items[1].tasks[0].id }
+    ]
   });
   state.items[1].tasks = [];
   const before = structuredClone(state.items);
@@ -137,8 +137,8 @@ test('actions use the latest state and preserve edits made while Gemini was thin
     reply: 'A plan.',
     actions: [
       { type: 'prioritize_task', itemId: state.items[0].id, taskId: state.items[0].tasks[0].id },
-      { type: 'complete_task', itemId: state.items[1].id, taskId: state.items[1].tasks[0].id },
-    ],
+      { type: 'complete_task', itemId: state.items[1].id, taskId: state.items[1].tasks[0].id }
+    ]
   });
   state.items[0].notes = 'Edited during request';
   state.items[0].tasks[0].title = 'My revised title';
@@ -153,7 +153,7 @@ test('reject unsupported actions, invalid dates, priorities and overly large pla
     { type: 'delete_idea', itemId: 'x' },
     { type: 'create_task', itemId: 'x', ...task, due: '2026-02-30' },
     { type: 'create_task', itemId: 'x', ...task, priority: 'Urgent' },
-    { type: 'create_task', itemId: 'x', ...task, title: '' },
+    { type: 'create_task', itemId: 'x', ...task, title: '' }
   ])
     assert.throws(() => validateReply({ reply: 'A plan.', actions: [action] }));
   assert.throws(() => validateReply({ reply: 'A plan.', actions: Array(11).fill({}) }));
@@ -171,9 +171,9 @@ test('workspace summaries omit private content and keep bounded planning context
         id: 'private-chat',
         role: 'user',
         text: 'PRIVATE-CHAT',
-        createdAt: new Date().toISOString(),
-      },
-    ],
+        createdAt: new Date().toISOString()
+      }
+    ]
   };
   const context = assistantContext(state, '2026-10-23', 'America/Toronto');
   assert.equal(JSON.stringify(context).includes('PRIVATE-'), false);
@@ -189,16 +189,16 @@ test('chat is bounded, serializable with backups, and invalid imported history i
       id: `message-${i}`,
       role: 'user',
       text: 'Hello',
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     });
   assert.equal(required(state.assistant).messages.length, 60);
   assert.equal(
     required(validateWorkspace(JSON.parse(JSON.stringify(state))).assistant).messages[0].id,
-    'message-10',
+    'message-10'
   );
   const invalid = {
     ...state,
-    assistant: { messages: [{ ...required(state.assistant).messages[0], role: 'system' }] },
+    assistant: { messages: [{ ...required(state.assistant).messages[0], role: 'system' }] }
   };
   assert.throws(() => validateWorkspace(invalid));
 });

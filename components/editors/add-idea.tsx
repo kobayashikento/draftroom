@@ -1,35 +1,28 @@
 'use client';
-import type { Format } from '../../lib/types.ts';
-import type { FormEvent } from 'react';
-import type { AddIdeaModal } from '../../lib/types.ts';
+
+import { captureIdea, isFormat } from './editors.helpers.ts';
+import type { AddIdeaProps } from './editors.helpers.ts';
 import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Input, Button, Field, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import { fmt } from '../../lib/display.ts';
-import { createItem } from '../../lib/model';
 import Modal from './modal';
-
-type AddIdeaProps = { modal: AddIdeaModal; close: () => void };
 
 export default function AddIdea({ modal, close }: AddIdeaProps) {
   const { state, update, open, notify } = useWorkspace();
-  const [title, setTitle] = useState(''),
-    [seriesId, setSeriesId] = useState(modal.seriesId || ''),
-    [format, setFormat] = useState(
-      state.series.find((s) => s.id === modal.seriesId)?.format || 'Reel',
-    );
+  const [title, setTitle] = useState('');
+  const [seriesId, setSeriesId] = useState(modal.seriesId || '');
+  const [format, setFormat] = useState(
+    state.series.find(s => s.id === modal.seriesId)?.format || 'Reel'
+  );
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!title.trim()) return;
-    const p = createItem(state, { title: title.trim(), format, seriesId });
-    if (modal.date) {
-      const publication =
-        p.publications.find((pub) => pub.platform === modal.platform) || p.publications[0];
-      publication.date = modal.date;
-    }
-    update((s) => s.items.push(p));
+    const p = captureIdea(state, { title, format, seriesId }, modal);
+    if (!p) return;
+    update(s => s.items.push(p));
     open(p.id, modal.date ? 'Publish' : 'Storyboard');
     notify('A new idea has a home.');
   }
@@ -57,23 +50,25 @@ export default function AddIdea({ modal, close }: AddIdeaProps) {
             autoFocus
             placeholder="A little idea goes a long way…"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={e => setTitle(e.target.value)}
           />
         </Field>
         <Field label="Format">
           <Select
             options={['Reel', 'Carousel']}
             value={format}
-            onChange={(value) => setFormat(value as Format)}
+            onChange={value => {
+              if (isFormat(value)) setFormat(value);
+            }}
           />
         </Field>
         <Field label="Series (optional)">
           <Select
-            options={[['', 'No series'], ...state.series.map((s) => [s.id, s.name])]}
+            options={[['', 'No series'], ...state.series.map(s => [s.id, s.name])]}
             value={seriesId}
-            onChange={(v) => {
+            onChange={v => {
               setSeriesId(v);
-              const s = state.series.find((x) => x.id === v);
+              const s = state.series.find(x => x.id === v);
               if (s) setFormat(s.format);
             }}
           />

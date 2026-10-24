@@ -22,19 +22,28 @@ pnpm start
 
 Check that Node.js and pnpm are available in your shell with `node --version` and `pnpm --version`. The project's package manager version is recorded in `package.json`. Dependencies and build output are generated locally and excluded from Git.
 
+## Formatting
+
+[Prettier](https://prettier.io/docs/) formats JavaScript, JSX, CSS, JSON, Markdown, SQL and TOML using the shared `.prettierrc.json` configuration. Run `pnpm format` to format the project, or `pnpm format:check` to check formatting without writing files. Generated output, dependencies, lockfiles, binary assets and environment files are excluded by `.prettierignore`.
+
+Use two-space indentation, single quotes in JavaScript, trailing commas and a 100-character print width. Editor integrations can use the installed project formatter and the same configuration.
+
 ## Architecture
 
 - `app/layout.jsx`, `app/page.jsx`: Next.js App Router entry points and metadata.
 - `app/globals.css`: responsive workspace layouts and component geometry.
 - `lib/design-tokens.js`: the working Pistachio & Oat palette, semantic color roles, typography and motion tokens.
+- `postcss.config.mjs`: Tailwind CSS v4 through the official PostCSS plugin.
 - `components/ui-provider.jsx`: Chakra provider consuming the shared design tokens.
 - `components/ui.jsx`: Chakra buttons, accessible fields, inputs, textareas, native selects, checkboxes and badges.
+- `components/icons.jsx`: shared Lucide icons for controls, navigation, status, content formats, platforms, series and branding.
 - Editors use Chakra Dialog and Tabs for focus handling and keyboard navigation.
 - `components/DraftroomApp.jsx`: workspace shell and view navigation.
 - `components/workspace.jsx`: reusable controls/cards and original SVG cover illustrations.
 - `components/workspace-provider.jsx`: private login boundary, shared React context, immutable updates, persistence and account lifecycle.
 - `components/account.jsx`: Chakra login, connection notices, conflict recovery and sign-out confirmation.
-- `components/views.jsx`: six views, all querying the shared records.
+- `components/views.jsx`: connected overview, ideas, series and analytics views.
+- `components/calendar.jsx`, `lib/calendar.js`: calendar-first week/month/list planning, channel/content filters, unscheduled channel plans and independent publication rescheduling.
 - `components/production.jsx`: collapsible To do/Completed checklists, task/project priority flags and an advancing Up next card.
 - `components/editors.jsx`: content detail, storyboard, tasks, publication records, quick capture, series templates and workflow-stage editors.
 - `lib/model.js`: stable IDs, seed data, series instantiation and calendar/production selectors.
@@ -44,7 +53,7 @@ Check that Node.js and pnpm are available in your shell with `node --version` an
 
 One versioned state object contains `stages`, `series`, and `items`. Each item owns stable-ID storyboard entries, tasks, and publication records. Series and stages are referenced by ID. There are no separate dashboard, calendar, production, or analytics post copies.
 
-Workflow stage, task completion, and publication status are intentionally independent. Each platform has its own date, caption, URL, external ID, and manual-posted flag. Dates are local calendar dates, not UTC timestamps. Seed dates cover October 26–November 1, 2026; Today navigates to the current week.
+Workflow stage, task completion, and publication status are intentionally independent. Each platform has its own date, caption, URL, external ID, and manual-posted flag. Dates are local calendar dates, not UTC timestamps. Seed dates cover October 26–November 1, 2026. The app opens to Calendar in the current week; Today returns to the current week or month.
 
 Stage behaviors (needs prep / ready / posted) remain independent of customizable stage names. Removing a stage migrates affected items to the first remaining stage. Templates are copied when creating episodes; editing a template does not rewrite existing posts.
 
@@ -104,24 +113,51 @@ Supabase Free can pause inactive projects and does not include automatic databas
 
 Implemented: all six connected views, quick capture, board/list, customizable stages, search and filters, ordered editable storyboards/tasks, notes/tags/priority/cadence, platform-specific dates/captions/links, editable series templates, manual publication tracking, Supabase email/password login and cloud persistence when configured, automatic migration of browser drafts, conflict handling, local recovery copies and JSON export.
 
-Deferred: real photo uploads/storage (reference URLs can be saved), drag-and-drop (use explicit reorder/stage controls), automated batch grouping, backup import, shared workspaces, real API analytics and automatic publishing. Analytics shows unavailable data honestly. Original cover illustrations are placeholders for future uploaded images.
+Deferred: real photo uploads/storage (reference URLs can be saved), board/storyboard drag-and-drop (use explicit reorder/stage controls), automated batch grouping, backup import, shared workspaces, real API analytics and automatic publishing. Analytics shows unavailable data honestly. Original cover illustrations are placeholders for future uploaded images.
+
+## Calendar planning
+
+Draftroom uses an original, Buffer-inspired planning layout with compact, collapsible navigation and the existing Pistachio & Oat tokens. Calendar is the landing view. Week and month grids share the same publication records as the weekly list; Monday is the first day, month navigation handles short months and year boundaries, and Today uses the local date.
+
+Filter by channel, format, series, publication status, or title/tags/caption. The Unscheduled tray contains individual undated channel plans, including the second channel of a partly scheduled idea. Counts follow the current filters. On desktop the tray opens beside the calendar, with its own scroll area; narrow screens stack it above the grid. Add buttons on a day prefill that date and the selected channel when capturing a new idea.
+
+Drag an unposted card onto a day to reschedule only that platform. Every full card also has a keyboard-accessible Choose a date control; the same dialog can move a plan back to Unscheduled. Opening a card goes directly to its Publish tab. Manually posted records stay visible and cannot be dragged or moved through the quick scheduling dialog. Checklist completion, workflow stage and other channel dates stay independent. Scheduling remains a planning tool; it does not publish to social platforms.
 
 ## UI component library
 
 Chakra UI v3 and Emotion provide shared controls. The provider uses Draftroom's working **Pistachio & Oat** palette. This is the default design direction, not a permanent brand commitment:
 
-| Token | Colour |
-| --- | --- |
-| Ivory | `#FAF9F5` |
-| Oat | `#E9E4D9` |
+| Token     | Colour    |
+| --------- | --------- |
+| Ivory     | `#FAF9F5` |
+| Oat       | `#E9E4D9` |
 | Pistachio | `#D5DEBC` |
-| Moss | `#79866A` |
-| Ink | `#2C3029` |
+| Moss      | `#79866A` |
+| Ink       | `#2C3029` |
 
 Change the five primitive values in `lib/design-tokens.js` to explore a new palette. Semantic roles derive surfaces, borders, accents, readable text, illustrations and overlays from those values. Chakra's `draftroom.*` tokens and `pistachio` color palette use the same CSS custom properties as the layout stylesheet. Component files do not define their own hex colours.
 
-The direction is editorial, playful, sleek and soft: DM Serif Display headings, DM Sans body text, a clean Manrope wordmark, generous spacing, warm surfaces, pistachio accents and small hover details. Ink is used on Pistachio primary buttons; small secondary text uses darker derived shades for readability. Motion respects `prefers-reduced-motion`.
+The direction is editorial, playful, sleek and soft: DM Serif Display section headings, compact DM Sans product headings and body text, a clean Manrope wordmark, generous spacing, warm surfaces, pistachio accents and small hover details. Ink is used on Pistachio primary buttons; small secondary text uses darker derived shades for readability. Motion respects `prefers-reduced-motion`.
 
 Native date inputs preserve platform-specific scheduling and both input/change event handling. Theme changes leave stored content and the persistence model unchanged.
+
+## Typography and spacing
+
+Tailwind CSS v4 supplies the shared utilities and component styles. Chakra continues to provide accessible interactive components; its type and spacing tokens reference the same values in `lib/design-tokens.js`. Public CSS variables are published by the root layout, so the palette and sizing remain centralized.
+
+| Role                                                 | Utility     | Size |
+| ---------------------------------------------------- | ----------- | ---- |
+| Metadata and helper text                             | `text-xs`   | 12px |
+| Interface copy, navigation, buttons and fields       | `text-sm`   | 14px |
+| Card titles                                          | `text-base` | 16px |
+| Product page, section, checklist and dialog headings | `text-2xl`  | 24px |
+| Account headings                                     | `text-3xl`  | 30px |
+| Metric values                                        | `text-4xl`  | 36px |
+
+Use the 4px spacing unit: `gap-2` for 8px, `gap-3` for 12px, `gap-4` for 16px and `gap-6` for 24px. Panels use `p-6`, compact panels use `p-4`, and standard controls have a 40px minimum height. Add contextual utilities in JSX instead of inline font sizes, margins or padding.
+
+The stylesheet declares Chakra's layers followed by shared components and Tailwind utilities. It imports Tailwind's theme and utilities without Preflight, preserving one reset and keeping dialog, tab and checkbox behavior consistent.
+
+Interface icons use `AppIcon` from `components/icons.jsx`. Sizes are 16px for controls and metadata, 20px for navigation and status, 24px for featured badges, and 32px for the brand mark. Every size keeps a 1.75px visual stroke. Icon-only controls use the shared 32px `icon-button` geometry and an accessible label. Existing saved series symbols map to Lucide icons when displayed; no data migration is needed. Platform icons use a camera for Instagram and a music note for TikTok, accompanied by their platform names. Original cover illustrations remain separate from the interface icon set.
 
 Chakra setup reference: https://chakra-ui.com/docs/get-started/frameworks/next-app

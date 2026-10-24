@@ -1,0 +1,25 @@
+# Dependencies and generated output
+node_modules/
+.next/
+out/
+coverage/
+.pnpm-store/
+supabase/.temp/
+supabase/.branches/
+next-env.d.ts
+*.tsbuildinfo
+
+# Package manager files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Local configuration and binary assets
+.env*
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.ico
+*.tar.gz

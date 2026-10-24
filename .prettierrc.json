@@ -1,0 +1,17 @@
+{
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "endOfLine": "lf",
+  "plugins": ["prettier-plugin-sql", "prettier-plugin-toml"],
+  "overrides": [
+    {
+      "files": "**/*.sql",
+      "options": {
+        "language": "postgresql"
+      }
+    }
+  ]
+}

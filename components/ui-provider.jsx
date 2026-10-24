@@ -1,14 +1,16 @@
 'use client';
-import {ChakraProvider, createSystem, defaultConfig, defineConfig} from '@chakra-ui/react';
-import {palette, colorRoles, fonts, typeScale, kebab} from '../lib/design-tokens.js';
+import { ChakraProvider, createSystem, defaultConfig, defineConfig } from '@chakra-ui/react';
+import { palette, colorRoles, fonts, typeScale, kebab } from '../lib/design-tokens.js';
 
-const token = value => ({value});
+const token = (value) => ({ value });
 const config = defineConfig({
   preflight: false,
   theme: {
     tokens: {
       colors: {
-        brand: Object.fromEntries(Object.entries(palette).map(([name, value]) => [name, token(value)])),
+        brand: Object.fromEntries(
+          Object.entries(palette).map(([name, value]) => [name, token(value)]),
+        ),
         pistachio: {
           50: token('var(--dr-canvas)'),
           100: token('var(--dr-accent-soft)'),
@@ -24,12 +26,24 @@ const config = defineConfig({
         },
       },
       fonts: Object.fromEntries(Object.entries(fonts).map(([name, value]) => [name, token(value)])),
-      fontSizes: Object.fromEntries(Object.keys(typeScale).map(name => [name==='base'?'md':name, token(`var(--dr-text-${name})`)])),
-      spacing: Object.fromEntries([0,1,2,3,4,5,6,7,8,9,10,12,14,16,20,24].map(value => [value, token(`calc(var(--dr-space) * ${value})`)])),
+      fontSizes: Object.fromEntries(
+        Object.keys(typeScale).map((name) => [
+          name === 'base' ? 'md' : name,
+          token(`var(--dr-text-${name})`),
+        ]),
+      ),
+      spacing: Object.fromEntries(
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 24].map((value) => [
+          value,
+          token(`calc(var(--dr-space) * ${value})`),
+        ]),
+      ),
     },
     semanticTokens: {
       colors: {
-        draftroom: Object.fromEntries(Object.keys(colorRoles).map(name => [name, token(`var(--dr-${kebab(name)})`)])),
+        draftroom: Object.fromEntries(
+          Object.keys(colorRoles).map((name) => [name, token(`var(--dr-${kebab(name)})`)]),
+        ),
         pistachio: {
           solid: token('var(--dr-accent)'),
           contrast: token('var(--dr-on-accent)'),
@@ -45,6 +59,6 @@ const config = defineConfig({
 });
 
 export const draftroomSystem = createSystem(defaultConfig, config);
-export default function UIProvider({children}) {
+export default function UIProvider({ children }) {
   return <ChakraProvider value={draftroomSystem}>{children}</ChakraProvider>;
 }

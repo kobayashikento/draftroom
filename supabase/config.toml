@@ -1,4 +1,4 @@
-project_id = "draftroom"
+project_id = 'draftroom'
 
 [auth]
 enable_signup = false

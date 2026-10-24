@@ -10,7 +10,9 @@
     "dev": "next dev --hostname 127.0.0.1 --port 3000",
     "build": "next build --webpack",
     "start": "node scripts/serve.mjs",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@chakra-ui/react": "3.37.0",
@@ -26,6 +28,9 @@
     "@electric-sql/pglite": "^0.5.11",
     "@tailwindcss/postcss": "4.3.3",
     "postcss": "8.5.31",
+    "prettier": "3.9.10",
+    "prettier-plugin-sql": "0.20.0",
+    "prettier-plugin-toml": "4.1.0",
     "tailwindcss": "4.3.3"
   }
 }

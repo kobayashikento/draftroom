@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {getSupabaseConfig} from '../lib/supabase.js';
+import { getSupabaseConfig } from '../lib/supabase.js';
 
-test('Supabase configuration fails closed for incomplete or secret browser keys', t => {
+test('Supabase configuration fails closed for incomplete or secret browser keys', (t) => {
   const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const originalKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   t.after(() => {

@@ -8,9 +8,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## Code formatting
+
+- Keep source files readable with the project's Prettier configuration. Run `pnpm format` after edits and `pnpm format:check` before finishing. SQL and TOML are included; generated output, dependencies, lockfiles, binary assets and environment files are excluded.
+
 ## Draftroom design direction
 
 - Use Chakra UI for shared interactive components.
+- Use Lucide through `AppIcon` in `components/icons.jsx` for interface icons. Shared sizes and stroke weight live in `lib/design-tokens.js`: 16px for controls/metadata, 20px for navigation/status, 24px for featured badges, and 32px for the brand. Use `icon-button` for icon-only controls and provide an accessible label. Do not use text characters as icons.
+- Use Tailwind utilities for typography and spacing. The shared scale lives in `lib/design-tokens.js` and is consumed by both Tailwind and Chakra; avoid one-off font sizes and inline margins/padding. Use 14px (`text-sm`) for interface copy and controls, 12px (`text-xs`) for metadata, 16px (`text-base`) for card titles, and 24px (`text-2xl`) for section headings. Use the 4px spacing unit, 24px panel padding and 24px gaps between panels; compact layouts use 16px panel padding.
+- Keep component styles in the `components` CSS layer and Tailwind utilities after Chakra's recipes so overrides remain predictable. Do not enable a second CSS reset.
 - Pistachio & Oat is the working default palette, and can change later. Its five primitive colours live in `lib/design-tokens.js`; use semantic tokens instead of hardcoded component colours.
 - Keep the experience editorial, playful, sleek and soft: expressive typography, spacious layouts, friendly copy, minimal clutter and gentle contrast.
 - Keep text readable and interactive states clear. Subtle motion must respect reduced-motion preferences.

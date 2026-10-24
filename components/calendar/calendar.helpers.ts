@@ -6,8 +6,11 @@ import type {
   Workspace,
   PublicationCollection,
   CalendarEntryOptions,
-  CalendarFilters
+  CalendarFilters,
+  ProductionTask,
+  ProductionGroup
 } from '../../lib/types.ts';
+import type { DayTaskEditorState, DayTaskOccurrence } from './day-task.helpers.ts';
 import type { Dispatch, SetStateAction, DragEvent, DragEventHandler } from 'react';
 import { addDays, dateString, monday, parseDate } from '../../lib/model.ts';
 import { CalendarDays, CalendarRange, List } from 'lucide-react';
@@ -32,6 +35,8 @@ export type PublicationDrag = {
 };
 export type CalendarDateRange = { start: string; end: string; days: number };
 export type CalendarPlanCounts = { planned: number; posted: number };
+export type CalendarContent = 'All' | 'Ideas' | 'Tasks';
+export type CalendarProductionCardsProps = { tasks: ProductionTask[] };
 
 export const emptyCalendarFilters = { format: '', seriesId: '', status: '', query: '' };
 
@@ -76,10 +81,15 @@ export function calendarDayClass(
 }
 
 export type CalendarAgendaProps = {
+  content: CalendarContent;
   days: string[];
   entries: PublicationEntry[];
+  tasks: ProductionTask[];
+  dayTasks: DayTaskOccurrence[];
   start: string;
   platform: string;
+  onAddTask: (date: string) => void;
+  onEditTask: (task: DayTaskEditorState) => void;
 };
 
 export type CalendarFiltersProps = {
@@ -92,21 +102,34 @@ export type CalendarFiltersProps = {
 };
 
 export type CalendarGridProps = {
+  content: CalendarContent;
   anchor: string;
   mode: CalendarMode;
   days: string[];
   entries: PublicationEntry[];
+  tasks: ProductionTask[];
+  dayTasks: DayTaskOccurrence[];
   platform: string;
   drag: PublicationDrag;
+  onAddTask: (date: string) => void;
+  onEditTask: (task: DayTaskEditorState) => void;
 };
 
-export type CalendarSummaryProps = { entries: PublicationEntry[]; mode: CalendarMode };
+export type CalendarSummaryProps = {
+  entries: PublicationEntry[];
+  tasks: ProductionTask[];
+  dayTasks: DayTaskOccurrence[];
+  mode: CalendarMode;
+  content: CalendarContent;
+  onContentChange: (content: CalendarContent) => void;
+};
 
 export type CalendarToolbarProps = {
   anchor: string;
   mode: CalendarMode;
   onAnchorChange: (anchor: string) => void;
   onModeChange: (mode: CalendarMode) => void;
+  onAddTask: () => void;
 };
 
 export type PublicationCardsProps = {
@@ -193,6 +216,50 @@ export function calendarEntries(
       );
     })
     .sort((a, b) => a.pub.date.localeCompare(b.pub.date));
+}
+
+export function calendarTasks(
+  state: Workspace,
+  {
+    start,
+    end,
+    platform = '',
+    format = '',
+    seriesId = '',
+    status = '',
+    query = ''
+  }: CalendarEntryOptions = {}
+): ProductionTask[] {
+  const search = query.trim().toLocaleLowerCase();
+  return state.items
+    .filter(
+      item =>
+        (!format || item.format === format) &&
+        (!seriesId || item.seriesId === seriesId) &&
+        item.publications.some(
+          pub => (!platform || pub.platform === platform) && (!status || pub.state === status)
+        )
+    )
+    .flatMap(p => p.tasks.map(t => ({ p, t })))
+    .filter(
+      ({ p, t }) =>
+        t.due &&
+        (!start || t.due >= start) &&
+        (!end || t.due <= end) &&
+        (!search ||
+          `${p.title} ${p.tags} ${t.title} ${t.category}`.toLocaleLowerCase().includes(search))
+    )
+    .sort((a, b) => a.t.due.localeCompare(b.t.due) || Number(a.t.done) - Number(b.t.done));
+}
+
+export function calendarProductionGroups(tasks: ProductionTask[]): ProductionGroup[] {
+  const groups = new Map<string, ProductionGroup>();
+  for (const task of tasks) {
+    const group = groups.get(task.p.id) || { item: task.p, tasks: [] };
+    group.tasks.push(task);
+    groups.set(task.p.id, group);
+  }
+  return [...groups.values()];
 }
 
 // Only the selected platform's plan moves. Posted records, task due dates,

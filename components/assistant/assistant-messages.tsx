@@ -7,13 +7,20 @@ import { CheckCheck, ArrowUpRight } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 import { assistantMarkdown } from '../../lib/assistant-markdown.ts';
+import AssistantFileList from './assistant-file-list';
 
-export default function AssistantMessages({ messages, busy, onOpen }: AssistantMessagesProps) {
+export default function AssistantMessages({
+  messages,
+  hidden,
+  busy,
+  activity,
+  onOpen
+}: AssistantMessagesProps) {
   const end = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (end.current?.getClientRects().length)
       end.current.scrollIntoView({ block: 'nearest', behavior: 'instant' });
-  }, [messages.length, busy]);
+  }, [messages.length, busy, hidden]);
   return (
     <div
       role="log"
@@ -34,6 +41,7 @@ export default function AssistantMessages({ messages, busy, onOpen }: AssistantM
               <Markdown {...assistantMarkdown}>{message.text}</Markdown>
             </div>
           )}
+          {message.attachments?.length ? <AssistantFileList files={message.attachments} /> : null}
           {message.receipts && message.receipts.length > 0 && (
             <div className="assistant-receipts">
               {message.receipts.map((receipt, index) => (
@@ -49,7 +57,7 @@ export default function AssistantMessages({ messages, busy, onOpen }: AssistantM
       ))}
       {busy && (
         <p role="status" className="assistant-thinking text-sm text-muted">
-          Thinking through your next step<span aria-hidden="true">…</span>
+          {activity}
         </p>
       )}
       <div ref={end} />

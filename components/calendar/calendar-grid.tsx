@@ -2,21 +2,29 @@
 
 import { calendarDayClass } from './calendar.helpers.ts';
 import type { CalendarGridProps } from './calendar.helpers.ts';
-import { Plus } from 'lucide-react';
+import { ListPlus, ListTodo, Plus } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import { fmt, today } from '../../lib/display.ts';
 import { parseDate } from '../../lib/model.ts';
 import { PublicationCards } from './publication-card';
+import IdeaSketch from '../workspace/idea-sketch';
+import CalendarProductionCards from './calendar-production-cards';
+import DayTaskCards from './day-task-cards';
 
 export default function CalendarGrid({
+  content,
   anchor,
   mode,
   days,
   entries,
+  tasks,
+  dayTasks: dayTaskEntries,
   platform,
-  drag
+  drag,
+  onAddTask,
+  onEditTask
 }: CalendarGridProps) {
   const { setModal } = useWorkspace();
   return (
@@ -33,8 +41,10 @@ export default function CalendarGrid({
               {day}
             </div>
           ))}
-        {days.map(date => {
+        {days.map((date, index) => {
           const dayEntries = entries.filter(e => e.pub.date === date);
+          const dayTasks = tasks.filter(({ t }) => t.due === date);
+          const routineTasks = dayTaskEntries.filter(task => task.date === date);
           return (
             <section
               key={date}
@@ -51,15 +61,43 @@ export default function CalendarGrid({
                   <strong>{parseDate(date).getDate()}</strong>
                   {date === today() && <span className="sr-only">Today</span>}
                 </div>
-                <Button
-                  className="icon-button"
-                  aria-label={`Add idea on ${date}`}
-                  onClick={() => setModal({ type: 'add', date, platform })}
-                >
-                  <AppIcon icon={Plus} />
-                </Button>
+                <div className="planner-day-actions">
+                  <Button
+                    className="icon-button"
+                    aria-label={`Add day task on ${date}`}
+                    title="Add day task"
+                    onClick={() => onAddTask(date)}
+                  >
+                    <AppIcon icon={ListPlus} />
+                  </Button>
+                  <Button
+                    className="icon-button"
+                    aria-label={`Add idea on ${date}`}
+                    onClick={() => setModal({ type: 'add', date, platform })}
+                  >
+                    <AppIcon icon={Plus} />
+                  </Button>
+                </div>
               </header>
               <div className="planner-day-cards">
+                {routineTasks.length > 0 && (
+                  <div className="planner-day-tasks">
+                    <span className="planner-day-label">
+                      <AppIcon icon={ListTodo} />
+                      Day tasks
+                    </span>
+                    <DayTaskCards tasks={routineTasks} onEdit={onEditTask} />
+                  </div>
+                )}
+                {dayTasks.length > 0 && (
+                  <div className="planner-day-tasks">
+                    <span className="planner-day-label">In production</span>
+                    <CalendarProductionCards tasks={dayTasks} />
+                  </div>
+                )}
+                {dayEntries.length > 0 && (
+                  <span className="planner-day-label">Publishing · {dayEntries.length}</span>
+                )}
                 <PublicationCards
                   entries={dayEntries}
                   compact={mode === 'Month'}
@@ -68,14 +106,28 @@ export default function CalendarGrid({
                   onDragEnd={drag.cancel}
                 />
               </div>
-              {mode === 'Week' && !dayEntries.length && (
+              {mode === 'Week' &&
+                content !== 'Tasks' &&
+                !dayEntries.length &&
+                !dayTasks.length &&
+                !routineTasks.length && (
+                  <Button
+                    className="planner-add"
+                    aria-label={`Plan an idea on ${date}`}
+                    onClick={() => setModal({ type: 'add', date, platform })}
+                  >
+                    <IdeaSketch variant={index} />
+                    <span>Room for an idea</span>
+                  </Button>
+                )}
+              {mode === 'Week' && (
                 <Button
-                  className="planner-add"
-                  aria-label={`Plan an idea on ${date}`}
-                  onClick={() => setModal({ type: 'add', date, platform })}
+                  className="link planner-add-day-task"
+                  aria-label={`Plan your day on ${date}`}
+                  onClick={() => onAddTask(date)}
                 >
-                  <AppIcon icon={Plus} />
-                  <span>Room for an idea</span>
+                  <AppIcon icon={ListTodo} />
+                  Add day task
                 </Button>
               )}
             </section>

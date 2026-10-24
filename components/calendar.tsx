@@ -1,9 +1,13 @@
 'use client';
 
-import { calendarDays, calendarEntries, calendarRange } from './calendar/calendar.helpers.ts';
+import {
+  calendarDays,
+  calendarEntries,
+  calendarRange,
+  calendarTasks
+} from './calendar/calendar.helpers.ts';
 import type { CalendarProps } from './calendar/calendar.helpers.ts';
 import type { CalendarMode } from '../lib/types.ts';
-import { useState } from 'react';
 import { useWorkspace } from './workspace/workspace-context';
 import CalendarToolbar from './calendar/calendar-toolbar';
 import CalendarFilters from './calendar/calendar-filters';
@@ -13,20 +17,29 @@ import CalendarAgenda from './calendar/calendar-agenda';
 import UnscheduledPlans from './calendar/unscheduled-plans';
 import useCalendarFilters from './calendar/use-calendar-filters.ts';
 import usePublicationDrag from './calendar/use-publication-drag.ts';
+import useCalendarView from './calendar/use-calendar-view.ts';
+import DayTaskEditor from './calendar/day-task-editor';
+import { calendarDayTasks } from './calendar/day-task.helpers.ts';
+import { today } from '../lib/display.ts';
 
 export default function Calendar({ week, setWeek, platform, setPlatform }: CalendarProps) {
   const { state } = useWorkspace();
-  const [mode, setMode] = useState<CalendarMode>('Week');
-  const [showFilters, setShowFilters] = useState(false);
-  const [showUnscheduled, setShowUnscheduled] = useState(false);
+  const view = useCalendarView();
+  const { mode, content, showFilters, showUnscheduled, taskEditor } = view;
   const filters = useCalendarFilters(platform, setPlatform);
   const drag = usePublicationDrag();
   const range = calendarRange(week, mode);
   const days = calendarDays(range);
+  const currentDate = today();
   const entries = calendarEntries(state, { ...range, ...filters.values });
+  const tasks = calendarTasks(state, { ...range, ...filters.values });
+  const dayTasks = calendarDayTasks(state, range, filters.values.query);
+  const visibleEntries = content === 'Tasks' ? [] : entries;
+  const visibleTasks = content === 'Tasks' ? [] : tasks;
+  const visibleDayTasks = content === 'Ideas' ? [] : dayTasks;
   const unscheduled = calendarEntries(state, { ...filters.values, unscheduled: true });
   function changeMode(value: CalendarMode) {
-    setMode(value);
+    view.setMode(value);
     drag.cancel();
   }
 
@@ -37,27 +50,52 @@ export default function Calendar({ week, setWeek, platform, setPlatform }: Calen
         mode={mode}
         onAnchorChange={setWeek}
         onModeChange={changeMode}
+        onAddTask={() =>
+          view.setTaskEditor({ date: days.includes(currentDate) ? currentDate : week })
+        }
       />
       <CalendarFilters
         filters={filters}
         showFilters={showFilters}
-        setShowFilters={setShowFilters}
+        setShowFilters={view.setShowFilters}
         showUnscheduled={showUnscheduled}
-        setShowUnscheduled={setShowUnscheduled}
+        setShowUnscheduled={view.setShowUnscheduled}
         unscheduledCount={unscheduled.length}
       />
-      <CalendarSummary entries={entries} mode={mode} />
+      <CalendarSummary
+        entries={entries}
+        tasks={tasks}
+        dayTasks={dayTasks}
+        mode={mode}
+        content={content}
+        onContentChange={view.setContent}
+      />
       <div className={`planner-canvas ${showUnscheduled ? 'has-drafts' : ''}`}>
         {mode === 'List' ? (
-          <CalendarAgenda days={days} entries={entries} start={range.start} platform={platform} />
+          <CalendarAgenda
+            content={content}
+            days={days}
+            entries={visibleEntries}
+            tasks={visibleTasks}
+            dayTasks={visibleDayTasks}
+            start={range.start}
+            platform={platform}
+            onAddTask={date => view.setTaskEditor({ date })}
+            onEditTask={view.setTaskEditor}
+          />
         ) : (
           <CalendarGrid
+            content={content}
             anchor={week}
             mode={mode}
             days={days}
-            entries={entries}
+            entries={visibleEntries}
+            tasks={visibleTasks}
+            dayTasks={visibleDayTasks}
             platform={platform}
             drag={drag}
+            onAddTask={date => view.setTaskEditor({ date })}
+            onEditTask={view.setTaskEditor}
           />
         )}
         <UnscheduledPlans
@@ -65,14 +103,21 @@ export default function Calendar({ week, setWeek, platform, setPlatform }: Calen
           mode={mode}
           hasFilters={filters.hasFilters}
           visible={showUnscheduled}
-          onClose={() => setShowUnscheduled(false)}
+          onClose={() => view.setShowUnscheduled(false)}
           drag={drag}
         />
       </div>
       <p className="planner-footnote">
-        Dates are your plans. Posts are published manually. Moving a card changes only that
-        channel’s date.
+        Day tasks are for your routine. Ideas appear on checklist due dates and publishing days.
+        Open an idea for its full checklist. Posts are published manually.
       </p>
+      {taskEditor && (
+        <DayTaskEditor
+          key={`${taskEditor.id || 'new'}:${taskEditor.date}`}
+          {...taskEditor}
+          onClose={() => view.setTaskEditor(null)}
+        />
+      )}
     </section>
   );
 }

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   calendarEntries,
+  calendarTasks,
   calendarRange,
   moveCalendarAnchor,
   reschedulePublication
@@ -108,4 +109,51 @@ test('invalid dates, missing publications, and posted records cannot be reschedu
   assert.equal(reschedulePublication(item, item.publications[0].id, '2026-11-01'), false);
   assert.equal(reschedulePublication(item, item.publications[0].id, ''), false);
   assert.equal(item.publications[0].date, before.publications[0].date);
+});
+
+test('calendar tasks follow their own due dates, appear once across channels, and retain completed work', () => {
+  const state = seed();
+  state.items = [state.items[0]];
+  const item = state.items[0];
+  item.stageId = 'ready';
+  item.tasks[0].due = '2026-10-26';
+  item.tasks[1].due = '';
+  item.tasks[2].due = '2026-10-27';
+  item.tasks[3].due = '2026-11-02';
+  const tasks = calendarTasks(state, calendarRange('2026-10-26'));
+  assert.deepEqual(
+    tasks.map(({ t }) => t.id),
+    [item.tasks[0].id, item.tasks[2].id]
+  );
+  assert.equal(tasks[0].t.done, true);
+  item.publications.forEach(pub => {
+    pub.date = '';
+  });
+  assert.deepEqual(calendarTasks(state, calendarRange('2026-10-26')), tasks);
+});
+
+test('task filters combine content, channel publication status, and task search without duplication', () => {
+  const state = seed();
+  const item = state.items[0];
+  item.tasks[2].title = 'Colour grade the footage';
+  item.publications[0].state = 'manually_posted';
+  const range = calendarRange('2026-10-19');
+  assert.deepEqual(
+    calendarTasks(state, { ...range, query: '  COLOUR GRADE  ' }).map(({ t }) => t.id),
+    [item.tasks[2].id]
+  );
+  assert.equal(
+    calendarTasks(state, { ...range, platform: 'TikTok', status: 'manually_posted' }).length,
+    0
+  );
+  assert.equal(
+    calendarTasks(state, {
+      ...range,
+      platform: 'Instagram',
+      status: 'manually_posted',
+      seriesId: 'emi'
+    }).length,
+    4
+  );
+  assert.equal(calendarTasks(state, { ...range, seriesId: 'emi', format: 'Carousel' }).length, 0);
 });

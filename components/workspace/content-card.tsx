@@ -38,6 +38,12 @@ export default function ContentCard({ item }: ContentCardProps) {
             </span>
             <span>{dates[0] ? fmt(dates[0].date) : 'No date yet'}</span>
           </div>
+          <progress
+            className="task-progress-bar"
+            value={done}
+            max={item.tasks.length || 1}
+            aria-label={`Checklist progress for ${item.title}`}
+          />
         </div>
       </Button>
     </article>

@@ -1,4 +1,5 @@
-import type { Workspace, Item, AssistantMessage } from './types.ts';
+import type { Workspace, Item, AssistantMessage, AssistantAttachment } from './types.ts';
+import { validateAttachments } from '../supabase/functions/_shared/assistant-attachments.ts';
 import type {
   CreateIdeaAction,
   CreateTaskAction,
@@ -16,8 +17,16 @@ export type AssistantTurn = { requestId: string; reply: string; changes: Prepare
 export function assistantMessages(state: Workspace): AssistantMessage[] {
   return Array.isArray(state.assistant?.messages) ? state.assistant.messages : [];
 }
+export function assistantAttachments(state: Workspace): AssistantAttachment[] {
+  return state.assistant?.attachments || [];
+}
 export function appendAssistantMessage(state: Workspace, message: AssistantMessage) {
   state.assistant ||= { messages: [] };
+  if (message.attachments?.length) {
+    const files = new Map(assistantAttachments(state).map(file => [file.id, file]));
+    for (const file of message.attachments) files.set(file.id, file);
+    state.assistant.attachments = validateAttachments([...files.values()]);
+  }
   state.assistant.messages = [
     ...assistantMessages(state).filter(entry => entry.id !== message.id),
     message

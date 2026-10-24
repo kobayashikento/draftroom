@@ -7,6 +7,7 @@ import { Button } from '../ui';
 import AssistantWelcome from './assistant-welcome';
 import AssistantMessages from './assistant-messages';
 import AssistantComposer from './assistant-composer';
+import AssistantFileList from './assistant-file-list';
 
 export default function AssistantPanel({
   assistant,
@@ -42,7 +43,7 @@ export default function AssistantPanel({
         <Button
           className="icon-button"
           aria-label="Start a new chat"
-          title="Start a new chat; your tasks stay in place"
+          title="Clear this chat and its planning files; your tasks stay in place"
           disabled={assistant.busy}
           onClick={assistant.newChat}
         >
@@ -58,7 +59,9 @@ export default function AssistantPanel({
         )}
         <AssistantMessages
           messages={assistant.messages}
+          hidden={hidden}
           busy={assistant.busy}
+          activity={assistant.activity}
           onOpen={assistant.open}
         />
         {assistant.error && (
@@ -69,7 +72,23 @@ export default function AssistantPanel({
         )}
       </div>
       <footer className="assistant-footer">
-        <AssistantComposer busy={assistant.busy} onSend={assistant.send} inputRef={inputRef} />
+        {assistant.attachments.length > 0 && (
+          <details className="assistant-documents text-xs">
+            <summary>
+              {assistant.attachments.length} planning{' '}
+              {assistant.attachments.length === 1 ? 'file' : 'files'} available in this chat
+            </summary>
+            <AssistantFileList files={assistant.attachments} />
+          </details>
+        )}
+        <AssistantComposer
+          busy={assistant.busy}
+          uploading={assistant.uploading}
+          attachments={assistant.attachments}
+          onCancelUpload={assistant.cancelUpload}
+          onSend={assistant.send}
+          inputRef={inputRef}
+        />
         <div className="assistant-footnote text-xs text-muted">
           <span>
             {assistant.cloud ? assistant.storageStatus : 'Connect your workspace to use Gemini'}
@@ -77,9 +96,12 @@ export default function AssistantPanel({
           <details>
             <summary>About Gemini</summary>
             <p>
-              Gemini receives your messages and a summary of idea titles, tasks and dates. Notes and
-              captions aren’t sent. Google may use free-tier content to improve its products. AI can
-              make mistakes; review changes in your checklist.{' '}
+              Gemini receives your messages, attached files and a summary of idea titles, tasks and
+              dates. Files stay in private storage for follow-up questions; a new chat removes them.
+              Synced post captions and measured results help Gemini plan; social video files aren’t
+              sent. Workspace notes and draft captions aren’t included automatically. Google may use
+              free-tier content to improve its products. AI can make mistakes; review changes in
+              your checklist.{' '}
               <a
                 href="https://ai.google.dev/gemini-api/docs/pricing"
                 target="_blank"

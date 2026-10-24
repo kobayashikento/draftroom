@@ -15,6 +15,8 @@ import { AppIcon } from './icons';
 import { useWorkspace } from './workspace/workspace-context';
 import { fmt, today } from '../lib/display.ts';
 import Checklist from './production/checklist';
+import Artwork from './workspace/artwork';
+import IdeaSketch from './workspace/idea-sketch';
 
 export default function Production() {
   const { state, updateItem, open } = useWorkspace();
@@ -59,13 +61,13 @@ export default function Production() {
           {queue.remaining} {queue.remaining === 1 ? 'task' : 'tasks'} left in this range
         </span>
       </div>
-      <p className="production-hint">
-        Flag a task or reel to bring it forward. Priority tasks come first, then priority projects,
-        then due dates.
-      </p>
+      <p className="production-hint">Flag a task or project to bring it forward.</p>
       <Tabs.Content value={tab} className="production-content">
         {tab === 'active' && next && (
           <section className="panel production-next" aria-label="Up next">
+            <div className="next-art">
+              <Artwork item={next.p} />
+            </div>
             <div className="next-copy" aria-live="polite">
               <div className="meta">
                 UP NEXT
@@ -93,6 +95,7 @@ export default function Production() {
         ))}
         {!groups.length && (
           <div className="panel empty">
+            <IdeaSketch />
             {tab === 'completed'
               ? 'Your finished checklists will have a home here.'
               : 'A little breathing room. No unfinished checklists in this range.'}

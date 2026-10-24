@@ -4,6 +4,7 @@ import { required, workspaceData } from './helpers.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { seed } from '../lib/model.ts';
+import { completeDayTask, saveDayTask } from '../components/calendar/day-task.helpers.ts';
 import { WorkspaceSync } from '../lib/workspace-sync.ts';
 import { WorkspaceConflictError } from '../lib/workspace-repository.ts';
 import {
@@ -78,6 +79,22 @@ test('existing cloud records take priority over legacy drafts and demo seeds', a
   assert.deepEqual(workspaceData(sync), cloud);
   assert.equal(sync.revision, 5);
   assert.equal(remote.saves.length, 0);
+});
+
+test('standalone calendar routines and per-week completion survive cloud save and a fresh session', async t => {
+  const { sync, remote } = fixture(t, { data: seed(), revision: 3 });
+  await sync.start(seed);
+  const changed = structuredClone(workspaceData(sync));
+  saveDayTask(changed, { title: 'Batch filming', date: '2026-10-26', repeat: 'weekly' });
+  const id = changed.calendarTasks![0].id;
+  completeDayTask(changed, id, '2026-10-26', true);
+  sync.change(changed);
+  assert.equal(await sync.flush(), true);
+  assert.equal(remote.row.revision, 4);
+  const { sync: fresh } = fixture(t, remote.row);
+  await fresh.start(seed);
+  assert.deepEqual(workspaceData(fresh).calendarTasks, changed.calendarTasks);
+  assert.deepEqual(workspaceData(fresh).items, changed.items);
 });
 
 test('a failed save retains a dirty browser copy and resumes after reconnecting', async t => {

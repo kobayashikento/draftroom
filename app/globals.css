@@ -5,6 +5,7 @@
 @layer theme, reset, base, tokens, recipes, components, utilities;
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
+@import './media.css';
 @source "../components";
 
 /* Values come from lib/design-tokens.js, published by the root layout. */
@@ -348,6 +349,27 @@
   .stat strong {
     @apply mt-3 mb-2 block font-heading text-4xl font-normal;
   }
+  .stat-value {
+    @apply my-2 flex min-h-16 items-center justify-between gap-2;
+  }
+  .stat-value strong {
+    @apply my-0;
+  }
+  .stat-previews {
+    @apply flex min-w-0 items-center justify-end pr-1;
+  }
+  .stat-preview {
+    @apply -ml-4 block size-12 shrink-0 overflow-hidden rounded-md;
+    border: 3px solid var(--dr-art-paper);
+    box-shadow: 0 2px 4px var(--dr-shadow);
+    transform: rotate(-8deg);
+  }
+  .stat-preview + .stat-preview {
+    transform: rotate(8deg);
+  }
+  .stat-previews .idea-sketch {
+    @apply h-16 w-20;
+  }
   .stat .tiny {
     @apply block min-h-10 leading-5;
     color: var(--dr-muted);
@@ -427,6 +449,53 @@
   }
   .art > svg {
     @apply size-full;
+  }
+  .cover-illustration {
+    @apply block size-full;
+  }
+  .idea-sketch {
+    @apply mx-auto block h-24 w-40 max-w-full shrink-0;
+  }
+  .task-progress-bar {
+    @apply mt-4 block h-1 w-full overflow-hidden rounded-full border-0;
+    appearance: none;
+    background: var(--dr-border);
+    color: var(--dr-moss);
+  }
+  .task-progress-bar::-webkit-progress-bar {
+    background: var(--dr-border);
+  }
+  .task-progress-bar::-webkit-progress-value {
+    @apply rounded-full;
+    background: var(--dr-moss);
+  }
+  .task-progress-bar::-moz-progress-bar {
+    @apply rounded-full;
+    background: var(--dr-moss);
+  }
+  .task-progress-ring {
+    @apply relative grid size-12 shrink-0 place-items-center text-xs font-medium;
+    color: var(--dr-moss-strong);
+  }
+  .task-progress-ring > svg {
+    @apply absolute size-full;
+    stroke-width: 3;
+  }
+  .progress-track {
+    stroke: var(--dr-border);
+  }
+  .progress-value {
+    stroke: var(--dr-moss);
+    stroke-linecap: round;
+  }
+  .list-art {
+    @apply size-12 shrink-0 overflow-hidden rounded-lg;
+  }
+  .list-art .art {
+    @apply h-full;
+  }
+  :is(.list-art, .miniart, .next-art) .format-tag {
+    @apply hidden;
   }
   .format-tag {
     @apply absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs;
@@ -550,7 +619,13 @@
     background: var(--dr-accent-soft);
   }
   .next-copy {
-    @apply grid min-w-0 gap-2;
+    @apply grid min-w-0 flex-1 gap-2;
+  }
+  .next-art {
+    @apply h-28 w-36 shrink-0 overflow-hidden rounded-lg;
+  }
+  .next-art .art {
+    @apply h-full;
   }
   .next-copy .meta {
     @apply m-0;
@@ -655,11 +730,11 @@
   .column > h3 {
     @apply p-1;
   }
-  .list-item {
+  .record-row {
     @apply flex items-center gap-4 p-4 text-sm;
     border-bottom: 1px solid var(--dr-border);
   }
-  .list-item .grow {
+  .record-row .grow {
     @apply flex-1 justify-start text-left;
   }
   .series-grid {
@@ -668,9 +743,37 @@
   .series-card .row {
     @apply flex-wrap;
   }
+  .series-card {
+    @apply min-w-0 overflow-hidden;
+  }
+  .series-episode-copy {
+    @apply grid min-w-0 flex-1 gap-1;
+  }
+  .series-episode-copy .link {
+    @apply justify-start text-left;
+  }
+  .series-episode .pill {
+    @apply shrink-0;
+  }
+  .series-cover {
+    @apply relative -mx-6 -mt-6 mb-6 h-40 overflow-hidden;
+    background: var(--dr-art-oat);
+  }
+  .series-cover > svg {
+    @apply absolute right-0 h-full w-64;
+  }
+  .series-cover[data-subject='ritual'] {
+    background: var(--dr-art-pistachio);
+  }
   .series-icon {
-    @apply mb-6 grid size-12 place-items-center rounded-xl text-2xl;
-    background: var(--dr-accent-soft);
+    @apply absolute bottom-4 left-6 grid size-12 place-items-center rounded-xl;
+    background: var(--dr-surface);
+    color: var(--dr-moss-strong);
+    box-shadow: 0 2px 8px var(--dr-shadow);
+  }
+  .series-cover-count {
+    @apply absolute top-4 left-6 rounded-full px-3 py-1 text-xs font-medium;
+    background: var(--dr-art-paper);
     color: var(--dr-moss-strong);
   }
   .empty {
@@ -900,6 +1003,9 @@
     background: var(--dr-surface);
   }
   .assistant-composer {
+    @apply flex flex-col gap-3;
+  }
+  .assistant-compose-field {
     @apply relative;
   }
   .assistant-composer .dr-textarea {
@@ -907,8 +1013,25 @@
     max-height: 128px;
     background: var(--dr-canvas);
   }
-  .assistant-composer .icon-button {
+  .assistant-composer .assistant-send-button {
     @apply absolute right-3 bottom-3 size-8 min-h-8 rounded-lg;
+  }
+  .assistant-files {
+    @apply m-0 flex min-w-0 list-none flex-col gap-2 p-0;
+  }
+  .assistant-file {
+    @apply flex min-w-0 items-center gap-2 rounded-lg p-2;
+    background: var(--dr-canvas);
+    border: 1px solid var(--dr-border);
+  }
+  .assistant-file .icon-button {
+    @apply size-8 min-h-8 shrink-0;
+  }
+  .assistant-documents summary {
+    @apply cursor-pointer text-muted;
+  }
+  .assistant-documents .assistant-files {
+    @apply mt-2 max-h-40 overflow-y-auto;
   }
   .assistant-footnote {
     @apply flex flex-wrap justify-between gap-2;
@@ -1228,8 +1351,11 @@
     @apply flex items-center justify-between gap-1 px-3 py-3;
     border-bottom: 1px solid var(--dr-border);
   }
-  .planner-day-head > div {
+  .planner-day-head > div:not(.planner-day-actions) {
     @apply grid gap-1;
+  }
+  .planner-day-actions {
+    @apply flex gap-1;
   }
   .planner-day-head span {
     @apply text-xs;
@@ -1252,9 +1378,51 @@
   .planner-day-cards:empty {
     @apply hidden;
   }
-  .dr-button.planner-add {
-    @apply mx-2 my-3 flex w-[calc(100%-1rem)] flex-col gap-2 rounded-lg border-dashed bg-transparent px-2 py-4 text-xs font-normal;
+  .planner-day-tasks {
+    @apply grid min-w-0 gap-2;
+  }
+  .planner-day-label {
+    @apply flex items-center gap-1 px-1 text-xs font-medium;
     color: var(--dr-muted);
+  }
+  .planner-task {
+    @apply min-w-0 rounded-lg p-3;
+    border: 1px solid var(--dr-border);
+    background: var(--dr-accent-soft);
+  }
+  .dr-button.planner-task-open {
+    @apply grid min-h-0 min-w-0 flex-1 justify-items-start gap-1 border-0 bg-transparent p-0 text-left text-sm font-medium whitespace-normal;
+  }
+  .planner-task-open > span {
+    @apply max-w-full;
+    overflow-wrap: anywhere;
+  }
+  .planner-task.is-done {
+    background: var(--dr-sidebar);
+  }
+  .planner-task.is-done .planner-task-title {
+    @apply line-through;
+    color: var(--dr-muted);
+  }
+  .dr-button.planner-add-day-task {
+    @apply mx-3 mb-3 text-xs;
+  }
+  .planner-production {
+    @apply min-w-0 rounded-lg p-3;
+    border: 1px solid var(--dr-border);
+    background: var(--dr-raised);
+  }
+  .dr-button.planner-add {
+    @apply mx-2 my-3 flex w-[calc(100%-1rem)] flex-col gap-1 rounded-lg border-dashed bg-transparent px-2 pt-2 pb-4 text-xs font-normal;
+    color: var(--dr-muted);
+  }
+  .planner-add .idea-sketch {
+    @apply h-20 w-full;
+    opacity: 0.7;
+    transition: opacity var(--dr-motion-duration) var(--dr-motion-easing);
+  }
+  .planner-add:hover .idea-sketch {
+    opacity: 1;
   }
   .planner-add:hover {
     background: var(--dr-hover);
@@ -1293,10 +1461,10 @@
     opacity: 0.55;
   }
   .planner-card-art {
-    @apply mx-2 overflow-hidden rounded;
+    @apply mx-2 overflow-hidden rounded-md;
   }
   .planner-card-art .art {
-    @apply h-20;
+    @apply h-28;
   }
   .planner-card-art .format-tag {
     @apply hidden;
@@ -1355,14 +1523,29 @@
     border-left: 3px solid var(--dr-moss);
     box-shadow: none;
   }
-  .is-compact :is(.planner-card-art, .planner-card-format, .pill, footer, .planner-grip) {
+  .is-compact :is(.planner-card-format, .pill, footer, .planner-grip) {
     @apply hidden;
   }
+  .is-compact .planner-card-open {
+    @apply grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  .is-compact .planner-card-art {
+    @apply m-1 self-center;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .is-compact .planner-card-art .art {
+    @apply h-10;
+  }
   .is-compact .planner-card-channel {
-    @apply px-2 pt-2 pb-0;
+    @apply px-1 pt-2 pb-0;
+    grid-column: 2;
+    grid-row: 1;
   }
   .is-compact .planner-card-copy {
-    @apply gap-0;
+    @apply gap-0 p-1;
+    grid-column: 2;
   }
   .is-compact .planner-card-copy h3 {
     @apply text-xs leading-4;
@@ -1453,7 +1636,10 @@
     @apply mb-4 grid grid-cols-1 gap-4;
   }
   .planner-draft-cards .planner-card-art {
-    @apply hidden;
+    @apply block;
+  }
+  .planner-draft-cards .planner-card-art .art {
+    @apply h-24;
   }
   .planner-draft-cards .planner-card-copy {
     @apply grid-cols-2;
@@ -1681,8 +1867,21 @@
     .production-next {
       @apply flex-col items-stretch gap-4;
     }
+    .next-art {
+      @apply h-32 w-full;
+    }
+    .series-cover {
+      @apply -mx-4 -mt-4;
+    }
+    .series-icon,
+    .series-cover-count {
+      @apply left-4;
+    }
     .checklist-header {
       @apply items-start gap-2;
+    }
+    .checklist-header .task-progress-ring {
+      @apply size-10;
     }
     .checklist-actions {
       @apply flex-col items-end gap-2;
@@ -1702,11 +1901,11 @@
     .tabs [data-part='trigger'] {
       @apply whitespace-nowrap;
     }
-    .list-item,
+    .record-row,
     .stage-row {
       @apply flex-wrap;
     }
-    .list-item .grow {
+    .record-row .grow {
       min-width: 65%;
     }
     .entry-head {

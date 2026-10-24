@@ -4,6 +4,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { seed } from '../lib/model.ts';
+import {
+  appendAssistantMessage,
+  applyAssistantTurn,
+  prepareAssistantTurn
+} from '../lib/assistant-actions.ts';
+import { validateWorkspace } from '../lib/workspace-data.ts';
 import { required } from './helpers.ts';
 
 type DatabaseFixtureRow = { owner_id: string; data: Workspace | null; revision: number };
@@ -136,4 +142,50 @@ test('PostgreSQL migration protects the private workspace and increments revisio
       1
     );
   });
+
+  await t.test(
+    'conversation and action receipts round-trip through the owner’s database record',
+    async () => {
+      await db.exec(
+        `set role authenticated; select set_config('request.jwt.claim.sub', '${owner}', false);`
+      );
+      const workspace = seed();
+      appendAssistantMessage(workspace, {
+        id: 'database-chat',
+        role: 'user',
+        text: 'Add a filming task.',
+        createdAt: '2026-10-23T12:00:00.000Z'
+      });
+      applyAssistantTurn(
+        workspace,
+        prepareAssistantTurn(workspace, 'database-chat', {
+          reply: 'Added your filming task.',
+          actions: [
+            {
+              type: 'create_task',
+              itemId: workspace.items[0].id,
+              title: 'Film the opening',
+              category: 'film',
+              due: '',
+              priority: 'High'
+            }
+          ]
+        })
+      );
+      await db.query(
+        'update public.draftroom_workspaces set data = $1 where owner_id = $2 and revision = 1',
+        [JSON.stringify(workspace), owner]
+      );
+      const { rows } = await db.query<DatabaseFixtureRow>(
+        'select data, revision from public.draftroom_workspaces where owner_id = $1',
+        [owner]
+      );
+      const restored = validateWorkspace(rows[0].data);
+      assert.deepEqual(restored.assistant, workspace.assistant);
+      assert.deepEqual(restored.items[0].tasks, workspace.items[0].tasks);
+      assert.equal(Number(rows[0].revision), 2);
+      await db.exec(`select set_config('request.jwt.claim.sub', '${other}', false);`);
+      assert.equal((await db.query('select data from public.draftroom_workspaces')).rows.length, 0);
+    }
+  );
 });

@@ -1,12 +1,19 @@
 'use client';
 
-import { createSeriesEpisode, seriesCollections } from './series/series.helpers.ts';
+import {
+  createSeriesEpisode,
+  seriesCollections,
+  seriesEpisodeDate
+} from './series/series.helpers.ts';
 import type { Series as ContentSeries } from '../../lib/types.ts';
 import { Plus } from 'lucide-react';
-import { AppIcon, SeriesIcon } from '../icons';
+import { AppIcon, SeriesIcon, FormatIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import StagePill from '../workspace/stage-pill';
+import CoverIllustration from '../workspace/cover-illustration';
+import Artwork from '../workspace/artwork';
+import { coverSubject } from '../workspace/artwork.helpers.ts';
 
 export default function Series() {
   const { state, update, setModal, open, notify } = useWorkspace();
@@ -27,8 +34,14 @@ export default function Series() {
       <div className="series-grid">
         {seriesCollections(state).map(({ series: s, items: related }) => (
           <section className="panel series-card" key={s.id}>
-            <div className="series-icon">
-              <SeriesIcon series={s} />
+            <div className="series-cover" data-subject={coverSubject(s.id, s.name)}>
+              <CoverIllustration subject={coverSubject(s.id, s.name)} />
+              <div className="series-icon">
+                <SeriesIcon series={s} />
+              </div>
+              <span className="series-cover-count">
+                {related.length} {related.length === 1 ? 'idea' : 'ideas'}
+              </span>
             </div>
             <div className="row justify-between">
               <h2>{s.name}</h2>
@@ -37,21 +50,24 @@ export default function Series() {
               </Button>
             </div>
             <p className="subtitle my-3">{s.description}</p>
-            <div className="meta">
-              {s.format} · {s.cadence} · {related.length} {related.length === 1 ? 'idea' : 'ideas'}
+            <div className="meta flex items-center gap-2">
+              <FormatIcon format={s.format} />
+              {s.format} · {s.cadence}
             </div>
             {related.map(p => (
-              <div key={p.id} className="list-item px-0 py-3">
-                <Button className="link grow" onClick={() => open(p.id)}>
-                  {p.title}
-                </Button>
-                <span className="tiny">
-                  {p.format} · {p.cadence || s.cadence}
-                </span>
+              <div key={p.id} className="record-row series-episode px-0 py-3">
+                <div className="list-art">
+                  <Artwork item={p} />
+                </div>
+                <div className="series-episode-copy">
+                  <Button className="link" onClick={() => open(p.id)}>
+                    {p.title}
+                  </Button>
+                  <span className="tiny muted">
+                    {p.format} · {seriesEpisodeDate(p)}
+                  </span>
+                </div>
                 <StagePill item={p} />
-                <span className="tiny">
-                  {p.publications.find(x => x.date)?.date || 'Unscheduled'}
-                </span>
               </div>
             ))}
             <div className="row mt-6">

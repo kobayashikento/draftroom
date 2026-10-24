@@ -70,6 +70,11 @@ export type SummaryCardsProps = {
   onSelect: (category: OverviewCategory) => void;
 };
 
+export function summaryPreview(summary: OverviewSummary, category: OverviewCategory): Item[] {
+  const items = category === 'tasks' ? summary.tasks.map(task => task.p) : summary[category];
+  return [...new Map(items.map(item => [item.id, item])).values()].slice(0, 2);
+}
+
 export type OverviewProps = {
   week: string;
   setWeek: Dispatch<SetStateAction<string>>;

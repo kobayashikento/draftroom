@@ -9,6 +9,8 @@ import { Input, Button, Select } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
 import StagePill from '../workspace/stage-pill';
 import ContentCard from '../workspace/content-card';
+import Artwork from '../workspace/artwork';
+import IdeaSketch from '../workspace/idea-sketch';
 import { today } from '../../lib/display.ts';
 
 export default function Ideas() {
@@ -100,7 +102,10 @@ export default function Ideas() {
         <div className="panel">
           {items.length ? (
             items.map(p => (
-              <div key={p.id} className="list-item">
+              <div key={p.id} className="record-row">
+                <div className="list-art">
+                  <Artwork item={p} />
+                </div>
                 <Button className="link grow" onClick={() => open(p.id)}>
                   {p.title}
                 </Button>
@@ -111,7 +116,10 @@ export default function Ideas() {
               </div>
             ))
           ) : (
-            <div className="empty">No ideas match these filters.</div>
+            <div className="empty">
+              <IdeaSketch variant={2} />
+              <p>No ideas match these filters.</p>
+            </div>
           )}
         </div>
       )}

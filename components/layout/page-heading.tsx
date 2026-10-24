@@ -15,10 +15,12 @@ export default function PageHeading({ view }: PageHeadingProps) {
         <h1>{pages[view][1]}</h1>
         <p className="subtitle">{pages[view][2]}</p>
       </div>
-      <Button className="primary" onClick={() => setModal({ type: 'add' })}>
-        <AppIcon icon={Plus} />
-        New idea
-      </Button>
+      {view !== 'Library' && (
+        <Button className="primary" onClick={() => setModal({ type: 'add' })}>
+          <AppIcon icon={Plus} />
+          New idea
+        </Button>
+      )}
     </div>
   );
 }

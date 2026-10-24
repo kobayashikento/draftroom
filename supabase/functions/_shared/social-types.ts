@@ -121,7 +121,13 @@ export type SocialCommand =
   | { action: 'sync'; platform: SocialPlatform; older: boolean }
   | { action: 'disconnect'; platform: SocialPlatform }
   | { action: 'import_link'; url: string; title: string; linkedItemId: string }
-  | { action: 'register_upload'; path: string; title: string; duration: number | null; linkedItemId: string }
+  | {
+      action: 'register_upload';
+      path: string;
+      title: string;
+      duration: number | null;
+      linkedItemId: string;
+    }
   | { action: 'update_media'; id: string; linkedItemId: string; archived: boolean };
 
 export type PerformancePost = {

@@ -6,6 +6,7 @@ import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import { PublicationCards } from './publication-card';
+import IdeaSketch from '../workspace/idea-sketch';
 
 export default function UnscheduledPlans({
   entries,
@@ -43,11 +44,14 @@ export default function UnscheduledPlans({
         />
       </div>
       {!entries.length && (
-        <p className="planner-drafts-empty">
-          {hasFilters
-            ? 'No unscheduled plans match these filters.'
-            : 'Every idea has a date. Your next spark can start here.'}
-        </p>
+        <div className="planner-drafts-empty">
+          <IdeaSketch variant={1} />
+          <p>
+            {hasFilters
+              ? 'No unscheduled plans match these filters.'
+              : 'Every idea has a date. Your next spark can start here.'}
+          </p>
+        </div>
       )}
       <Button className="link" onClick={() => setModal({ type: 'add' })}>
         Capture a new idea

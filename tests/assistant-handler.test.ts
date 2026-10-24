@@ -160,3 +160,139 @@ test('CORS, method checks, payload bounds and per-owner cooldown protect the end
   for (let i = 0; i < 6; i++) assert.equal((await run(request())).status, 200);
   assert.equal((await run(request())).status, 429);
 });
+
+const attachmentOwner = '00000000-0000-4000-8000-000000000001';
+const attachmentId = '00000000-0000-4000-8000-000000000002';
+const planningBytes = new TextEncoder().encode('%PDF-1.7 outside planning content');
+const attachment = {
+  id: attachmentId,
+  name: 'My planning doc.pdf',
+  size: planningBytes.length,
+  mimeType: 'application/pdf',
+  path: `${attachmentOwner}/${attachmentId}.pdf`
+};
+const googleFile = {
+  name: 'files/planning-file',
+  uri: 'https://generativelanguage.googleapis.com/v1beta/files/planning-file',
+  state: 'ACTIVE'
+};
+const uploadUrl =
+  'https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=temporary';
+
+test('owner files stream to Gemini and remain available in follow-ups beyond the recent messages', async () => {
+  let loaded = 0;
+  let generated = false;
+  let deleted = false;
+  const run = handler({
+    authorize: async () => attachmentOwner,
+    loadAttachment: async (_request, file) => {
+      assert.deepEqual(file, attachment);
+      loaded++;
+      return new Response(planningBytes);
+    },
+    fetcher: async (url, options) => {
+      if (String(url).endsWith('/upload/v1beta/files')) {
+        const headers = new Headers(options?.headers);
+        assert.equal(headers.get('x-goog-api-key'), 'TEST-KEY');
+        assert.equal(
+          headers.get('x-goog-upload-header-content-length'),
+          String(planningBytes.length)
+        );
+        assert.equal(headers.get('x-goog-upload-header-content-type'), 'application/pdf');
+        return new Response('', { headers: { 'x-goog-upload-url': uploadUrl } });
+      }
+      if (String(url) === uploadUrl) {
+        assert.equal(new Headers(options?.headers).has('x-goog-api-key'), false);
+        assert.deepEqual(
+          new Uint8Array(await new Response(options?.body).arrayBuffer()),
+          planningBytes
+        );
+        return Response.json({ file: googleFile });
+      }
+      if (options?.method === 'DELETE') {
+        deleted = true;
+        assert.equal(String(url), googleFile.uri);
+        return new Response('{}');
+      }
+      const body = JSON.parse(String(options?.body));
+      const parts = body.contents[0].parts;
+      assert.ok(
+        parts.some(
+          (part: { fileData?: { fileUri: string; mimeType: string } }) =>
+            part.fileData?.fileUri === googleFile.uri &&
+            part.fileData.mimeType === 'application/pdf'
+        )
+      );
+      assert.match(
+        body.systemInstruction.parts[0].text,
+        /file upload alone asks for understanding/
+      );
+      assert.equal(JSON.stringify(body).includes(attachment.path), false);
+      generated = true;
+      return success();
+    }
+  });
+  const response = await run(request({ ...payload(), attachments: [attachment] }));
+  assert.equal(response.status, 200);
+  assert.equal(loaded, 1);
+  assert.equal(generated, true);
+  assert.equal(deleted, true);
+  const followup = await run(
+    request({
+      ...payload(),
+      messages: [{ role: 'user', text: 'What are the priorities from that PDF?' }],
+      attachments: [attachment]
+    })
+  );
+  assert.equal(followup.status, 200);
+  assert.equal(loaded, 2);
+});
+
+test('forged paths, cross-owner attachments and oversized batches never load files or call Google', async () => {
+  let called = false;
+  const run = handler({
+    authorize: async () => attachmentOwner,
+    loadAttachment: async () => {
+      called = true;
+      return new Response(planningBytes);
+    },
+    fetcher: async () => {
+      called = true;
+      return success();
+    }
+  });
+  for (const attachments of [
+    [{ ...attachment, path: `00000000-0000-4000-8000-000000000099/${attachmentId}.pdf` }],
+    [{ ...attachment, path: 'https://attacker.example/file.pdf' }],
+    [{ ...attachment, size: 50_000_001 }],
+    [attachment, attachment]
+  ])
+    assert.equal((await run(request({ ...payload(), attachments }))).status, 400);
+  assert.equal(called, false);
+});
+
+test('Google files are removed after unusable replies and failed file processing', async () => {
+  for (const state of ['ACTIVE', 'FAILED']) {
+    let deleted = false;
+    const response = await handler({
+      authorize: async () => attachmentOwner,
+      loadAttachment: async () => new Response(planningBytes),
+      fetcher: async (url, options) => {
+        if (String(url).endsWith('/upload/v1beta/files'))
+          return new Response('', { headers: { 'x-goog-upload-url': uploadUrl } });
+        if (String(url) === uploadUrl) {
+          await new Response(options?.body).arrayBuffer();
+          return Response.json({ file: { ...googleFile, state } });
+        }
+        if (options?.method === 'DELETE') {
+          deleted = true;
+          return new Response('{}');
+        }
+        return Response.json({ candidates: [{ finishReason: 'MAX_TOKENS' }] });
+      }
+    })(request({ ...payload(), attachments: [attachment] }));
+    assert.equal(response.status, 502);
+    assert.equal(deleted, true);
+    assert.equal(JSON.stringify(await response.json()).includes(uploadUrl), false);
+  }
+});

@@ -1,7 +1,7 @@
 'use client';
 
 import type { View } from '../lib/types.ts';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrandMark } from './icons';
 import { WorkspaceProvider } from './workspace-provider';
 import { useWorkspaceContext } from './workspace/workspace-context';
@@ -19,13 +19,18 @@ import WorkspaceTopbar from './layout/workspace-topbar';
 import WorkspaceSyncNotice from './layout/workspace-sync-notice';
 import PageHeading from './layout/page-heading';
 import Assistant from './assistant';
+import Library from './views/library';
+import MediaProvider from './media/media-context';
 
 function Draftroom() {
-  const { state, message } = useWorkspaceContext();
+  const { state, message, setModal } = useWorkspaceContext();
   const [view, setView] = useState<View>('Calendar');
   const [week, setWeek] = useState(() => monday(today()));
   const [platform, setPlatform] = useState('');
   const [compactNav, setCompactNav] = useState(false);
+  useEffect(() => {
+    if (new URL(window.location.href).searchParams.get('view') === 'Library') setView('Library');
+  }, []);
   const navigate = (name: View) => {
     setView(name);
     if (name === 'Overview') setWeek(w => monday(w));
@@ -39,7 +44,12 @@ function Draftroom() {
     );
 
   return (
-    <>
+    <MediaProvider
+      onOpenLibrary={() => {
+        setModal(null);
+        setView('Library');
+      }}
+    >
       <div className={`shell studio-shell ${compactNav ? 'is-nav-compact' : ''}`}>
         <Sidebar
           view={view}
@@ -64,6 +74,7 @@ function Draftroom() {
           {view === 'Series' && <Series />}
           {view === 'Production' && <Production />}
           {view === 'Analytics' && <Analytics />}
+          {view === 'Library' && <Library />}
         </main>
       </div>
       <Assistant />
@@ -73,7 +84,7 @@ function Draftroom() {
           {message}
         </div>
       )}
-    </>
+    </MediaProvider>
   );
 }
 export default function DraftroomApp() {

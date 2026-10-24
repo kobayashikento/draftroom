@@ -109,13 +109,16 @@ export class WorkspaceSync {
 
   change(data: Workspace) {
     if (this.disposed || !this.data) return;
+    const conversationChanged = !equal(this.data.assistant, data.assistant);
     this.data = validateWorkspace(data);
     this.dirty = true;
     this.error = '';
     this.status = this.conflict ? 'conflict' : 'pending';
     this.cache();
     this.emit();
-    this.schedule();
+    // Chat turns get an immediate cloud write as well as the synchronous recovery copy.
+    if (conversationChanged) void this.flush();
+    else this.schedule();
   }
 
   schedule() {

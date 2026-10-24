@@ -3,6 +3,7 @@ import { validateReply } from '../supabase/functions/_shared/assistant-protocol.
 import { getSupabaseClient } from './supabase.ts';
 import { assistantContext } from '../supabase/functions/_shared/assistant-context.ts';
 import { dateString } from './model.ts';
+import { assistantAttachments } from './assistant-actions.ts';
 
 export async function requestAssistant(
   state: Workspace,
@@ -17,6 +18,7 @@ export async function requestAssistant(
   const { data, error } = await client.functions.invoke('draftroom-assistant', {
     body: {
       messages: messages.slice(-16).map(({ role, text }) => ({ role, text })),
+      attachments: assistantAttachments(state),
       context: assistantContext(
         state,
         dateString(new Date()),
@@ -24,7 +26,7 @@ export async function requestAssistant(
       )
     },
     signal,
-    timeout: 55_000
+    timeout: 140_000
   });
   if (error) {
     let message;

@@ -2,12 +2,23 @@
 
 import { completedTaskCount } from '../production/production.helpers.ts';
 import type { PublicationCardsProps, PublicationCardProps } from './calendar.helpers.ts';
-import { CalendarArrowUp, Check, GripVertical } from 'lucide-react';
-import { AppIcon, PlatformIcon, FormatIcon } from '../icons';
+import {
+  CalendarArrowUp,
+  Check,
+  GripVertical,
+  Image,
+  Images,
+  Film,
+  TriangleAlert,
+  Play
+} from 'lucide-react';
+import { AppIcon, PlatformIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import { Button } from '../ui';
 import StagePill from '../workspace/stage-pill';
-import Artwork from '../workspace/artwork';
+import PublicationArtwork from './publication-artwork';
+import usePublicationMedia from './use-publication-media.ts';
+import MediaDetail from '../media/media-detail';
 
 export function PublicationCards({
   entries,
@@ -38,6 +49,7 @@ export default function PublicationCard({
   onDragEnd
 }: PublicationCardProps) {
   const { open, setModal } = useWorkspace();
+  const media = usePublicationMedia(p, pub);
   const posted = pub.state === 'manually_posted';
   return (
     <article
@@ -49,7 +61,8 @@ export default function PublicationCard({
       <Button
         className="planner-card-open"
         aria-label={`Edit ${p.title} for ${pub.platform}`}
-        title={p.title}
+        title={`${p.title}. ${media.label}. ${media.description} ${media.issues.join(' ')}`}
+        aria-description={media.issues.length ? media.issues.join(' ') : media.description}
         onClick={() => open(p.id, 'Publish')}
       >
         <div className="planner-card-channel">
@@ -62,21 +75,42 @@ export default function PublicationCard({
           )}
         </div>
         <div className="planner-card-art">
-          <Artwork item={p} />
+          <PublicationArtwork item={p} record={media.record} />
         </div>
         <div className="planner-card-copy">
           <h3>{p.title}</h3>
           <span className="planner-card-format">
-            <FormatIcon format={p.format} />
-            {p.format}
+            <AppIcon
+              icon={media.format === 'Photo' ? Image : media.format === 'Carousel' ? Images : Film}
+            />
+            {media.format}
           </span>
           <StagePill item={p} />
+          {media.issues.length > 0 && (
+            <span className="publication-review" title={media.issues.join(' ')}>
+              <AppIcon icon={TriangleAlert} />
+              Check linked post
+              <span className="sr-only">{media.issues.join(' ')}</span>
+            </span>
+          )}
         </div>
       </Button>
       <footer>
-        <span>
-          {posted ? 'Manually posted' : `${completedTaskCount(p)}/${p.tasks.length} tasks`}
+        <span title={media.description}>
+          {posted || media.confirmed
+            ? media.label
+            : `${completedTaskCount(p)}/${p.tasks.length} tasks`}
         </span>
+        {media.record && (
+          <Button
+            className="icon-button"
+            aria-label={`Preview linked ${pub.platform} post for ${p.title}`}
+            title="Preview linked media"
+            onClick={media.openPreview}
+          >
+            <AppIcon icon={media.record.media_type === 'video' ? Play : Image} />
+          </Button>
+        )}
         {!posted && (
           <Button
             className="icon-button"
@@ -88,6 +122,9 @@ export default function PublicationCard({
           </Button>
         )}
       </footer>
+      {media.previewOpen && media.record && (
+        <MediaDetail record={media.record} close={media.closePreview} readOnly />
+      )}
     </article>
   );
 }

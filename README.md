@@ -111,17 +111,21 @@ Edits are immediately copied to a browser cache scoped to the Supabase project a
 
 A conditional revision check prevents stale devices from silently overwriting one another. If versions conflict, choose the cloud or device copy. The replaced version is preserved in a timestamped `draftroom:v1:…:recovery:…` browser key; recovery requires extracting that JSON manually for now. Export downloads a regular JSON backup. A backup-import UI is not included yet. Clearing browser data removes local pending/recovery copies, but not successfully saved cloud records.
 
-Supabase Free can pause inactive projects and does not include automatic database backups. Keep JSON exports outside the browser. File uploads, API tokens and platform metrics are not stored by this integration. When shared editing or analytics needs grow, the nested records can be moved into separate tables behind the repository interface.
+Supabase Free can pause inactive projects and does not include automatic database backups. Keep JSON exports outside the browser. Planning records use the workspace JSON; imported media, platform metrics and encrypted social credentials use separate tables. Private source files live in Supabase Storage and are not included in JSON exports.
 
 ## Gemini assistant
 
-The bottom-center **Ask Draftroom** button opens a planning chat that stays available across all six views. It can discuss plans, create ideas with checklists, add tasks to existing ideas, prioritize tasks and check tasks off. Action receipts open the affected checklist. Publication scheduling and social posting remain in the existing UI. The latest 60 messages save with the workspace; **Start a new chat** clears the conversation and keeps created ideas/tasks.
+The bottom-center **Ask Draftroom** button opens a planning chat that stays available across all six views. It can discuss plans, create ideas with checklists, add tasks to existing ideas, prioritize tasks and check tasks off. Action receipts open the affected checklist. Publication scheduling and social posting remain in the existing UI. The latest 60 messages save in the owner's `draftroom_workspaces.data.assistant` database record. Chat changes start a cloud save immediately and keep a synchronous browser recovery copy, so reopening the panel or refreshing restores the conversation, planning file references and action receipts. A refresh during a reply keeps the user message and offers **Try again** to continue the same request. **Start a new chat** clears the conversation and keeps created ideas/tasks.
 
-The assistant requires a signed-in, provisioned Supabase workspace. Browser-only mode shows the interface and a connection message without simulated AI responses. Existing users need no database migration: chat is an optional field in the workspace JSON.
+The assistant requires a signed-in, provisioned Supabase workspace. Browser-only mode shows the interface and a connection message without simulated AI responses. Chat and attachment metadata are optional fields in the workspace JSON; file uploads also require the private storage migration below.
+
+Use the paperclip in chat to attach outside planning documents: **PDFs up to 50 MB** or **JPG, PNG and WebP images up to 20 MB**, with **4 files and 50 MB total per chat**. You can send files with a question or on their own for a summary and suggested next steps. The upload shows progress, retries interrupted chunks and can be cancelled. File-only requests do not authorize workspace changes. Gemini reads text, diagrams and scanned pages using its native document/image support; PDFs must fit its [document limits (up to 1,000 pages)](https://ai.google.dev/gemini-api/docs/document-processing).
+
+Files upload directly to an owner-only Supabase Storage bucket using resumable 6 MiB chunks. Only validated metadata enters workspace sync and JSON backups, so backups do not contain the original files. Source files remain available throughout the chat, including after older messages leave the 60-message history. Starting a new chat removes that chat's source files and clears its messages while preserving created ideas and tasks. Failed upload batches are cleaned up on a best-effort basis; files left behind after a closed browser or cleanup failure can be removed from the private `assistant-attachments` bucket in Supabase.
 
 1. Create an API key in [Google AI Studio](https://aistudio.google.com/apikey), using a project without paid billing if you want to stay on the free tier.
 2. In your Supabase project, open **Edge Functions → Secrets** and add `GEMINI_API_KEY`. Never use a `NEXT_PUBLIC_` prefix, put this key in browser code, or commit it to Git. Vercel does not need this secret because Supabase runs the proxy.
-3. Deploy the function with the Supabase CLI:
+3. Apply `supabase/migrations/202610240001_assistant_attachments.sql` using the Supabase SQL editor, or push pending migrations through your normal CLI workflow. It creates the private bucket and owner-scoped read/upload/delete policies. Keep the project's global Storage file-size limit at **50 MB or greater**; a smaller project limit still applies. Deploy the updated function with the Supabase CLI:
 
    ```sh
    supabase functions deploy draftroom-assistant --project-ref YOUR_PROJECT_REF --use-api
@@ -131,9 +135,61 @@ The assistant requires a signed-in, provisioned Supabase workspace. Browser-only
 
 The default model is `gemini-3.5-flash-lite`, a fast model with a free tier. An optional Supabase secret `GEMINI_MODEL` changes it; check that the chosen model is available on your account’s free tier. There is no automatic paid-model fallback. Free-tier quotas depend on the Google project/model; quota exhaustion appears as an error instead of a fabricated answer. A best-effort, per-instance cooldown limits each owner to six requests per minute; Google’s project quotas remain the overall usage limit.
 
-The backend verifies the caller’s Supabase session and checks workspace ownership through RLS. `verify_jwt` stays enabled. It sends only recent messages and a bounded summary of idea titles, stages, series, tasks and publication dates to Google. Notes, hooks, captions, account email and credentials are excluded from that automatic summary; anything typed in chat is sent. The summary includes at most 150 ideas and 40 tasks per idea and tells the model when context is partial. Google says free-tier content may be used to improve its products; see [Gemini pricing and data use](https://ai.google.dev/gemini-api/docs/pricing).
+The backend verifies the caller’s Supabase session and checks workspace ownership through RLS. `verify_jwt` stays enabled. It sends recent messages, explicitly attached files and a bounded summary of idea titles, stages, series, tasks and publication dates to Google. Workspace notes, hooks, draft captions, account email and credentials are excluded from that planning summary. A separate server-verified summary includes recent and high-view API-synced post captions, measured results and sync dates; social video files are not sent to Gemini. Missing measurements remain unknown; anything typed or attached in chat is sent. Attachment paths must belong to the caller, and actual stored sizes/MIME types, file signatures and byte counts are verified before use. Large files stream into the Gemini Files API without base64 or buffering entire documents in Edge memory; temporary Google files are deleted after each turn on a best-effort basis (Google otherwise expires Files API uploads after 48 hours). Original source files remain in private Supabase Storage for subsequent turns. Document contents are treated as reference data, never instructions to change the workspace. The summary includes at most 150 ideas and 40 tasks per idea and tells the model when context is partial. Google says free-tier content may be used to improve its products; see [Gemini pricing and data use](https://ai.google.dev/gemini-api/docs/pricing).
 
 Model output is treated as untrusted data. Only the four supported action types are accepted, dates/priorities are validated, and targets are rechecked against the latest workspace before applying a whole response. Missing targets cancel its changes. Stable record IDs prevent duplicate creations if a response is replayed. Conversation and action changes use the same revision-aware cloud save as manual edits, with pending/failure status visible in the chat footer.
+
+## Video library and social connections
+
+Publish videos and photos directly to Instagram or TikTok from your phone. **Library** brings those published posts back into Draftroom: connect each account once, then use **Sync posts** after publishing. Sync is an explicit action, rather than a background monitor. Watch posts in a focused player, link them to an existing idea, search by title/caption, filter by channel, or archive and restore them. Draftroom stores imported metadata and platform media URLs; it does not copy social video files into Supabase Storage.
+
+You can also use **Add post link** after publishing from your phone. Publish previews a saved post URL too. Manual links use official platform embeds; they do not claim access to private posts or measured performance data. TikTok short links must first be expanded to the full `https://www.tiktok.com/@name/video/ID` address. Browser-only mode supports saved links; connected account syncing requires cloud sign-in. Video file-upload controls are not part of this workflow. Previously stored private clips retain their playback, archiving and recovery support.
+
+API sync imports 20 posts at a time. **Sync** refreshes the newest page; **Import older posts** advances through available history. Existing linked ideas and archive choices survive a refresh. Cached results stay available after disconnection or a failed sync. Account switching within one platform is not supported yet. Analytics shows measured views, likes, comments, shares, saves and reach only when the platform supplies them; it does not invent metrics for pasted links or uploads. Period filters select posts by publication date, rather than claiming a historical daily analytics series. Video/thumbnail URLs supplied by platforms can expire; syncing refreshes them.
+
+Calendar publication cards use the same media matcher as the Publish preview. Exact platform-specific post URLs or post IDs take priority, followed by a single explicitly linked post for that channel. Similar titles never create a match, and multiple linked posts require an exact reference. Cards use the matched post’s thumbnail, image or video still; an unavailable preview is labelled rather than replaced with an unrelated post. Unlinked illustrations are labelled **Draft cover**. Private draft uploads can illustrate a plan but cannot verify a posted publication.
+
+**Check linked post** highlights cross-platform links, conflicting IDs, ambiguous matches, and differences between synced published details and the plan’s status, local publication date, caption or format. Open Publish to inspect the differences and synced caption, or use the card’s preview control to watch the exact matched media. Manual posted records remain labelled unverified until a matching API-synced post is available. Cached synced results describe the last import, not a fresh check that a post still exists online. These checks do not rewrite schedules, captions, checklists or manual posted states.
+
+The assistant loads a bounded performance summary on the server using the caller’s database permissions, rather than trusting client-supplied metrics. It receives synced captions, dates and available counts, with freshness and coverage information. Uploaded video footage, signed video URLs and social credentials are excluded. Imported captions are untrusted reference material. Limited samples and lifetime counters cannot establish causation or a reliable best posting time.
+
+### Backend setup
+
+Apply `supabase/migrations/202610240002_media_library.sql` after the workspace migration. It creates owner-readable media/account tables, service-only credential/state tables, a private video bucket and owner-scoped storage policies. Media is separate from revisioned planning JSON, so syncing does not rewrite ideas or checklists. JSON exports do not back up video files or synced analytics.
+
+Set these **Supabase Edge Function secrets**, never public Vercel environment variables:
+
+- `DRAFTROOM_APP_URL=https://draftroom-inky.vercel.app`
+- `SOCIAL_TOKEN_ENCRYPTION_KEY`: a stable, random 32-byte base64url value. Preserve it: changing it prevents existing tokens from being decrypted and requires reconnecting accounts.
+- `INSTAGRAM_APP_ID` and `INSTAGRAM_APP_SECRET`
+- `TIKTOK_CLIENT_KEY` and `TIKTOK_CLIENT_SECRET`
+- Optional `INSTAGRAM_API_VERSION` (defaults to `v25.0`); verify permissions and metrics against the version configured for the Meta app.
+
+The current Draftroom Supabase project has the media schema, app origin and encryption key configured. Platform app credentials still need to be supplied. Deploy the three functions after code changes:
+
+```sh
+supabase functions deploy draftroom-social --project-ref YOUR_PROJECT_REF --use-api
+supabase functions deploy draftroom-social-callback --project-ref YOUR_PROJECT_REF --use-api
+supabase functions deploy draftroom-assistant --project-ref YOUR_PROJECT_REF --use-api
+```
+
+`draftroom-social` and `draftroom-assistant` require authenticated, provisioned owners. The callback is public because OAuth providers cannot send Supabase JWTs; it consumes a hashed, owner/platform-bound, ten-minute, single-use state before exchanging the code. Tokens are encrypted on the server with AES-GCM and never returned to browser clients. Disconnect removes stored credentials while retaining imported posts.
+
+### Developer app setup
+
+Register this exact authorized redirect URI in **both** developer apps:
+
+```text
+https://draftroom-inky.vercel.app/social/callback/
+```
+
+Deploy the frontend before connecting: this static callback page forwards the one-time grant to the Supabase callback, and then returns to Library. Production connections must start from the configured public origin. Localhost remains usable for uploads and links.
+
+1. In [Meta for Developers](https://developers.facebook.com/apps/), create/configure an Instagram app using **Instagram API with Instagram Login**, with the existing professional Instagram account as an authorized tester during development. Request `instagram_business_basic` and `instagram_business_manage_insights`. Follow Meta’s current testing and app-review requirements before using accounts outside the app’s allowed roles. This integration does not request publishing access. See Meta’s [official Instagram API workspace](https://www.postman.com/meta/instagram/overview).
+2. In [TikTok for Developers](https://developers.tiktok.com/), create an app, configure **Login Kit** and **Display API**, register the redirect/domain and authorized sandbox account, and request `user.info.basic` and `video.list`. Follow TikTok’s [Display API setup and approval process](https://developers.tiktok.com/docs/en/display-api-get-started). Availability depends on the app’s review status and granted scopes.
+3. Save the four platform credentials in Supabase secrets, then return to **Library → Connect**. The in-app setup guide shows missing configuration without exposing secret values. Approve the platform’s connection and sync the account. An unsuccessful connection leaves cached media untouched.
+
+Live provider exchange and insights must be verified with the developer apps once their credentials and permissions exist. Automated tests cover canonical URLs, single-use OAuth state, encrypted tokens, provider payloads, missing/zero metrics, deduplication, pagination, private upload ownership, archive preservation and server-verified AI context.
 
 ## Acceptance walkthrough
 
@@ -145,7 +201,7 @@ Model output is treated as untrusted data. Only the four supported action types 
 6. Move an item with unfinished tasks to Ready. It leaves the normal prep queue and gets an inconsistency notice; task history remains.
 7. Edit a series template and create the next episode. Exactly one draft appears with copied entries/tasks and no schedule.
 8. Rename, reorder, add and remove stages. Linked ideas remain accessible.
-9. Save a manual post URL and mark that publication posted. Analytics stays Not connected / unavailable.
+9. Publish a post from your phone, then sync its connected Instagram or TikTok account. Match it to an idea by its URL, platform post ID or explicit library link. Also check Add post link and in-app previews. Manual links have unavailable metrics until synced; API-synced posts show only measured results with their last sync time. Archive a post, find it in Archived and restore it; the original planning record stays unchanged.
 10. Check week/month navigation across October and November. Monday October 26 and Sunday November 1 align correctly.
 11. Use Board/List, search, filters, keyboard controls, and compact navigation at narrow widths.
 12. Configure Supabase and sign in. Confirm the original IDs and edits migrate into the empty owner row, then sign in on a second browser and verify those records load.
@@ -158,15 +214,19 @@ Model output is treated as untrusted data. Only the four supported action types 
 
 ## Scope
 
-Implemented: all six connected views, quick capture, board/list, customizable stages, search and filters, ordered editable storyboards/tasks, notes/tags/priority/cadence, platform-specific dates/captions/links, editable series templates, manual publication tracking, Supabase email/password login and cloud persistence when configured, automatic migration of browser drafts, conflict handling, local recovery copies and JSON export.
+Implemented: connected planning views, quick capture, board/list, customizable stages, search and filters, ordered editable storyboards/tasks, notes/tags/priority/cadence, platform-specific dates/captions/links, editable series templates, manual publication tracking, a private video library, Instagram/TikTok connection and read-only sync infrastructure, measured analytics, AI performance context, Supabase email/password login and cloud persistence when configured, automatic migration of browser drafts, conflict handling, local recovery copies and JSON export. Live social sync requires configured developer apps and platform permissions.
 
-Deferred: real photo uploads/storage (reference URLs can be saved), board/storyboard drag-and-drop (use explicit reorder/stage controls), automated batch grouping, backup import, shared workspaces, real API analytics and automatic publishing. Analytics shows unavailable data honestly. Original cover illustrations are placeholders for future uploaded images.
+Deferred: reference photo uploads (reference URLs can be saved), board/storyboard drag-and-drop (use explicit reorder/stage controls), backup import, shared workspaces, switching between multiple accounts on the same platform and automatic publishing. Analytics shows unavailable data honestly. Original cover illustrations are placeholders for future uploaded images.
 
 ## Calendar planning
 
 Draftroom uses an original, Buffer-inspired planning layout with compact, collapsible navigation and the existing Pistachio & Oat tokens. Calendar is the landing view. Week and month grids share the same publication records as the weekly list; Monday is the first day, month navigation handles short months and year boundaries, and Today uses the local date.
 
-Filter by channel, format, series, publication status, or title/tags/caption. The Unscheduled tray contains individual undated channel plans, including the second channel of a partly scheduled idea. Counts follow the current filters. On desktop the tray opens beside the calendar, with its own scroll area; narrow screens stack it above the grid. Add buttons on a day prefill that date and the selected channel when capturing a new idea.
+The calendar combines standalone **day tasks**, ideas to work on, and publishing plans in Week, Month and List views. Switch between All, Ideas and Tasks. Ideas with checklist tasks due on a day appear together in a compact production card; opening one shows its full checklist. These cards appear once per idea and day even when the idea has multiple channels. Publishing cards keep their own channel-specific dates.
+
+Use **Add day task** in the toolbar or on any calendar day for work such as “Plan content”, “Batch filming”, or “Edit and prepare”. Day tasks belong to the calendar and do not require an idea. They can run once or repeat weekly on the chosen weekday; checking off a weekly task completes only that occurrence. Click a task to rename it, change its schedule or delete it. Edits and deletion apply to the whole weekly routine. Tasks persist in the same saved workspace and JSON backups; existing workspaces without day tasks remain compatible.
+
+Filter by channel, format, series, publication status, or search text. Content filters apply to ideas; standalone day tasks stay visible across channels and content filters. Search includes day task names, idea title/tags/caption and checklist task title/category. The Unscheduled tray contains individual undated channel plans, including the second channel of a partly scheduled idea. Counts follow the current filters. On desktop the tray opens beside the calendar, with its own scroll area; narrow screens stack it above the grid. Add buttons on a day prefill that date and the selected channel when capturing a new idea.
 
 Drag an unposted card onto a day to reschedule only that platform. Every full card also has a keyboard-accessible Choose a date control; the same dialog can move a plan back to Unscheduled. Opening a card goes directly to its Publish tab. Manually posted records stay visible and cannot be dragged or moved through the quick scheduling dialog. Checklist completion, workflow stage and other channel dates stay independent. Scheduling remains a planning tool; it does not publish to social platforms.
 

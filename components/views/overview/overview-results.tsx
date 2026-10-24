@@ -7,6 +7,7 @@ import { AppIcon } from '../../icons';
 import { Button } from '../../ui';
 import TaskRow from '../../workspace/task-row';
 import PostResults from './post-results';
+import IdeaSketch from '../../workspace/idea-sketch';
 
 export default function OverviewResults({
   selected,
@@ -31,7 +32,10 @@ export default function OverviewResults({
         {overviewResultCount(selected, matches.length, week)}
       </p>
       {!matches.length ? (
-        <div className="panel empty">{section.empty}</div>
+        <div className="panel empty">
+          <IdeaSketch />
+          <p>{section.empty}</p>
+        </div>
       ) : selected === 'tasks' ? (
         <div className="panel">
           {summary.tasks.map(({ p, t }) => (

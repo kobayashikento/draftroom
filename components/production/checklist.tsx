@@ -9,6 +9,7 @@ import { AppIcon } from '../icons';
 import { useWorkspace } from '../workspace/workspace-context';
 import StagePill from '../workspace/stage-pill';
 import TaskRow from '../workspace/task-row';
+import TaskProgress from '../workspace/task-progress';
 
 export default function Checklist({ item, tasks, finished }: ChecklistProps) {
   const { updateItem, open } = useWorkspace();
@@ -18,6 +19,11 @@ export default function Checklist({ item, tasks, finished }: ChecklistProps) {
   return (
     <section className="panel production-checklist">
       <div className="checklist-header">
+        <TaskProgress
+          completed={done}
+          total={item.tasks.length}
+          label={`Checklist progress for ${item.title}`}
+        />
         <Button
           className="checklist-toggle"
           aria-label={`${expanded ? 'Collapse' : 'Expand'} checklist for ${item.title}`}

@@ -10,7 +10,8 @@ import {
   TriangleAlert,
   CloudUpload,
   CloudCheck,
-  HardDrive
+  HardDrive,
+  LibraryBig
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { fmt } from '../../lib/display.ts';
@@ -58,9 +59,10 @@ export type WeekBarProps = {
 
 export const pages: Record<View, [LucideIcon, string, string]> = {
   Overview: [LayoutDashboard, 'Overview', 'A little perspective on everything you’re making.'],
-  Calendar: [CalendarDays, 'Calendar', 'Your ideas. A little rhythm. Room for what’s next.'],
+  Calendar: [CalendarDays, 'Calendar', 'Your ideas and tasks, with a little rhythm for the week.'],
   Ideas: [Lightbulb, 'Ideas', 'Collect the sparks. Make something you love.'],
   Production: [ListChecks, 'Production', 'The next small steps, gathered in one place.'],
+  Library: [LibraryBig, 'Library', 'Your Instagram and TikTok posts, with a little perspective.'],
   Series: [Layers, 'Series', 'Familiar formats, fresh little stories.'],
   Analytics: [
     ChartNoAxesCombined,

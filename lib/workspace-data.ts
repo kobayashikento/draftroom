@@ -1,4 +1,6 @@
 import type { Workspace, CacheStorage, WorkspaceCache } from './types.ts';
+import { validAttachments } from '../supabase/functions/_shared/assistant-attachments.ts';
+import { dateString, parseDate } from './model.ts';
 export const LEGACY_STORAGE_KEY = 'studio-space-v1';
 
 const object = (value: unknown): value is Record<string, unknown> =>
@@ -6,6 +8,8 @@ const object = (value: unknown): value is Record<string, unknown> =>
 const string = (value: unknown): value is string => typeof value === 'string';
 const date = (value: unknown) =>
   string(value) && (value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value));
+const calendarDate = (value: unknown): value is string =>
+  string(value) && /^\d{4}-\d{2}-\d{2}$/.test(value) && dateString(parseDate(value)) === value;
 
 function records(
   value: unknown,
@@ -28,8 +32,29 @@ export function validateWorkspace(data: unknown): Workspace {
   const valid =
     object(data) &&
     data.version === 1 &&
+    (data.calendarTasks === undefined ||
+      records(
+        data.calendarTasks,
+        task =>
+          string(task.title) &&
+          Boolean(task.title.trim()) &&
+          task.title.length <= 240 &&
+          calendarDate(task.date) &&
+          included(['none', 'weekly'], task.repeat) &&
+          Array.isArray(task.completedDates) &&
+          task.completedDates.every(calendarDate) &&
+          new Set(task.completedDates).size === task.completedDates.length &&
+          task.completedDates.every(
+            date =>
+              date >= String(task.date) &&
+              (task.repeat === 'weekly'
+                ? parseDate(date).getDay() === parseDate(String(task.date)).getDay()
+                : date === task.date)
+          )
+      )) &&
     (data.assistant === undefined ||
       (object(data.assistant) &&
+        validAttachments(data.assistant.attachments) &&
         records(
           data.assistant.messages,
           message =>
@@ -37,6 +62,8 @@ export function validateWorkspace(data: unknown): Workspace {
             string(message.text) &&
             message.text.length <= 6000 &&
             string(message.createdAt) &&
+            validAttachments(message.attachments) &&
+            (message.role === 'user' || message.attachments === undefined) &&
             (message.receipts === undefined ||
               (Array.isArray(message.receipts) &&
                 message.receipts.length <= 10 &&

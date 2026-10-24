@@ -8,6 +8,7 @@ import {
 import type { PublishEditorProps } from './editors.helpers.ts';
 import { Input, Textarea, Badge, Button, Field } from '../ui';
 import { useWorkspace } from '../workspace/workspace-context';
+import PublicationPreview from '../media/publication-preview';
 
 export default function PublishEditor({ item }: PublishEditorProps) {
   const { updateItem } = useWorkspace();
@@ -15,8 +16,8 @@ export default function PublishEditor({ item }: PublishEditorProps) {
   return (
     <>
       <p className="banner">
-        Plan each platform separately. Marking a publication posted records your manual update; it
-        does not publish online or change the idea’s workflow stage.
+        Plan here and publish from your phone. After posting, sync your channel in Library or paste
+        the published post URL below. The posted toggle records your manual update.
       </p>
       {item.publications.map(pub => (
         <section className="entry" key={pub.id} aria-label={pub.platform}>
@@ -57,6 +58,7 @@ export default function PublishEditor({ item }: PublishEditorProps) {
           {hasInvalidPublicationUrl(pub) && (
             <p className="warning">Use a full http or https link.</p>
           )}
+          <PublicationPreview item={item} publication={pub} />
           <div className="mt-4">
             <Button
               className="small"

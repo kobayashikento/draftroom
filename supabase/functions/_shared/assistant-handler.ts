@@ -2,6 +2,10 @@ import type { GeminiResponse } from './types.ts';
 import { validateContext } from './assistant-context.ts';
 import { validateMessages, validateReply } from './assistant-protocol.ts';
 import { geminiRequest } from './assistant-prompt.ts';
+import { validateAttachments } from './assistant-attachments.ts';
+import { prepareGeminiFiles } from './assistant-files.ts';
+import type { AttachmentLoader, GeminiFileSession } from './assistant-files.ts';
+import type { PerformanceContext } from './social-types.ts';
 
 const MAX_BODY = 160_000;
 export class AssistantError extends Error {
@@ -45,12 +49,16 @@ export function createAssistantHandler({
   apiKey,
   model = 'gemini-3.5-flash-lite',
   fetcher = fetch,
+  loadAttachment,
+  loadPerformance,
   corsHeaders = {}
 }: {
   authorize: (request: Request) => Promise<string | null>;
   apiKey?: string;
   model?: string;
   fetcher?: typeof fetch;
+  loadAttachment?: AttachmentLoader;
+  loadPerformance?: (request: Request, ownerId: string) => Promise<PerformanceContext>;
   corsHeaders?: Record<string, string>;
 }) {
   const calls = new Map<string, number[]>();
@@ -60,6 +68,7 @@ export function createAssistantHandler({
     if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
     if (request.method !== 'POST')
       return json({ error: 'Use POST to talk to the assistant.' }, 405);
+    let fileSession: GeminiFileSession | undefined;
     try {
       const userId = await authorize(request);
       if (!userId)
@@ -79,11 +88,51 @@ export function createAssistantHandler({
         throw new AssistantError('A message and workspace context are required.', 400);
       const messages = validateMessages(body.messages);
       const context = validateContext(body.context);
+      let attachments;
+      try {
+        attachments = validateAttachments(
+          'attachments' in body ? body.attachments : undefined,
+          userId
+        );
+      } catch (error) {
+        throw new AssistantError(
+          error instanceof Error ? error.message : 'Invalid planning files.',
+          400
+        );
+      }
       const now = Date.now();
       const recent = (calls.get(userId) || []).filter(time => time > now - 60_000);
       if (recent.length >= 6)
         throw new AssistantError('A little breather—please try again in a minute.', 429);
       calls.set(userId, [...recent, now]);
+      // Ignore browser-supplied analytics and load only the verified owner's saved results.
+      if (loadPerformance) {
+        try {
+          context.performance = await loadPerformance(request, userId);
+        } catch {
+          context.performance = { status: 'unavailable', accounts: [], posts: [], partial: false };
+        }
+      }
+      const signal = AbortSignal.any([request.signal, AbortSignal.timeout(125_000)]);
+      if (attachments.length) {
+        if (!loadAttachment)
+          throw new AssistantError('Planning file storage isn’t connected yet.', 503);
+        try {
+          fileSession = await prepareGeminiFiles({
+            request,
+            attachments,
+            load: loadAttachment,
+            apiKey,
+            fetcher,
+            signal
+          });
+        } catch (error) {
+          throw new AssistantError(
+            error instanceof Error ? error.message : 'The planning files couldn’t be read.',
+            502
+          );
+        }
+      }
       let response;
       try {
         response = await fetcher(
@@ -91,8 +140,8 @@ export function createAssistantHandler({
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-            body: JSON.stringify(geminiRequest(context, messages)),
-            signal: AbortSignal.timeout(45_000)
+            body: JSON.stringify(geminiRequest(context, messages, fileSession?.files)),
+            signal
           }
         );
       } catch {
@@ -107,7 +156,9 @@ export function createAssistantHandler({
         throw new AssistantError('Gemini is busy right now. Please try again in a moment.', 503);
       if (!response.ok) {
         const error = new AssistantError(
-          'Gemini couldn’t respond. Check the API key, model access and quota in Google AI Studio.',
+          attachments.length && response.status === 400
+            ? 'Gemini couldn’t read this request. Try fewer files or split PDFs into smaller documents of up to 1,000 pages.'
+            : 'Gemini couldn’t respond. Check the API key, model access and quota in Google AI Studio.',
           502
         );
         error.providerStatus = response.status;
@@ -142,6 +193,8 @@ export function createAssistantHandler({
         { error: 'The request could not be read. Please shorten your message and try again.' },
         400
       );
+    } finally {
+      await fileSession?.dispose();
     }
   };
 }

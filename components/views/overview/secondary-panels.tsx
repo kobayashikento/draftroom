@@ -7,6 +7,7 @@ import { Button } from '../../ui';
 import { useWorkspace } from '../../workspace/workspace-context';
 import Artwork from '../../workspace/artwork';
 import TaskRow from '../../workspace/task-row';
+import IdeaSketch from '../../workspace/idea-sketch';
 
 export default function SecondaryPanels({ work, ready, navigate }: SecondaryPanelsProps) {
   const { state, open } = useWorkspace();
@@ -21,7 +22,10 @@ export default function SecondaryPanels({ work, ready, navigate }: SecondaryPane
           {work.length ? (
             work.slice(0, 4).map(({ p, t }) => <TaskRow key={t.id} item={p} task={t} />)
           ) : (
-            <div className="empty">You’re all caught up.</div>
+            <div className="empty">
+              <IdeaSketch />
+              <p>You’re all caught up.</p>
+            </div>
           )}
           <div className="mt-4">
             <Button className="link" onClick={() => navigate('Production')}>

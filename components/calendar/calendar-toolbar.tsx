@@ -2,7 +2,7 @@
 
 import { calendarPeriodLabel, modes, moveCalendarAnchor } from './calendar.helpers.ts';
 import type { CalendarToolbarProps } from './calendar.helpers.ts';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ListTodo } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 import { today } from '../../lib/display.ts';
@@ -11,7 +11,8 @@ export default function CalendarToolbar({
   anchor,
   mode,
   onAnchorChange,
-  onModeChange
+  onModeChange,
+  onAddTask
 }: CalendarToolbarProps) {
   const heading = calendarPeriodLabel(anchor, mode);
   return (
@@ -38,18 +39,24 @@ export default function CalendarToolbar({
           Today
         </Button>
       </div>
-      <div className="planner-view segmented" role="group" aria-label="Calendar view">
-        {modes.map(([name, Icon]) => (
-          <Button
-            key={name}
-            className={mode === name ? 'active' : ''}
-            aria-pressed={mode === name}
-            onClick={() => onModeChange(name)}
-          >
-            <AppIcon icon={Icon} />
-            {name}
-          </Button>
-        ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button className="primary" onClick={onAddTask}>
+          <AppIcon icon={ListTodo} />
+          Add day task
+        </Button>
+        <div className="planner-view segmented" role="group" aria-label="Calendar view">
+          {modes.map(([name, Icon]) => (
+            <Button
+              key={name}
+              className={mode === name ? 'active' : ''}
+              aria-pressed={mode === name}
+              onClick={() => onModeChange(name)}
+            >
+              <AppIcon icon={Icon} />
+              {name}
+            </Button>
+          ))}
+        </div>
       </div>
     </div>
   );

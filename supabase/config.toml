@@ -3,6 +3,13 @@ project_id = 'draftroom'
 [functions.draftroom-assistant]
 verify_jwt = true
 
+[functions.draftroom-social]
+verify_jwt = true
+
+[functions.draftroom-social-callback]
+# OAuth providers cannot attach a Supabase JWT. The callback verifies server-stored state.
+verify_jwt = false
+
 [auth]
 enable_signup = false
 enable_anonymous_sign_ins = false

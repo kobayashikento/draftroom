@@ -1,6 +1,13 @@
-import type { AssistantMessage, Format, Priority } from '../supabase/functions/_shared/types.ts';
+import type {
+  AssistantMessage,
+  AssistantAttachment,
+  Format,
+  Priority
+} from '../supabase/functions/_shared/types.ts';
 export type {
   AssistantMessage,
+  AssistantAttachment,
+  AssistantFileDetails,
   Format,
   Priority,
   TaskCategory
@@ -34,6 +41,13 @@ export type Task = {
   due: string;
   priority?: Priority;
 };
+export type CalendarTask = {
+  id: string;
+  title: string;
+  date: string;
+  repeat: 'none' | 'weekly';
+  completedDates: string[];
+};
 export type Publication = {
   id: string;
   platform: Platform;
@@ -66,7 +80,8 @@ export type Workspace = {
   stages: Stage[];
   series: Series[];
   items: Item[];
-  assistant?: { messages: AssistantMessage[] };
+  calendarTasks?: CalendarTask[];
+  assistant?: { messages: AssistantMessage[]; attachments?: AssistantAttachment[] };
 };
 export type PublicationCollection = { publications: Publication[] };
 export type ItemOptions = { title: string; format?: Format; seriesId?: string };
@@ -81,7 +96,8 @@ export type ProductionQueue = {
   remaining: number;
 };
 export type CalendarMode = 'Week' | 'Month' | 'List';
-export type View = 'Overview' | 'Calendar' | 'Ideas' | 'Production' | 'Series' | 'Analytics';
+export type View =
+  'Overview' | 'Calendar' | 'Ideas' | 'Production' | 'Library' | 'Series' | 'Analytics';
 export type EditorTab = 'Storyboard' | 'Production' | 'Publish' | 'Notes' | 'Analytics';
 export type AddIdeaModal = { type: 'add'; seriesId?: string; date?: string; platform?: string };
 export type WorkspaceModal =

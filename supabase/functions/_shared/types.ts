@@ -1,3 +1,5 @@
+import type { PerformanceContext } from './social-types.ts';
+
 export type Format = 'Reel' | 'Carousel';
 export type Priority = 'Normal' | 'High';
 export type TaskCategory = 'plan' | 'film' | 'photo' | 'edit' | 'caption' | 'publish';
@@ -18,11 +20,22 @@ export type ExistingTaskAction = {
 export type AssistantAction = CreateTaskAction | CreateIdeaAction | ExistingTaskAction;
 export type AssistantReply = { reply: string; actions: AssistantAction[] };
 export type ChatMessage = { role: 'user' | 'assistant'; text: string };
+export type AssistantFileDetails = {
+  name: string;
+  mimeType: string;
+  size: number;
+};
+export type AssistantAttachment = AssistantFileDetails & {
+  id: string;
+  path: string;
+};
+export type GeminiAttachment = { name: string; mimeType: string; uri: string };
 export type ActionReceipt = { itemId: string; label: string };
 export type AssistantMessage = ChatMessage & {
   id: string;
   createdAt: string;
   receipts?: ActionReceipt[];
+  attachments?: AssistantAttachment[];
 };
 export type PlanningTask = {
   id: string;
@@ -55,6 +68,7 @@ export type AssistantContext = PlanningWorkspace & {
   timezone: string;
   totalIdeas: number;
   partial: boolean;
+  performance?: PerformanceContext;
 };
 export type AssistantRequest = { context: AssistantContext; messages: ChatMessage[] };
 export type JsonSchema = {

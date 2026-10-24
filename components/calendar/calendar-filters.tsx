@@ -36,7 +36,7 @@ export default function CalendarFilters({
           <Input
             type="search"
             aria-label="Search calendar"
-            placeholder="Search your plans…"
+            placeholder="Search ideas and tasks…"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
@@ -89,6 +89,9 @@ export default function CalendarFilters({
             Clear filters
           </Button>
         )}
+        <p className="w-full text-xs text-muted">
+          Content filters apply to ideas. Your day tasks stay visible and can be searched by name.
+        </p>
       </div>
     </>
   );

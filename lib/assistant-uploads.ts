@@ -1,6 +1,7 @@
 import { Upload } from 'tus-js-client';
 import type { AssistantAttachment } from './types.ts';
 import { getSupabaseClient, getSupabaseConfig } from './supabase.ts';
+import { assistantUploadError, assistantUploadFailure } from './assistant-uploads.helpers.ts';
 import {
   ASSISTANT_BUCKET,
   ATTACHMENT_TYPES,
@@ -86,7 +87,12 @@ export async function uploadAssistantFiles(
           },
           uploadDataDuringCreation: true,
           storeFingerprintForResuming: false,
-          onBeforeRequest: request => {
+          onBeforeRequest: async request => {
+            signal.throwIfAborted();
+            const { data: current, error: sessionError } = await client.auth.getSession();
+            if (sessionError || !current.session)
+              throw new Error(assistantUploadError(record.name, { status: 401, body: '' }));
+            request.setHeader('authorization', `Bearer ${current.session.access_token}`);
             const xhr = request.getUnderlyingObject();
             if (typeof XMLHttpRequest !== 'undefined' && xhr instanceof XMLHttpRequest)
               xhr.timeout = 90_000;
@@ -96,9 +102,13 @@ export async function uploadAssistantFiles(
               `Uploading ${index + 1} of ${files.length}: ${record.name} · ${Math.round((sent / total) * 100)}%`
             ),
           onSuccess: () => finish(),
-          onError: () =>
+          onError: error =>
             finish(
-              new Error(`Couldn’t upload ${record.name}. Check your connection and try again.`)
+              new Error(
+                error.message === assistantUploadError(record.name, { status: 401, body: '' })
+                  ? error.message
+                  : assistantUploadError(record.name, assistantUploadFailure(error))
+              )
             )
         });
         function cancel() {
@@ -128,6 +138,6 @@ export async function removeAssistantFiles(files: AssistantAttachment[]): Promis
     .remove(files.map(file => file.path));
   if (error)
     throw new Error(
-      'Your planning files couldn’t be removed. Check your connection and try starting a new chat again.'
+      'Your planning files couldn’t be removed. Check your connection and try again.'
     );
 }

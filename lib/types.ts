@@ -85,13 +85,26 @@ export type Item = {
   tasks: Task[];
   publications: Publication[];
 };
+export type AssistantConversationContent = {
+  messages: AssistantMessage[];
+  attachments?: AssistantAttachment[];
+};
+export type AssistantConversation = AssistantConversationContent & {
+  id: string;
+  createdAt: string;
+};
+export type AssistantHistory = AssistantConversationContent & {
+  conversationId?: string;
+  createdAt?: string;
+  conversations?: AssistantConversation[];
+};
 export type Workspace = {
   version: 1;
   stages: Stage[];
   series: Series[];
   items: Item[];
   calendarTasks?: CalendarTask[];
-  assistant?: { messages: AssistantMessage[]; attachments?: AssistantAttachment[] };
+  assistant?: AssistantHistory;
 };
 export type PublicationCollection = { publications: Publication[] };
 export type ItemOptions = { title: string; format?: Format; seriesId?: string };

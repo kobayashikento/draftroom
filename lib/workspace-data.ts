@@ -1,5 +1,5 @@
 import type { Workspace, CacheStorage, WorkspaceCache } from './types.ts';
-import { validAttachments } from '../supabase/functions/_shared/assistant-attachments.ts';
+import { validAssistantHistory } from './assistant-history-validation.ts';
 import { dateString, parseDate } from './model.ts';
 export const LEGACY_STORAGE_KEY = 'studio-space-v1';
 
@@ -78,26 +78,7 @@ export function validateWorkspace(data: unknown): Workspace {
                 : date === task.date)
           )
       )) &&
-    (data.assistant === undefined ||
-      (object(data.assistant) &&
-        validAttachments(data.assistant.attachments) &&
-        records(
-          data.assistant.messages,
-          message =>
-            included(['user', 'assistant'], message.role) &&
-            string(message.text) &&
-            message.text.length <= 6000 &&
-            string(message.createdAt) &&
-            validAttachments(message.attachments) &&
-            (message.role === 'user' || message.attachments === undefined) &&
-            (message.receipts === undefined ||
-              (Array.isArray(message.receipts) &&
-                message.receipts.length <= 10 &&
-                message.receipts.every(
-                  receipt => object(receipt) && string(receipt.itemId) && string(receipt.label)
-                )))
-        ) &&
-        data.assistant.messages.length <= 60)) &&
+    validAssistantHistory(data.assistant) &&
     records(
       data.stages,
       stage => string(stage.name) && included(['prep', 'ready', 'posted'], stage.kind)

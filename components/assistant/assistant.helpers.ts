@@ -3,17 +3,22 @@ import type {
   AssistantMessage,
   AssistantAttachment,
   AssistantFileDetails,
+  AssistantConversation,
   EditorTab,
   Workspace,
   WorkspaceRow
 } from '../../lib/types.ts';
 import { assistantMessages } from '../../lib/assistant-actions.ts';
+import { currentAssistantConversation } from '../../lib/assistant-conversations.ts';
 import { planningFileRecord, planningFileType } from '../../lib/assistant-uploads.ts';
 import { validateAttachments } from '../../supabase/functions/_shared/assistant-attachments.ts';
 
 export type SendAssistant = (text: string, files?: File[], retryId?: string) => Promise<boolean>;
 export type FailedAssistantRequest = { text: string; id: string };
+export type AssistantConversationError = { conversationId: string; message: string };
 export type AssistantController = {
+  conversationId: string;
+  conversations: AssistantConversationSummary[];
   messages: AssistantMessage[];
   busy: boolean;
   uploading: boolean;
@@ -24,10 +29,29 @@ export type AssistantController = {
   storageStatus: string;
   open: (id: string, tab?: EditorTab) => void;
   send: SendAssistant;
-  newChat: () => Promise<void>;
+  newChat: () => boolean;
+  selectChat: (id: string) => boolean;
   cancelUpload: () => void;
   retry: (() => Promise<boolean>) | null;
 };
+export type AssistantConversationSummary = {
+  id: string;
+  title: string;
+  updatedAt: string;
+  messageCount: number;
+};
+export type AssistantConversationsProps = {
+  conversations: AssistantConversationSummary[];
+  selectedId: string;
+  disabled: boolean;
+  onSelect: (id: string) => void;
+  onNew?: () => void;
+};
+export type AssistantHistoryNavigationProps = {
+  assistant: AssistantController;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
+};
+export type AssistantComposerDraft = { text: string; files: File[]; error: string };
 export type ComposerKey = { key: string; shiftKey: boolean; nativeEvent: { isComposing: boolean } };
 
 export function assistantBlockedReason(
@@ -67,11 +91,42 @@ export function shouldSubmitAssistantMessage(event: ComposerKey): boolean {
   return event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing;
 }
 
-export function clearAssistantConversation(state: Workspace): void {
-  state.assistant = { messages: [] };
+export function assistantConversationSummary(
+  conversation: AssistantConversation
+): AssistantConversationSummary {
+  const first = conversation.messages.find(message => message.role === 'user');
+  const title =
+    first?.attachments?.length && first.text === assistantMessageText('', true)
+      ? first.attachments[0].name
+      : first?.text || 'New conversation';
+  return {
+    id: conversation.id,
+    title: title.replace(/\s+/g, ' ').trim().slice(0, 80),
+    updatedAt: conversation.messages.at(-1)?.createdAt || conversation.createdAt,
+    messageCount: conversation.messages.length
+  };
+}
+
+export function assistantConversationList(state: Workspace): AssistantConversationSummary[] {
+  const current = currentAssistantConversation(state);
+  return [current, ...(state.assistant?.conversations || [])]
+    .map(assistantConversationSummary)
+    .sort((a, b) => {
+      if (!a.messageCount && a.id === current.id) return -1;
+      if (!b.messageCount && b.id === current.id) return 1;
+      return (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0);
+    });
+}
+
+export function assistantConversationDate(value: string): string {
+  const date = new Date(value);
+  return Number.isFinite(date.getTime())
+    ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    : '';
 }
 
 export type AssistantComposerProps = {
+  conversationId: string;
   busy: boolean;
   uploading: boolean;
   attachments: AssistantAttachment[];
@@ -81,6 +136,7 @@ export type AssistantComposerProps = {
 };
 
 export type AssistantMessagesProps = {
+  conversationId: string;
   messages: AssistantMessage[];
   hidden: boolean;
   busy: boolean;
@@ -96,7 +152,11 @@ export type AssistantPanelProps = {
   hidden: boolean;
 };
 
-export type AssistantWelcomeProps = { onSend: SendAssistant; disabled: boolean };
+export type AssistantWelcomeProps = {
+  onSend: SendAssistant;
+  disabled: boolean;
+  showSuggestions?: boolean;
+};
 
 export type AssistantFileListProps = {
   files: AssistantFileDetails[];

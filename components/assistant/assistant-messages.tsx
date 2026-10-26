@@ -12,6 +12,7 @@ import AssistantReferenceLink from './assistant-reference-link';
 import AssistantFileList from './assistant-file-list';
 
 export default function AssistantMessages({
+  conversationId,
   messages,
   hidden,
   busy,
@@ -27,9 +28,9 @@ export default function AssistantMessages({
   ));
   const end = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    if (end.current?.getClientRects().length)
+    if ((messages.length || busy) && end.current?.getClientRects().length)
       end.current.scrollIntoView({ block: 'nearest', behavior: 'instant' });
-  }, [messages.length, busy, hidden]);
+  }, [messages.length, busy, hidden, conversationId]);
   return (
     <div
       role="log"

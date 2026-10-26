@@ -943,6 +943,21 @@
     @apply border-0;
     background: transparent;
   }
+  .assistant-conversations {
+    @apply flex flex-col gap-4;
+  }
+  .assistant-conversation-list {
+    @apply m-0 flex list-none flex-col gap-2 p-0;
+  }
+  .dr-button.assistant-conversation {
+    @apply h-auto min-w-0 w-full justify-start gap-3 rounded-xl p-4 text-left whitespace-normal;
+    border-color: transparent;
+    background: transparent;
+  }
+  .dr-button.assistant-conversation:is(:hover, [aria-current='true']) {
+    border-color: var(--dr-border);
+    background: var(--dr-accent-soft);
+  }
   .assistant-body {
     @apply min-h-0 flex-1 overflow-y-auto p-6;
     overscroll-behavior: contain;

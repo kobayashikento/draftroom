@@ -18,10 +18,14 @@ import {
   prepareAssistantTurn
 } from '../lib/assistant-actions.ts';
 import {
-  clearAssistantConversation,
   conversationWithMessage,
   unansweredAssistantRequest
 } from '../components/assistant/assistant.helpers.ts';
+import {
+  assistantConversationId,
+  selectAssistantConversation,
+  startAssistantConversation
+} from '../lib/assistant-conversations.ts';
 import { required, workspaceData } from './helpers.ts';
 
 const message: AssistantMessage = {
@@ -183,7 +187,7 @@ test('a failed reply save survives refresh and returns to cloud sync without los
   assert.equal(unansweredAssistantRequest(workspaceData(reloaded)), null);
 });
 
-test('only starting a new chat clears its saved history and preserves workspace tasks', async t => {
+test('starting a new chat saves the previous conversation and files; both survive a fresh cloud load', async t => {
   const { remote, open } = fixture(t);
   const sync = open();
   await sync.start(seed);
@@ -193,13 +197,20 @@ test('only starting a new chat clears its saved history and preserves workspace 
   await sync.flush();
 
   const cleared = structuredClone(workspaceData(sync));
-  clearAssistantConversation(cleared);
+  const previousId = assistantConversationId(cleared);
+  startAssistantConversation(cleared, 'new-chat', '2026-10-26T12:00:00.000Z');
   sync.change(cleared);
   assert.equal(remote.attempts, 2);
   assert.equal(await sync.flush(), true);
   const reloaded = open(memoryStorage());
   await reloaded.start(seed);
-  assert.deepEqual(workspaceData(reloaded).assistant, { messages: [] });
+  const restored = workspaceData(reloaded);
+  assert.deepEqual(restored.assistant, cleared.assistant);
+  assert.deepEqual(assistantMessages(restored), []);
+  assert.deepEqual(restored.assistant?.conversations?.[0].attachments, message.attachments);
   assert.deepEqual(workspaceData(reloaded).items, draft.items);
   assert.equal(unansweredAssistantRequest(workspaceData(reloaded)), null);
+  selectAssistantConversation(restored, previousId);
+  assert.deepEqual(assistantMessages(restored), [message]);
+  assert.deepEqual(unansweredAssistantRequest(restored), { id: message.id, text: message.text });
 });

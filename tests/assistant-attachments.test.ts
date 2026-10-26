@@ -15,6 +15,7 @@ import {
 } from '../components/assistant/assistant.helpers.ts';
 import { validateAttachments } from '../supabase/functions/_shared/assistant-attachments.ts';
 import { checkedAttachmentStream } from '../supabase/functions/_shared/assistant-files.ts';
+import { assistantUploadError, assistantUploadFailure } from '../lib/assistant-uploads.helpers.ts';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 function planningAttachment(options: Partial<AssistantAttachment> = {}): AssistantAttachment {
@@ -63,6 +64,16 @@ test('file selection checks the same limits and preserves useful file-only reque
   const file = new File(['%PDF-1.7 planning content'], 'notes.pdf', { type: 'application/pdf' });
   assert.equal(planningFileType(file), 'application/pdf');
   assert.equal(planningFileType(new File(['%PDF-1.7'], 'notes.pdf')), 'application/pdf');
+  const whatsapp = new File(
+    [new Uint8Array([255, 216, 255, 224])],
+    'WhatsApp Image 2026-10-26 at 16.22.30.jpeg'
+  );
+  assert.equal(planningFileType(whatsapp), 'image/jpeg');
+  assert.equal(
+    planningFileType(new File([whatsapp], whatsapp.name, { type: 'image/jpeg' })),
+    'image/jpeg'
+  );
+  assert.ok(planningFileRecord(whatsapp, owner).path.endsWith('.jpg'));
   assert.equal(planningFileType(new File(['html'], 'notes.pdf', { type: 'text/html' })), '');
   validatePlanningFiles([file], []);
   assert.throws(() => validatePlanningFiles([file], [planningAttachment({ size: 50_000_000 })]));
@@ -78,6 +89,41 @@ test('file selection checks the same limits and preserves useful file-only reque
     resumableStorageEndpoint('http://127.0.0.1:54321'),
     'http://127.0.0.1:54321/storage/v1/upload/resumable'
   );
+});
+
+test('upload errors distinguish missing setup, expired login, permissions, size and network failures without exposing server details', () => {
+  const name = 'WhatsApp Image 2026-10-26 at 16.22.30.jpeg';
+  assert.match(
+    assistantUploadError(name, { status: 404, body: '{"error":"Bucket not found"}' }),
+    /hasn’t been set up/
+  );
+  assert.match(assistantUploadError(name, { status: 401, body: 'private token' }), /Sign in again/);
+  assert.match(
+    assistantUploadError(name, { status: 403, body: 'new row violates row-level security policy' }),
+    /permission/
+  );
+  assert.match(assistantUploadError(name, { status: 413, body: '' }), /Try a smaller file/);
+  assert.match(assistantUploadError(name, { status: 415, body: '' }), /Export it/);
+  assert.match(
+    assistantUploadError(name, { status: 503, body: 'private diagnostics' }),
+    /temporarily unavailable/
+  );
+  assert.match(assistantUploadError(name, { status: 429, body: '' }), /Wait a moment/);
+  assert.match(assistantUploadError(name, { status: 0, body: '' }), /Check your connection/);
+  assert.doesNotMatch(
+    assistantUploadError(name, { status: 400, body: 'private token and database details' }),
+    /private token|database details/
+  );
+  assert.deepEqual(assistantUploadFailure(new Error('private token')), { status: 0, body: '' });
+  const failure = Object.assign(new Error('Upload rejected'), {
+    originalResponse: {
+      getStatus: () => 404,
+      getBody: () => '{"error":"Bucket not found"}',
+      getHeader: () => undefined,
+      getUnderlyingObject: () => null
+    }
+  });
+  assert.match(assistantUploadError(name, assistantUploadFailure(failure)), /hasn’t been set up/);
 });
 
 test('file references survive cloud serialization and message trimming without embedding document bytes', () => {

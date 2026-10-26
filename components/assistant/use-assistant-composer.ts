@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import type { AssistantComposerProps } from './assistant.helpers.ts';
+import type { AssistantComposerDraft, AssistantComposerProps } from './assistant.helpers.ts';
 import {
   assistantErrorMessage,
   assistantMessageText,
@@ -11,35 +11,46 @@ import {
 export default function useAssistantComposer({
   busy,
   onSend,
-  attachments
+  attachments,
+  conversationId
 }: AssistantComposerProps) {
-  const [draft, setDraft] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
-  const [error, setError] = useState('');
+  const [drafts, setDrafts] = useState(() => new Map<string, AssistantComposerDraft>());
+  const {
+    text: draft,
+    files,
+    error
+  } = drafts.get(conversationId) || { text: '', files: [], error: '' };
+  function setDraftState(change: Partial<AssistantComposerDraft>) {
+    setDrafts(current =>
+      new Map(current).set(conversationId, {
+        ...(current.get(conversationId) || { text: '', files: [], error: '' }),
+        ...change
+      })
+    );
+  }
+  const setDraft = (text: string) => setDraftState({ text });
+  const setError = (error: string) => setDraftState({ error });
   const fileInput = useRef<HTMLInputElement | null>(null);
   function addFiles(selected: File[]) {
     if (busy || !selected.length) return;
     try {
       const next = [...files, ...selected];
       validatePlanningFiles(next, attachments);
-      setFiles(next);
-      setError('');
+      setDraftState({ files: next, error: '' });
     } catch (error) {
       setError(assistantErrorMessage(error));
     }
   }
   function removeFile(index: number) {
     if (busy) return;
-    setFiles(files.filter((_, position) => position !== index));
-    setError('');
+    setDraftState({ files: files.filter((_, position) => position !== index), error: '' });
   }
   async function submit() {
     const text = assistantMessageText(draft, files.length > 0);
     if (busy || !text) return;
     setError('');
     if (await onSend(text, files)) {
-      setDraft('');
-      setFiles([]);
+      setDraftState({ text: '', files: [], error: '' });
     }
   }
   return { draft, setDraft, files, fileInput, error, addFiles, removeFile, submit };

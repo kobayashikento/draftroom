@@ -8,6 +8,10 @@ import type {
 } from '../supabase/functions/_shared/types.ts';
 import { createItem } from './model.ts';
 import { validateReply } from '../supabase/functions/_shared/assistant-protocol.ts';
+import {
+  assistantConversationContent,
+  assistantConversationId
+} from './assistant-conversations.ts';
 
 type PreparedChange =
   | (CreateIdeaAction & { id: string; item: Item })
@@ -20,15 +24,21 @@ export function assistantMessages(state: Workspace): AssistantMessage[] {
 export function assistantAttachments(state: Workspace): AssistantAttachment[] {
   return state.assistant?.attachments || [];
 }
-export function appendAssistantMessage(state: Workspace, message: AssistantMessage) {
+export function appendAssistantMessage(
+  state: Workspace,
+  message: AssistantMessage,
+  conversationId = assistantConversationId(state)
+) {
   state.assistant ||= { messages: [] };
+  const conversation = assistantConversationContent(state, conversationId);
+  if (!conversation) throw new Error('This conversation is no longer available.');
   if (message.attachments?.length) {
-    const files = new Map(assistantAttachments(state).map(file => [file.id, file]));
+    const files = new Map((conversation.attachments || []).map(file => [file.id, file]));
     for (const file of message.attachments) files.set(file.id, file);
-    state.assistant.attachments = validateAttachments([...files.values()]);
+    conversation.attachments = validateAttachments([...files.values()]);
   }
-  state.assistant.messages = [
-    ...assistantMessages(state).filter(entry => entry.id !== message.id),
+  conversation.messages = [
+    ...conversation.messages.filter(entry => entry.id !== message.id),
     message
   ].slice(-60);
 }
@@ -56,8 +66,15 @@ export function prepareAssistantTurn(
 }
 
 // Runs inside the existing workspace updater against its latest draft. All-or-nothing, with stable IDs on replay.
-export function applyAssistantTurn(state: Workspace, turn: AssistantTurn) {
-  if (assistantMessages(state).some(message => message.id === `${turn.requestId}-reply`)) return;
+export function applyAssistantTurn(
+  state: Workspace,
+  turn: AssistantTurn,
+  conversationId = assistantConversationId(state)
+) {
+  state.assistant ||= { messages: [] };
+  const conversation = assistantConversationContent(state, conversationId);
+  if (!conversation) throw new Error('This conversation is no longer available.');
+  if (conversation.messages.some(message => message.id === `${turn.requestId}-reply`)) return;
   const receipts: ActionReceipt[] = [];
   let failure = '';
   for (const change of turn.changes) {
@@ -108,13 +125,17 @@ export function applyAssistantTurn(state: Workspace, turn: AssistantTurn) {
         item.updatedAt = new Date().toISOString();
       }
     }
-  appendAssistantMessage(state, {
-    id: `${turn.requestId}-reply`,
-    role: 'assistant',
-    text: failure
-      ? `${failure} No changes were made. Please ask me again with the updated idea or task.`
-      : turn.reply,
-    receipts,
-    createdAt: new Date().toISOString()
-  });
+  appendAssistantMessage(
+    state,
+    {
+      id: `${turn.requestId}-reply`,
+      role: 'assistant',
+      text: failure
+        ? `${failure} No changes were made. Please ask me again with the updated idea or task.`
+        : turn.reply,
+      receipts,
+      createdAt: new Date().toISOString()
+    },
+    conversationId
+  );
 }

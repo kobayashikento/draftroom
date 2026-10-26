@@ -5,10 +5,10 @@ import {
   userAssistantMessage,
   conversationWithMessage,
   assistantErrorMessage,
-  clearAssistantConversation,
+  assistantConversationList,
   unansweredAssistantRequest
 } from './assistant.helpers.ts';
-import type { AssistantController, FailedAssistantRequest } from './assistant.helpers.ts';
+import type { AssistantController, AssistantConversationError } from './assistant.helpers.ts';
 import type {
   AssistantMessage,
   AssistantAttachment,
@@ -26,20 +26,27 @@ import {
   prepareAssistantTurn,
   applyAssistantTurn
 } from '../../lib/assistant-actions.ts';
+import {
+  assistantConversationId,
+  selectAssistantConversation,
+  startAssistantConversation
+} from '../../lib/assistant-conversations.ts';
 
 export default function useAssistant(): AssistantController {
   const { state, update, cloud, conflict, storageStatus, open } = useWorkspace();
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [activity, setActivity] = useState('');
-  const [error, setError] = useState('');
-  const [failed, setFailed] = useState<FailedAssistantRequest | null>(null);
+  const [notice, setNotice] = useState<AssistantConversationError | null>(null);
   const request = useRef<AbortController | null>(null);
   const latest = useRef(state);
   const hasConflict = useRef(conflict);
   latest.current = state;
   hasConflict.current = conflict;
   useEffect(() => () => request.current?.abort(), []);
+  function setError(message: string, conversationId = assistantConversationId(latest.current)) {
+    setNotice(message ? { conversationId, message } : null);
+  }
 
   async function send(text: string, files: File[] = [], retryId?: string): Promise<boolean> {
     text = text.trim();
@@ -50,6 +57,7 @@ export default function useAssistant(): AssistantController {
       return false;
     }
     const controller = new AbortController();
+    const conversationId = assistantConversationId(latest.current);
     request.current = controller;
     setBusy(true);
     setUploading(files.length > 0);
@@ -57,7 +65,6 @@ export default function useAssistant(): AssistantController {
       files.length ? 'Preparing your planning files…' : 'Thinking through your next step…'
     );
     setError('');
-    setFailed(null);
     let uploaded: AssistantAttachment[] = [];
     try {
       uploaded = await uploadAssistantFiles(
@@ -68,6 +75,8 @@ export default function useAssistant(): AssistantController {
       );
       controller.signal.throwIfAborted();
       if (hasConflict.current) throw new Error(assistantBlockedReason(cloud, hasConflict.current));
+      if (assistantConversationId(latest.current) !== conversationId)
+        throw new Error('The selected conversation changed. Open it again before sending.');
       const message = userAssistantMessage(text, retryId);
       const previous = assistantMessages(latest.current).find(entry => entry.id === retryId);
       if (uploaded.length) message.attachments = uploaded;
@@ -82,14 +91,15 @@ export default function useAssistant(): AssistantController {
           ? 'Reading your planning files and thinking through your next step…'
           : 'Thinking through your next step…'
       );
-      void respond(message.id, text, snapshot, messages, controller);
+      void respond(message.id, snapshot, messages, controller, conversationId);
       return true;
     } catch (error) {
       if (uploaded.length) await removeAssistantFiles(uploaded).catch(() => {});
       setError(
         controller.signal.aborted
           ? 'Upload cancelled. Your files are still selected.'
-          : assistantErrorMessage(error)
+          : assistantErrorMessage(error),
+        conversationId
       );
       setBusy(false);
       setUploading(false);
@@ -99,10 +109,10 @@ export default function useAssistant(): AssistantController {
   }
   async function respond(
     id: string,
-    text: string,
     snapshot: Workspace,
     messages: AssistantMessage[],
-    controller: AbortController
+    controller: AbortController,
+    conversationId: string
   ) {
     try {
       const response = await requestAssistant(snapshot, messages, controller.signal);
@@ -112,12 +122,9 @@ export default function useAssistant(): AssistantController {
           'Your workspace changed on another device. Resolve the sync conflict, then try again. No assistant actions were applied.'
         );
       const turn = prepareAssistantTurn(latest.current, id, response);
-      update(draft => applyAssistantTurn(draft, turn));
+      update(draft => applyAssistantTurn(draft, turn, conversationId));
     } catch (error) {
-      if (!controller.signal.aborted) {
-        setError(assistantErrorMessage(error));
-        setFailed({ text, id });
-      }
+      if (!controller.signal.aborted) setError(assistantErrorMessage(error), conversationId);
     } finally {
       if (!controller.signal.aborted) {
         setBusy(false);
@@ -125,33 +132,30 @@ export default function useAssistant(): AssistantController {
       }
     }
   }
-  async function newChat() {
-    if (request.current) return;
+  function changeConversation(id?: string): boolean {
+    if (request.current) return false;
     if (hasConflict.current) {
       setError(assistantBlockedReason(cloud, hasConflict.current));
-      return;
+      return false;
     }
-    request.current = new AbortController();
-    setBusy(true);
-    setActivity('Clearing this chat’s planning files…');
-    try {
-      await removeAssistantFiles(assistantAttachments(latest.current));
-      update(clearAssistantConversation);
-      setError('');
-      setFailed(null);
-    } catch (error) {
-      setError(assistantErrorMessage(error));
-    } finally {
-      setBusy(false);
-      request.current = null;
+    if (id) update(draft => selectAssistantConversation(draft, id));
+    else {
+      const conversationId = crypto.randomUUID();
+      const createdAt = new Date().toISOString();
+      update(draft => startAssistantConversation(draft, conversationId, createdAt));
     }
+    setError('');
+    return true;
   }
   function openReceipt(id: string, tab?: EditorTab) {
     if (latest.current.items.some(item => item.id === id)) open(id, tab);
     else setError('That idea has since been removed. Your conversation is still here.');
   }
-  const retryRequest = failed || unansweredAssistantRequest(state);
+  const retryRequest = unansweredAssistantRequest(state);
+  const error = notice?.conversationId === assistantConversationId(state) ? notice.message : '';
   return {
+    conversationId: assistantConversationId(state),
+    conversations: assistantConversationList(state),
     messages: assistantMessages(state),
     busy,
     uploading,
@@ -166,7 +170,8 @@ export default function useAssistant(): AssistantController {
     storageStatus,
     open: openReceipt,
     send,
-    newChat,
+    newChat: () => changeConversation(),
+    selectChat: changeConversation,
     cancelUpload: () => {
       if (uploading) request.current?.abort();
     },

@@ -1,13 +1,15 @@
 'use client';
 
 import type { AssistantPanelProps } from './assistant.helpers.ts';
-import { ChevronDown, MessageSquarePlus, Sparkles } from 'lucide-react';
+import { ArrowLeft, ChevronDown, MessagesSquare, MessageSquarePlus, Sparkles } from 'lucide-react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 import AssistantWelcome from './assistant-welcome';
 import AssistantMessages from './assistant-messages';
 import AssistantComposer from './assistant-composer';
 import AssistantFileList from './assistant-file-list';
+import AssistantConversations from './assistant-conversations';
+import useAssistantHistory from './use-assistant-history.ts';
 
 export default function AssistantPanel({
   assistant,
@@ -15,6 +17,7 @@ export default function AssistantPanel({
   inputRef,
   hidden
 }: AssistantPanelProps) {
+  const history = useAssistantHistory({ assistant, inputRef });
   return (
     <section
       id="draftroom-assistant"
@@ -31,21 +34,46 @@ export default function AssistantPanel({
       }}
     >
       <header className="assistant-header">
-        <span className="assistant-avatar">
-          <AppIcon icon={Sparkles} size="md" />
-        </span>
+        {history.showHistory ? (
+          <Button
+            className="icon-button"
+            aria-label="Back to conversation"
+            onClick={history.returnToChat}
+          >
+            <AppIcon icon={ArrowLeft} />
+          </Button>
+        ) : (
+          <span className="assistant-avatar">
+            <AppIcon icon={Sparkles} size="md" />
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <h2 id="assistant-title" className="font-sans text-base font-semibold">
             Draftroom assistant
           </h2>
-          <p className="text-xs text-muted">Your ideas, with a little momentum.</p>
+          <p className="truncate text-xs text-muted">
+            {history.showHistory
+              ? 'Your conversations, kept together.'
+              : assistant.conversations.find(
+                  conversation => conversation.id === assistant.conversationId
+                )?.title || 'New conversation'}
+          </p>
         </div>
         <Button
           className="icon-button"
+          aria-label="Show conversations"
+          aria-pressed={history.showHistory}
+          onClick={() => history.setShowHistory(!history.showHistory)}
+          title="Show conversations"
+        >
+          <AppIcon icon={MessagesSquare} />
+        </Button>
+        <Button
+          className="icon-button"
           aria-label="Start a new chat"
-          title="Clear this chat and its planning files; your tasks stay in place"
+          title="Start a new chat; your previous conversations stay saved"
           disabled={assistant.busy}
-          onClick={assistant.newChat}
+          onClick={history.newChat}
         >
           <AppIcon icon={MessageSquarePlus} />
         </Button>
@@ -53,13 +81,31 @@ export default function AssistantPanel({
           <AppIcon icon={ChevronDown} />
         </Button>
       </header>
-      <div className="assistant-body">
+      <div className="assistant-body" hidden={history.showHistory}>
         {!assistant.messages.length && (
-          <AssistantWelcome onSend={assistant.send} disabled={assistant.busy} />
+          <AssistantWelcome
+            onSend={assistant.send}
+            disabled={assistant.busy}
+            showSuggestions={
+              !assistant.conversations.some(conversation => conversation.messageCount > 0)
+            }
+          />
         )}
+        {!assistant.messages.length &&
+          assistant.conversations.some(conversation => conversation.messageCount > 0) && (
+            <AssistantConversations
+              conversations={assistant.conversations.filter(
+                conversation => conversation.messageCount > 0
+              )}
+              selectedId={assistant.conversationId}
+              disabled={assistant.busy}
+              onSelect={history.selectChat}
+            />
+          )}
         <AssistantMessages
+          conversationId={assistant.conversationId}
           messages={assistant.messages}
-          hidden={hidden}
+          hidden={hidden || history.showHistory}
           busy={assistant.busy}
           activity={assistant.activity}
           onOpen={assistant.open}
@@ -72,7 +118,18 @@ export default function AssistantPanel({
           </div>
         )}
       </div>
-      <footer className="assistant-footer">
+      {history.showHistory && (
+        <div className="assistant-body">
+          <AssistantConversations
+            conversations={assistant.conversations}
+            selectedId={assistant.conversationId}
+            disabled={assistant.busy}
+            onSelect={history.selectChat}
+            onNew={history.newChat}
+          />
+        </div>
+      )}
+      <footer className="assistant-footer" hidden={history.showHistory}>
         {assistant.attachments.length > 0 && (
           <details className="assistant-documents text-xs">
             <summary>
@@ -83,6 +140,7 @@ export default function AssistantPanel({
           </details>
         )}
         <AssistantComposer
+          conversationId={assistant.conversationId}
           busy={assistant.busy}
           uploading={assistant.uploading}
           attachments={assistant.attachments}
@@ -98,7 +156,7 @@ export default function AssistantPanel({
             <summary>About Gemini</summary>
             <p>
               Gemini receives your messages, attached files and a summary of idea titles, tasks and
-              dates. Files stay in private storage for follow-up questions; a new chat removes them.
+              dates. Files stay in private storage with their conversation for follow-up questions.
               Synced post captions and measured results help Gemini compare performance and plan;
               social video files aren’t sent. Workspace notes and draft captions aren’t included
               automatically. Google may use free-tier content to improve its products. AI can make

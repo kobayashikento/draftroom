@@ -78,7 +78,8 @@ export async function uploadAssistantFiles(
           endpoint: resumableStorageEndpoint(config.url),
           chunkSize: 6 * 1024 * 1024,
           retryDelays: [0, 1000, 3000, 5000],
-          headers: { authorization: `Bearer ${data.session!.access_token}`, apikey: config.key },
+          // XHR appends duplicate headers; authorization is set once with the current session below.
+          headers: { apikey: config.key },
           metadata: {
             bucketName: ASSISTANT_BUCKET,
             objectName: record.path,

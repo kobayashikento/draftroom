@@ -7,7 +7,7 @@ import Modal from '../editors/modal';
 import useSocialConnections from './use-social-connections.ts';
 import ConnectionSetup from './connection-setup';
 import type { AccountConnectionsProps, SocialPlatform } from './media.helpers.ts';
-import { freshnessLabel } from './media.helpers.ts';
+import SyncTimestamp from './sync-timestamp';
 
 export default function AccountConnections({ compact = false }: AccountConnectionsProps) {
   const { library, setup, setSetup, managing, setManaging, busy, connect, disconnect } =
@@ -64,11 +64,14 @@ export default function AccountConnections({ compact = false }: AccountConnectio
                 </p>
               )}
               <div className="connection-card-foot">
-                <span className="text-xs text-muted">
-                  {connected
-                    ? freshnessLabel(account.last_synced_at)
-                    : 'Read access · you stay in control'}
-                </span>
+                {connected || account?.last_synced_at ? (
+                  <SyncTimestamp
+                    value={account?.last_synced_at || null}
+                    syncing={library.busy === `Syncing ${platform}`}
+                  />
+                ) : (
+                  <span className="text-xs text-muted">Read access · you stay in control</span>
+                )}
                 <div className="row gap-2">
                   {connected ? (
                     <>

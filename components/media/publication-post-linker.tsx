@@ -61,7 +61,7 @@ export default function PublicationPostLinker(props: PublicationPostLinkProps) {
               >
                 <MediaArtwork record={record} />
                 <span className="min-w-0 flex-1 text-left">
-                  <span className="block line-clamp-2 text-sm font-medium">{record.title}</span>
+                  <span className="line-clamp-2 text-sm font-medium">{record.title}</span>
                   <span className="block text-xs text-muted">
                     Published {mediaDate(record.published_at)}
                   </span>

@@ -531,7 +531,7 @@
     background: var(--dr-surface);
   }
   .publication-post-options {
-    @apply grid max-h-80 gap-2 overflow-y-auto;
+    @apply grid max-h-80 auto-rows-max grid-cols-1 content-start gap-2 overflow-y-auto;
   }
   .dr-button.publication-post-option {
     @apply flex h-auto w-full items-center justify-start gap-4 p-3 font-normal;

@@ -1,13 +1,6 @@
 import type { Workspace } from '../../lib/types.ts';
-import type { SocialAccount, SocialPlatform } from './media.helpers.ts';
+import type { SocialPlatform } from './media.helpers.ts';
 import { isIntendedPublication } from './publication-link.helpers.ts';
-
-export type PostedSyncLibrary = {
-  accounts: SocialAccount[];
-  loading: boolean;
-  busy: string;
-  sync: (platform: SocialPlatform) => Promise<void>;
-};
 
 export function postedSyncPlatforms(
   previous: Workspace | null,

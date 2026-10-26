@@ -23,6 +23,7 @@ export default function useMediaLibrary(onOpenLibrary: () => void): MediaControl
   const { cloud, authUser, notify, state, update } = useWorkspace();
   const [snapshot, setSnapshot] = useState(blankLibrary);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
   const locked = useRef(false);
@@ -31,6 +32,7 @@ export default function useMediaLibrary(onOpenLibrary: () => void): MediaControl
 
   const refresh = useCallback(async () => {
     const current = ++generation.current;
+    setRefreshing(true);
     try {
       let next;
       if (cloud && ownerId) {
@@ -52,7 +54,10 @@ export default function useMediaLibrary(onOpenLibrary: () => void): MediaControl
       if (generation.current === current)
         setError(error instanceof Error ? error.message : 'The library could not be loaded.');
     } finally {
-      if (generation.current === current) setLoading(false);
+      if (generation.current === current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [cloud, ownerId]);
 
@@ -64,10 +69,12 @@ export default function useMediaLibrary(onOpenLibrary: () => void): MediaControl
       if (document.visibilityState === 'visible' && !locked.current) void refresh();
     };
     window.addEventListener('online', visible);
+    window.addEventListener('focus', visible);
     document.addEventListener('visibilitychange', visible);
     return () => {
       generation.current++;
       window.removeEventListener('online', visible);
+      window.removeEventListener('focus', visible);
       document.removeEventListener('visibilitychange', visible);
     };
   }, [refresh]);
@@ -109,6 +116,7 @@ export default function useMediaLibrary(onOpenLibrary: () => void): MediaControl
   return {
     ...snapshot,
     loading,
+    refreshing,
     error,
     busy,
     cloud: Boolean(cloud),

@@ -256,7 +256,10 @@ test('sync imports idempotently, preserves linked ideas, paginates and isolates 
     });
   };
   const service = createSocialService(memory.repository, env, fetcher);
+  const syncStarted = Date.now();
   await service.run(owner, { action: 'sync', platform: 'TikTok', older: false });
+  const firstSynced = Date.parse(memory.accounts[0].last_synced_at || '');
+  assert.ok(firstSynced >= syncStarted && firstSynced <= Date.now());
   assert.equal(memory.records.length, 1);
   assert.equal(memory.accounts[0].has_more, true);
   const id = memory.records[0].id;
@@ -269,8 +272,10 @@ test('sync imports idempotently, preserves linked ideas, paginates and isolates 
   assert.equal(requestedCursor, 1234567890000);
   assert.equal(memory.records.length, 2);
   assert.equal(memory.accounts[0].has_more, false);
+  const lastSuccessfulSync = memory.accounts[0].last_synced_at;
   denied = true;
   await assert.rejects(service.run(owner, { action: 'sync', platform: 'TikTok', older: false }));
+  assert.equal(memory.accounts[0].last_synced_at, lastSuccessfulSync);
   assert.equal(memory.accounts[0].status, 'reconnect_required');
   assert.equal(memory.accounts[0].sync_lock_until, null);
   assert.equal(memory.records.length, 2);

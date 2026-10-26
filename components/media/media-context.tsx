@@ -3,7 +3,7 @@
 import { createContext, useContext } from 'react';
 import type { MediaController, MediaLibraryProps } from './media.helpers.ts';
 import useMediaLibrary from './use-media-library.ts';
-import usePostedSync from './use-posted-sync.ts';
+import useMediaSync from './use-media-sync.ts';
 
 const Context = createContext<MediaController | null>(null);
 
@@ -15,6 +15,6 @@ export function useMedia(): MediaController {
 
 export default function MediaProvider({ children, onOpenLibrary }: MediaLibraryProps) {
   const library = useMediaLibrary(onOpenLibrary);
-  usePostedSync(library);
+  useMediaSync(library);
   return <Context.Provider value={library}>{children}</Context.Provider>;
 }

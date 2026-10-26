@@ -49,6 +49,7 @@ export type AddPostLinkDialogProps = {
 export type PublicationPreviewProps = { item: Item; publication: Publication };
 export type MediaController = MediaLibrarySnapshot & {
   loading: boolean;
+  refreshing: boolean;
   error: string;
   busy: string;
   cloud: boolean;

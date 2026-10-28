@@ -3,6 +3,7 @@ import type { Item, Workspace } from './types.ts';
 import type { MediaRecord } from '../supabase/functions/_shared/social-types.ts';
 import { isAssistantServiceAction } from '../supabase/functions/_shared/assistant-action-contract.ts';
 import { createItem, kind } from './model.ts';
+import { writeCreativeBrief } from './creative-brief.helpers.ts';
 import { workspaceLinkHref } from './workspace-links.ts';
 import { assignItemSeries, deleteIdea } from '../components/editors/editors.helpers.ts';
 import { removeTask } from '../components/production/production.helpers.ts';
@@ -115,8 +116,18 @@ export function applyWorkspaceAction(
           id,
           media
         );
+      if (action.brief) {
+        writeCreativeBrief(item, action.brief, id);
+        if (action.brief.cadence) item.cadence = action.brief.cadence;
+      }
     }
     return ideaReceipt(item, `Created idea: ${item.title}`, 'Storyboard');
+  }
+  if (action.type === 'write_creative_brief') {
+    const item = assistantItem(state, action.itemId);
+    writeCreativeBrief(item, action.brief, id);
+    item.updatedAt = new Date().toISOString();
+    return ideaReceipt(item, `Updated creative brief: ${item.title}`, 'Storyboard');
   }
   if (action.type === 'delete_unposted_ideas')
     throw new Error('Review the exact unposted ideas before deleting them.');

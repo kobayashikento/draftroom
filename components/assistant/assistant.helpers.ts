@@ -199,6 +199,6 @@ export function assistantMessageText(text: string, hasFiles: boolean): string {
 export const suggestions = [
   'Which of my reels is performing best?',
   'What do my best posts have in common?',
-  'What should I work on next?',
+  'Give me 3 ideas with exact shots, hooks and visual references',
   'Help me plan next week'
 ];

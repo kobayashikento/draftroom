@@ -405,7 +405,7 @@ test('referenced ideas beyond the summary cap stay actionable and oversized Unic
   const body = assistantRequestBody(state, messages);
   assert.ok(new TextEncoder().encode(JSON.stringify(body)).length <= 150_000);
   assert.equal(body.messages.at(-1)!.text, messages.at(-1)!.text);
-  assert.equal(body.actionVersion, 2);
+  assert.equal(body.actionVersion, 3);
   assert.equal(body.context.details?.[0].notes, target.notes);
   assert.doesNotThrow(() => validateContext(body.context));
 });

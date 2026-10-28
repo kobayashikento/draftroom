@@ -1,5 +1,6 @@
 import type { AssistantAction, JsonSchema } from './types.ts';
 import type { AssistantServiceAction } from './assistant-action-types.ts';
+import { CREATIVE_BRIEF_SCHEMA, validateCreativeBrief } from './creative-brief.ts';
 
 export const TASK_CATEGORIES = ['plan', 'film', 'photo', 'edit', 'caption', 'publish'] as const;
 type FieldRule = { schema: JsonSchema; parse: (value: unknown) => unknown };
@@ -125,12 +126,14 @@ const seriesFields = {
   storyboard: list(text()),
   tasks: list(text())
 };
+const creativeBrief: FieldRule = { schema: CREATIVE_BRIEF_SCHEMA, parse: validateCreativeBrief };
 
 export const ASSISTANT_ACTIONS: Record<string, ActionSpec> = {
   create_idea: {
     fields: {
       title: text(),
       format,
+      brief: creativeBrief,
       seriesId: text(100, true),
       tasks: list({ schema: schema(taskFields), parse: value => fields(value, taskFields) }, 12),
       changes: patch(ideaFields),
@@ -143,9 +146,14 @@ export const ASSISTANT_ACTIONS: Record<string, ActionSpec> = {
         2
       )
     },
-    optional: ['changes', 'storyboard', 'publications'],
+    optional: ['changes', 'storyboard', 'publications', 'brief'],
     description:
-      'Create an idea; an empty tasks list uses the normal checklist. Optional changes, storyboard entries and platform plans initialize all requested content in the same operation.'
+      'Create an idea; use brief for a complete executable creative plan, saved into its hook, notes, storyboard and draft captions. Do not duplicate brief content in changes/storyboard/publications. An empty tasks list uses the normal checklist.'
+  },
+  write_creative_brief: {
+    fields: { itemId: id, brief: creativeBrief },
+    description:
+      'Replace the creative plan for an existing idea when requested: hook, notes, complete storyboard and draft captions. Keep its title, format, tasks, workflow, dates and published captions. The brief format must match the idea. Use partial update actions for narrow edits.'
   },
   create_task: { fields: { itemId: id, ...taskFields }, description: 'Add a checklist task.' },
   prioritize_task: {
@@ -349,26 +357,38 @@ export const LEGACY_ACTION_TYPES = [
   'prioritize_task',
   'complete_task'
 ];
-export function assistantActionSchema(allowed?: string[]): JsonSchema {
+type AssistantContract = 'legacy' | 'workspace' | 'creative';
+export function assistantActionSchema(contract: AssistantContract = 'creative'): JsonSchema {
   return {
     anyOf: Object.entries(ASSISTANT_ACTIONS)
-      .filter(([type]) => !allowed || allowed.includes(type))
+      .filter(([type]) =>
+        contract === 'legacy'
+          ? LEGACY_ACTION_TYPES.includes(type)
+          : contract !== 'workspace' || type !== 'write_creative_brief'
+      )
       .map(([type, spec]) => {
         const rules =
-          allowed && type === 'create_idea'
+          contract === 'legacy' && type === 'create_idea'
             ? {
                 title: spec.fields.title,
                 format: spec.fields.format,
                 seriesId: spec.fields.seriesId,
                 tasks: spec.fields.tasks
               }
-            : spec.fields;
+            : contract === 'workspace' && type === 'create_idea'
+              ? Object.fromEntries(Object.entries(spec.fields).filter(([key]) => key !== 'brief'))
+              : spec.fields;
         return {
           ...schema(
             { type: choices([type]), ...rules },
             (spec.optional || []).filter(key => Object.hasOwn(rules, key))
           ),
-          description: spec.description
+          description:
+            type === 'create_idea' && contract !== 'creative'
+              ? contract === 'legacy'
+                ? 'Create an idea with title, format, seriesId and tasks.'
+                : 'Create an idea with optional changes, storyboard entries and platform plans. An empty tasks list uses the normal checklist.'
+              : spec.description
         };
       })
   };

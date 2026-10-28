@@ -12,6 +12,7 @@ import { assistantLinkedMarkdown } from './assistant-links.helpers.ts';
 import useAssistantLinks from './use-assistant-links.ts';
 import AssistantReferenceLink from './assistant-reference-link';
 import AssistantFileList from './assistant-file-list';
+import AssistantBrief from './assistant-brief';
 
 export default function AssistantMessages({
   conversationId,
@@ -55,6 +56,17 @@ export default function AssistantMessages({
             </div>
           )}
           {message.attachments?.length ? <AssistantFileList files={message.attachments} /> : null}
+          {message.briefs?.map((brief, index) => (
+            <AssistantBrief
+              key={`${index}-${brief.title}`}
+              message={message}
+              index={index}
+              conversationId={conversationId}
+              disabled={busy || message.proposal?.status === 'pending'}
+              onOpen={onOpen}
+              onNavigate={onNavigate}
+            />
+          ))}
           {message.proposal?.status === 'pending' && (
             <div className="assistant-proposal">
               <span className="text-sm text-muted">

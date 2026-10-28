@@ -1,6 +1,17 @@
 import { validAttachments } from '../supabase/functions/_shared/assistant-attachments.ts';
 import { validateAssistantAction } from '../supabase/functions/_shared/assistant-action-contract.ts';
 import { parseWorkspaceLink } from './workspace-links.ts';
+import { validateCreativeBriefs } from '../supabase/functions/_shared/creative-brief.ts';
+
+function validBriefs(value: unknown): boolean {
+  if (value === undefined) return true;
+  try {
+    validateCreativeBriefs(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -42,6 +53,15 @@ function validMessages(value: unknown): boolean {
       typeof message.createdAt !== 'string' ||
       !validAttachments(message.attachments) ||
       !validProposal(message.proposal) ||
+      !validBriefs(message.briefs) ||
+      (message.briefItemIds !== undefined &&
+        (!Array.isArray(message.briefItemIds) ||
+          !Array.isArray(message.briefs) ||
+          message.briefItemIds.length !== message.briefs.length ||
+          !message.briefItemIds.every(
+            value => typeof value === 'string' && value.length <= 300
+          ))) ||
+      (message.briefs !== undefined && message.role !== 'assistant') ||
       (message.proposal !== undefined && message.role !== 'assistant') ||
       (message.role !== 'user' && message.attachments !== undefined) ||
       (message.receipts !== undefined &&

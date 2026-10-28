@@ -1,4 +1,5 @@
 import type { Format, Priority, TaskCategory } from './types.ts';
+import type { CreativeBrief } from './creative-brief.ts';
 
 export type AssistantPlatform = 'Instagram' | 'TikTok';
 export type AssistantStageKind = 'prep' | 'ready' | 'posted';
@@ -46,6 +47,7 @@ export type SeriesChanges = {
 export type StageChanges = { name?: string; kind?: AssistantStageKind };
 export type CalendarTaskChanges = { title?: string; date?: string; repeat?: AssistantRepeat };
 export type WorkspaceEditAction =
+  | { type: 'write_creative_brief'; itemId: string; brief: CreativeBrief }
   | { type: 'update_idea'; itemId: string; changes: IdeaChanges }
   | { type: 'update_ideas'; itemIds: string[]; changes: IdeaChanges }
   | { type: 'duplicate_idea'; itemId: string; title: string }

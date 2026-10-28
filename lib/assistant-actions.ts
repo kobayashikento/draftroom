@@ -5,6 +5,7 @@ import type {
   AssistantProposal
 } from '../supabase/functions/_shared/types.ts';
 import type { MediaRecord } from '../supabase/functions/_shared/social-types.ts';
+import type { CreativeBrief } from '../supabase/functions/_shared/creative-brief.ts';
 import { validateAttachments } from '../supabase/functions/_shared/assistant-attachments.ts';
 import { validateReply } from '../supabase/functions/_shared/assistant-protocol.ts';
 import {
@@ -30,6 +31,8 @@ export type AssistantTurn = {
   requestId: string;
   reply: string;
   changes: PreparedAssistantAction[];
+  briefs?: CreativeBrief[];
+  briefItemIds?: string[];
 };
 export type AssistantApplyOptions = {
   media?: MediaRecord[];
@@ -81,7 +84,7 @@ export function prepareAssistantTurn(
   response: unknown,
   media: MediaRecord[] = []
 ): AssistantTurn {
-  const { reply, actions } = validateReply(response);
+  const { reply, actions, briefs } = validateReply(response);
   const normalized: AssistantAction[] = actions.flatMap(action => {
     if (action.type !== 'delete_unposted_ideas') return [action];
     const itemIds = state.items
@@ -89,13 +92,24 @@ export function prepareAssistantTurn(
       .map(item => item.id);
     return itemIds.length ? [{ type: 'delete_ideas' as const, itemIds, onlyUnposted: true }] : [];
   });
+  const changes = normalized.map((action, index) => ({
+    id: `assistant-${requestId}-${index}`,
+    action
+  }));
+  const plans = changes.flatMap(({ id, action }) =>
+    (action.type === 'create_idea' || action.type === 'write_creative_brief') && action.brief
+      ? [{ brief: action.brief, itemId: action.type === 'create_idea' ? id : action.itemId }]
+      : []
+  );
   return {
     requestId,
+    briefs: [...plans.map(plan => plan.brief), ...(briefs || [])].slice(0, 8),
+    briefItemIds: [...plans.map(plan => plan.itemId), ...(briefs || []).map(() => '')].slice(0, 8),
     reply:
       actions.some(action => action.type === 'delete_unposted_ideas') && !normalized.length
         ? 'There are no unposted ideas to remove. Your posted work was kept.'
         : reply,
-    changes: normalized.map((action, index) => ({ id: `assistant-${requestId}-${index}`, action }))
+    changes
   };
 }
 
@@ -195,6 +209,7 @@ export function applyAssistantTurn(
       role: 'assistant',
       text,
       receipts,
+      ...(turn.briefs?.length ? { briefs: turn.briefs, briefItemIds: turn.briefItemIds } : {}),
       ...(proposal ? { proposal } : {}),
       createdAt: new Date().toISOString()
     },

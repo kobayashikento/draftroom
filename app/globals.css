@@ -908,7 +908,7 @@
   .assistant-dock {
     @apply fixed left-1/2 z-30 -translate-x-1/2;
     bottom: max(16px, env(safe-area-inset-bottom));
-    width: min(560px, calc(100vw - 32px));
+    width: min(760px, calc(100vw - 32px));
     pointer-events: none;
   }
   .dr-button.assistant-trigger {
@@ -926,7 +926,7 @@
   }
   .assistant-panel {
     @apply mb-3 flex flex-col overflow-hidden rounded-2xl text-sm;
-    height: min(640px, calc(100dvh - 112px));
+    height: min(760px, calc(100dvh - 112px));
     pointer-events: auto;
     border: 1px solid var(--dr-control-border);
     background: var(--dr-canvas);
@@ -1042,6 +1042,52 @@
   }
   .assistant-proposal-row {
     background: var(--dr-accent-soft);
+  }
+  .assistant-brief {
+    @apply my-2 flex flex-col items-start gap-5 rounded-xl border p-4;
+    border-color: var(--dr-border);
+    background: var(--dr-raised);
+    overflow-wrap: anywhere;
+  }
+  .assistant-brief > div {
+    @apply w-full;
+  }
+  .creative-brief-intro {
+    @apply grid gap-4;
+  }
+  .creative-brief-intro:has(.creative-reference) {
+    grid-template-columns: minmax(80px, 120px) minmax(0, 1fr);
+  }
+  .creative-reference {
+    @apply flex min-w-0 flex-col gap-2;
+  }
+  .creative-reference img,
+  .creative-reference-empty {
+    @apply w-full rounded-xl object-cover;
+    aspect-ratio: 3 / 4;
+  }
+  .creative-reference-empty {
+    @apply flex flex-col items-center justify-center gap-2 p-3 text-xs text-muted;
+    background: var(--dr-raised);
+  }
+  .creative-hook,
+  .creative-caption,
+  .storyboard-direction {
+    @apply space-y-2 rounded-lg p-4;
+    background: var(--dr-accent-soft);
+  }
+  .creative-step {
+    @apply grid gap-3;
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+  .storyboard-entry-body {
+    @apply grid items-start gap-4;
+  }
+  .storyboard-entry-body:has(.creative-reference) {
+    grid-template-columns: minmax(80px, 120px) minmax(0, 1fr);
+  }
+  .storyboard-entry-body .fields {
+    @apply min-w-0;
   }
   .assistant-footer {
     @apply flex shrink-0 flex-col gap-3 p-4;
@@ -1970,6 +2016,12 @@
     }
     .fields {
       @apply grid-cols-1;
+    }
+    .storyboard-entry-body:has(.creative-reference) {
+      @apply grid-cols-1;
+    }
+    .storyboard-entry-body > .creative-reference {
+      @apply max-w-40;
     }
     .panel,
     .modal-body,

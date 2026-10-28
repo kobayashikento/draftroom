@@ -94,7 +94,9 @@ export function createAssistantHandler({
         throw new AssistantError('A message and workspace context are required.', 400);
       const messages = validateMessages(body.messages);
       const context = validateContext(body.context);
-      const workspaceActions = 'actionVersion' in body && body.actionVersion === 2;
+      const creativeBriefs = 'actionVersion' in body && body.actionVersion === 3;
+      const workspaceActions =
+        creativeBriefs || ('actionVersion' in body && body.actionVersion === 2);
       let attachments;
       try {
         attachments = validateAttachments(
@@ -148,7 +150,7 @@ export function createAssistantHandler({
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
             body: JSON.stringify(
-              geminiRequest(context, messages, fileSession?.files, workspaceActions)
+              geminiRequest(context, messages, fileSession?.files, workspaceActions, creativeBriefs)
             ),
             signal
           }
@@ -205,6 +207,16 @@ export function createAssistantHandler({
         startsWithObject = text.trimStart().startsWith('{');
         replyStage = 'validation';
         const reply = parseAssistantReply(text);
+        if (
+          !creativeBriefs &&
+          (reply.briefs?.length ||
+            reply.actions.some(
+              action =>
+                action.type === 'write_creative_brief' ||
+                (action.type === 'create_idea' && action.brief)
+            ))
+        )
+          throw new Error('This client cannot display creative briefs.');
         if (
           !workspaceActions &&
           reply.actions.some(action => !LEGACY_ACTION_TYPES.includes(action.type))

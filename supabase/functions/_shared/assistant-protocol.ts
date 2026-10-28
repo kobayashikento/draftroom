@@ -1,7 +1,7 @@
 import type { AssistantReply, ChatMessage, JsonSchema } from './types.ts';
+import { CREATIVE_BRIEF_SCHEMA, validateCreativeBriefs } from './creative-brief.ts';
 import {
   ACTION_SCHEMA,
-  LEGACY_ACTION_TYPES,
   assistantActionSchema,
   validateAssistantAction
 } from './assistant-action-contract.ts';
@@ -23,7 +23,8 @@ export function validateReply(value: unknown): AssistantReply {
     throw new Error('The assistant returned an unreadable plan. Please try again.');
   return {
     reply: text(value.reply, 'reply', 6000),
-    actions: value.actions.map(validateAssistantAction)
+    actions: value.actions.map(validateAssistantAction),
+    ...(value.briefs === undefined ? {} : { briefs: validateCreativeBriefs(value.briefs) })
   };
 }
 
@@ -51,16 +52,28 @@ export const REPLY_SCHEMA: JsonSchema = {
   type: 'object',
   properties: {
     reply: { type: 'string', description: 'A concise answer under 5,000 characters.' },
-    actions: { type: 'array', maxItems: 10, items: ACTION_SCHEMA }
+    actions: { type: 'array', maxItems: 10, items: ACTION_SCHEMA },
+    briefs: { type: 'array', maxItems: 8, items: CREATIVE_BRIEF_SCHEMA }
   },
   required: ['reply', 'actions'],
   additionalProperties: false
 };
+export const WORKSPACE_REPLY_SCHEMA: JsonSchema = {
+  ...REPLY_SCHEMA,
+  properties: {
+    reply: REPLY_SCHEMA.properties!.reply,
+    actions: {
+      type: 'array',
+      maxItems: 10,
+      items: assistantActionSchema('workspace')
+    }
+  }
+};
 export const LEGACY_REPLY_SCHEMA: JsonSchema = {
   ...REPLY_SCHEMA,
   properties: {
-    ...REPLY_SCHEMA.properties,
-    actions: { type: 'array', maxItems: 10, items: assistantActionSchema(LEGACY_ACTION_TYPES) }
+    reply: REPLY_SCHEMA.properties!.reply,
+    actions: { type: 'array', maxItems: 10, items: assistantActionSchema('legacy') }
   }
 };
 

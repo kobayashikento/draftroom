@@ -8,6 +8,7 @@ import { workspaceLinkHref } from '../../../lib/workspace-links.ts';
 import { viewPaths } from '../../../lib/navigation.ts';
 import { assistantContentDetails, validContentDetails } from './assistant-content-context.ts';
 import { validDate } from './assistant-action-contract.ts';
+import { validateCreativeBriefs } from './creative-brief.ts';
 // Planning metadata is always bounded. Creative details are included only for ideas referenced by the conversation.
 export function assistantContext(
   state: PlanningWorkspace,
@@ -217,6 +218,8 @@ export function validateContext(context: unknown): AssistantContext {
   )
     throw new Error('Invalid workspace context.');
   const result = assistantContext(context, context.today, context.timezone);
+  if (context.creativeBriefs !== undefined)
+    result.creativeBriefs = validateCreativeBriefs(context.creativeBriefs);
   if (context.details !== undefined) {
     if (!validContentDetails(context.details)) throw new Error('Invalid creative details.');
     result.details = context.details.filter(detail =>

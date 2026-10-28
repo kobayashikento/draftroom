@@ -12,7 +12,7 @@ import { assistantAttachments } from './assistant-actions.ts';
 import { dateString } from './model.ts';
 
 export type AssistantRequestBody = {
-  actionVersion: 2;
+  actionVersion: 3;
   messages: ChatMessage[];
   attachments: AssistantAttachment[];
   context: AssistantContext;
@@ -59,15 +59,20 @@ export function assistantRequestBody(
     .slice(0, 60)
     .map(({ id, title }) => ({ id, title }));
   const body: AssistantRequestBody = {
-    actionVersion: 2,
+    actionVersion: 3,
     messages: messages.slice(-16).map(({ role, text }) => ({ role, text })),
     attachments: assistantAttachments(state),
     context
   };
+  context.creativeBriefs = messages
+    .filter(message => message.role === 'assistant')
+    .flatMap(message => message.briefs || [])
+    .slice(-8);
   // Leave room beneath the Edge Function's byte limit, including non-ASCII messages.
   while (new TextEncoder().encode(JSON.stringify(body)).length > 150_000) {
     context.partial = true;
-    if (body.messages.length > 4) body.messages.shift();
+    if (context.creativeBriefs.length > 1) context.creativeBriefs.shift();
+    else if (body.messages.length > 4) body.messages.shift();
     else if (context.library.length) {
       context.library.pop();
       context.libraryPartial = true;
@@ -78,6 +83,7 @@ export function assistantRequestBody(
     else if (body.messages.length > 1) body.messages.shift();
     else if (context.details?.length) context.details.pop();
     else if (context.items.length > 1) context.items.pop();
+    else if (context.creativeBriefs.length) context.creativeBriefs.pop();
     else throw new Error('This request is too large. Please shorten your message.');
   }
   return body;

@@ -6,6 +6,7 @@ import {
 } from '../supabase/functions/_shared/assistant-handler.ts';
 import { assistantContext } from '../supabase/functions/_shared/assistant-context.ts';
 import { seed } from '../lib/model.ts';
+import { matchaBrief } from './fixtures/creative-brief.ts';
 type HandlerOptions = Parameters<typeof createAssistantHandler>[0];
 
 const payload = () => ({
@@ -69,6 +70,35 @@ test('expanded actions are negotiated so deployed older clients keep their exist
       assert.deepEqual((await response.json()).actions, [{ type: 'delete_unposted_ideas' }]);
       assert.match(instruction, /The user completes Review changes/);
     } else assert.match(instruction, /browser supports only/);
+  }
+});
+
+test('complete creative briefs reach version 3 clients and are rejected for older clients', async () => {
+  for (const actionVersion of [2, 3]) {
+    const endpoint = handler({
+      fetcher: async () =>
+        Response.json({
+          candidates: [
+            {
+              finishReason: 'STOP',
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      reply: 'A complete matcha plan.',
+                      briefs: [matchaBrief],
+                      actions: []
+                    })
+                  }
+                ]
+              }
+            }
+          ]
+        })
+    });
+    const response = await endpoint(request({ ...payload(), actionVersion }));
+    assert.equal(response.status, actionVersion === 3 ? 200 : 502);
+    if (actionVersion === 3) assert.deepEqual((await response.json()).briefs, [matchaBrief]);
   }
 });
 

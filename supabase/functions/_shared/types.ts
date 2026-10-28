@@ -1,4 +1,5 @@
 import type { PerformanceContext } from './social-types.ts';
+import type { CreativeBrief } from './creative-brief.ts';
 import type {
   WorkspaceEditAction,
   AssistantServiceAction,
@@ -22,6 +23,7 @@ export type CreateIdeaAction = {
   changes?: IdeaChanges;
   storyboard?: StoryboardChanges[];
   publications?: { platform: AssistantPlatform; changes: PublicationChanges }[];
+  brief?: CreativeBrief;
 };
 export type ExistingTaskAction = {
   type: 'prioritize_task' | 'complete_task';
@@ -34,7 +36,11 @@ export type AssistantAction =
   | ExistingTaskAction
   | WorkspaceEditAction
   | AssistantServiceAction;
-export type AssistantReply = { reply: string; actions: AssistantAction[] };
+export type AssistantReply = {
+  reply: string;
+  actions: AssistantAction[];
+  briefs?: CreativeBrief[];
+};
 export type ChatMessage = { role: 'user' | 'assistant'; text: string };
 export type AssistantFileDetails = {
   name: string;
@@ -58,6 +64,8 @@ export type AssistantMessage = ChatMessage & {
   receipts?: ActionReceipt[];
   attachments?: AssistantAttachment[];
   proposal?: AssistantProposal;
+  briefs?: CreativeBrief[];
+  briefItemIds?: string[];
 };
 export type PlanningTask = {
   id: string;
@@ -156,6 +164,7 @@ export type AssistantContext = PlanningWorkspace & {
   libraryPartial?: boolean;
   conversations?: AssistantConversationReference[];
   proposals?: { messageId: string; summary: string }[];
+  creativeBriefs?: CreativeBrief[];
 };
 export type AssistantNavigationLink = {
   type: 'idea' | 'task' | 'series' | 'view';
@@ -176,6 +185,7 @@ export type JsonSchema = {
   description?: string;
   items?: JsonSchema;
   maxItems?: number;
+  minItems?: number;
 };
 export type GeminiPart = { text?: string; thought?: boolean };
 export type GeminiResponse = {

@@ -1,31 +1,23 @@
+import type { MediaRecord } from '../supabase/functions/_shared/social-types.ts';
 import type { Workspace, AssistantMessage } from './types.ts';
 import { validateReply } from '../supabase/functions/_shared/assistant-protocol.ts';
 import { getSupabaseClient } from './supabase.ts';
-import { assistantContext } from '../supabase/functions/_shared/assistant-context.ts';
-import { dateString } from './model.ts';
-import { assistantAttachments } from './assistant-actions.ts';
+import { assistantRequestBody } from './assistant-client.helpers.ts';
 
 export async function requestAssistant(
   state: Workspace,
   messages: AssistantMessage[],
-  signal: AbortSignal
+  signal: AbortSignal,
+  media: MediaRecord[] = []
 ) {
   const client = getSupabaseClient();
   if (!client)
     throw new Error(
       'The assistant needs a signed-in Supabase workspace. Open the connected app to use Gemini.'
     );
+  const body = assistantRequestBody(state, messages, media);
   const { data, error } = await client.functions.invoke('draftroom-assistant', {
-    body: {
-      messages: messages.slice(-16).map(({ role, text }) => ({ role, text })),
-      attachments: assistantAttachments(state),
-      context: assistantContext(
-        state,
-        dateString(new Date()),
-        Intl.DateTimeFormat().resolvedOptions().timeZone,
-        { includeLinks: false }
-      )
-    },
+    body,
     signal,
     timeout: 140_000
   });

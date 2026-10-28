@@ -150,7 +150,7 @@ test('actions use the latest state and preserve edits made while Gemini was thin
 });
 test('reject unsupported actions, invalid dates, priorities and overly large plans', () => {
   for (const action of [
-    { type: 'delete_idea', itemId: 'x' },
+    { type: 'publish_to_instagram', itemId: 'x' },
     { type: 'create_task', itemId: 'x', ...task, due: '2026-02-30' },
     { type: 'create_task', itemId: 'x', ...task, priority: 'Urgent' },
     { type: 'create_task', itemId: 'x', ...task, title: '' }

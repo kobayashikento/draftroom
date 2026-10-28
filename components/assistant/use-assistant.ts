@@ -16,15 +16,15 @@ import type {
   Workspace
 } from '../../lib/types.ts';
 import { useEffect, useRef, useState } from 'react';
+import useAssistantActions from './use-assistant-actions.ts';
+import { useMedia } from '../media/media-context';
 import { useWorkspace } from '../workspace/workspace-context';
 import { requestAssistant } from '../../lib/assistant-client.ts';
 import { uploadAssistantFiles, removeAssistantFiles } from '../../lib/assistant-uploads.ts';
 import {
   assistantMessages,
   assistantAttachments,
-  appendAssistantMessage,
-  prepareAssistantTurn,
-  applyAssistantTurn
+  appendAssistantMessage
 } from '../../lib/assistant-actions.ts';
 import {
   assistantConversationId,
@@ -34,6 +34,8 @@ import {
 
 export default function useAssistant(): AssistantController {
   const { state, update, cloud, conflict, storageStatus, open } = useWorkspace();
+  const library = useMedia();
+  const actions = useAssistantActions();
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [activity, setActivity] = useState('');
@@ -50,7 +52,7 @@ export default function useAssistant(): AssistantController {
 
   async function send(text: string, files: File[] = [], retryId?: string): Promise<boolean> {
     text = text.trim();
-    if (!text || request.current) return false;
+    if (!text || request.current || actions.running.current) return false;
     const blockedReason = assistantBlockedReason(cloud, conflict);
     if (blockedReason) {
       setError(blockedReason);
@@ -91,7 +93,11 @@ export default function useAssistant(): AssistantController {
           ? 'Reading your planning files and thinking through your next step…'
           : 'Thinking through your next step…'
       );
-      void respond(message.id, snapshot, messages, controller, conversationId);
+      respond(message.id, snapshot, messages, controller, conversationId).catch(error => {
+        setError(assistantErrorMessage(error), conversationId);
+        setBusy(false);
+        request.current = null;
+      });
       return true;
     } catch (error) {
       if (uploaded.length) await removeAssistantFiles(uploaded).catch(() => {});
@@ -115,14 +121,13 @@ export default function useAssistant(): AssistantController {
     conversationId: string
   ) {
     try {
-      const response = await requestAssistant(snapshot, messages, controller.signal);
+      const response = await requestAssistant(snapshot, messages, controller.signal, library.media);
       if (controller.signal.aborted) return;
       if (hasConflict.current)
         throw new Error(
           'Your workspace changed on another device. Resolve the sync conflict, then try again. No assistant actions were applied.'
         );
-      const turn = prepareAssistantTurn(latest.current, id, response);
-      update(draft => applyAssistantTurn(draft, turn, conversationId));
+      await actions.runResponse(id, response, conversationId);
     } catch (error) {
       if (!controller.signal.aborted) setError(assistantErrorMessage(error), conversationId);
     } finally {
@@ -133,7 +138,7 @@ export default function useAssistant(): AssistantController {
     }
   }
   function changeConversation(id?: string): boolean {
-    if (request.current) return false;
+    if (request.current || actions.running.current) return false;
     if (hasConflict.current) {
       setError(assistantBlockedReason(cloud, hasConflict.current));
       return false;
@@ -157,17 +162,24 @@ export default function useAssistant(): AssistantController {
     conversationId: assistantConversationId(state),
     conversations: assistantConversationList(state),
     messages: assistantMessages(state),
-    busy,
+    busy: busy || actions.busy,
     uploading,
-    activity,
+    activity: actions.busy ? 'Applying your workspace changes…' : activity,
     attachments: assistantAttachments(state),
     error:
+      actions.error ||
       error ||
       (!busy && retryRequest
         ? 'Your last message is saved. Its reply was interrupted. Try again to continue this conversation.'
         : ''),
     cloud,
     storageStatus,
+    review: actions.review,
+    reviewProposal: actions.reviewProposal,
+    closeReview: actions.closeReview,
+    cancelReview: actions.cancelReview,
+    confirmReview: actions.confirmReview,
+    historyRequest: actions.historyRequest,
     open: openReceipt,
     send,
     newChat: () => changeConversation(),

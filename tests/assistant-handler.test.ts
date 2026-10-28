@@ -36,6 +36,42 @@ const handler = (options: Partial<HandlerOptions> = {}) =>
     ...options
   });
 
+test('expanded actions are negotiated so deployed older clients keep their existing action contract', async () => {
+  for (const actionVersion of [undefined, 2]) {
+    let instruction = '';
+    const endpoint = handler({
+      fetcher: async (_url, options) => {
+        instruction = JSON.parse(String(options?.body)).systemInstruction.parts[0].text;
+        return Response.json({
+          candidates: [
+            {
+              finishReason: 'STOP',
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      reply: 'Ready to review',
+                      actions: [{ type: 'delete_unposted_ideas' }]
+                    })
+                  }
+                ]
+              }
+            }
+          ]
+        });
+      }
+    });
+    const response = await endpoint(
+      request({ ...payload(), ...(actionVersion ? { actionVersion } : {}) })
+    );
+    assert.equal(response.status, actionVersion === 2 ? 200 : 502);
+    if (actionVersion === 2) {
+      assert.deepEqual((await response.json()).actions, [{ type: 'delete_unposted_ideas' }]);
+      assert.match(instruction, /The user completes Review changes/);
+    } else assert.match(instruction, /browser supports only/);
+  }
+});
+
 test('a Supabase key mistakenly entered as the Gemini secret is never sent to Google', async () => {
   let called = false;
   const response = await handler({

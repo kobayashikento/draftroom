@@ -1,3 +1,4 @@
+import type { AssistantActionReview } from './assistant-actions.helpers.ts';
 import type { RefObject } from 'react';
 import type {
   AssistantMessage,
@@ -17,6 +18,12 @@ export type SendAssistant = (text: string, files?: File[], retryId?: string) => 
 export type FailedAssistantRequest = { text: string; id: string };
 export type AssistantConversationError = { conversationId: string; message: string };
 export type AssistantController = {
+  review: AssistantActionReview | null;
+  reviewProposal: (messageId: string) => void;
+  closeReview: () => void;
+  cancelReview: () => void;
+  confirmReview: () => Promise<void>;
+  historyRequest: number;
   conversationId: string;
   conversations: AssistantConversationSummary[];
   messages: AssistantMessage[];
@@ -143,6 +150,7 @@ export type AssistantMessagesProps = {
   activity: string;
   onOpen: (id: string, tab?: EditorTab) => void;
   onNavigate: () => void;
+  onReview: (messageId: string) => void;
 };
 
 export type AssistantPanelProps = {

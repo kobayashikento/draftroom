@@ -110,6 +110,7 @@ export default function AssistantPanel({
           activity={assistant.activity}
           onOpen={assistant.open}
           onNavigate={onClose}
+          onReview={assistant.reviewProposal}
         />
         {assistant.error && (
           <div className="assistant-error" role="alert">
@@ -155,12 +156,13 @@ export default function AssistantPanel({
           <details>
             <summary>About Gemini</summary>
             <p>
-              Gemini receives your messages, attached files and a summary of idea titles, tasks and
-              dates. Files stay in private storage with their conversation for follow-up questions.
-              Synced post captions and measured results help Gemini compare performance and plan;
-              social video files aren’t sent. Workspace notes and draft captions aren’t included
-              automatically. Google may use free-tier content to improve its products. AI can make
-              mistakes; review changes in your checklist.{' '}
+              Gemini receives your messages, attached files, planning metadata, conversation titles
+              and creative details for ideas referenced in this conversation. Files stay in private
+              storage with their conversation for follow-up questions. Synced post captions and
+              measured results help Gemini compare performance and plan; social video files aren’t
+              sent. Related notes, hooks, storyboard text and draft captions help it read and edit
+              the work you ask about. Google may use free-tier content to improve its products. AI
+              can make mistakes; review changes in your checklist.{' '}
               <a
                 href="https://ai.google.dev/gemini-api/docs/pricing"
                 target="_blank"

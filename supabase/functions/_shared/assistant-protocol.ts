@@ -1,78 +1,29 @@
-import type {
-  TaskDraft,
-  AssistantReply,
-  AssistantAction,
-  ChatMessage,
-  JsonSchema
-} from './types.ts';
-export const TASK_CATEGORIES = ['plan', 'film', 'photo', 'edit', 'caption', 'publish'] as const;
+import type { AssistantReply, ChatMessage, JsonSchema } from './types.ts';
+import {
+  ACTION_SCHEMA,
+  LEGACY_ACTION_TYPES,
+  assistantActionSchema,
+  validateAssistantAction
+} from './assistant-action-contract.ts';
+export { TASK_CATEGORIES, validDate } from './assistant-action-contract.ts';
 const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
-
-function text(value: unknown, name: string, max = 240, empty = false) {
-  if (typeof value !== 'string' || value.length > max || (!empty && !value.trim()))
+function text(value: unknown, name: string, max = 240) {
+  if (typeof value !== 'string' || value.length > max || !value.trim())
     throw new Error(`Invalid ${name}.`);
   return value.trim();
-}
-export function validDate(value: string) {
-  if (value === '') return true;
-  return (
-    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
-    !Number.isNaN(Date.parse(value)) &&
-    new Date(value).toISOString().slice(0, 10) === value
-  );
 }
 function oneOf<T extends string>(value: unknown, choices: readonly T[]): T {
   const match = choices.find(choice => choice === value);
   if (!match) throw new Error('Invalid assistant field.');
   return match;
 }
-function taskFields(value: unknown): TaskDraft {
-  if (!object(value)) throw new Error('Invalid task details.');
-  const title = text(value.title, 'task title');
-  if (
-    !TASK_CATEGORIES.some(category => category === value.category) ||
-    !['Normal', 'High'].some(choice => choice === value.priority) ||
-    typeof value.due !== 'string' ||
-    !validDate(value.due)
-  )
-    throw new Error('Invalid task details.');
-  return {
-    title,
-    category: oneOf(value.category, TASK_CATEGORIES),
-    due: value.due,
-    priority: oneOf(value.priority, ['Normal', 'High'] as const)
-  };
-}
 export function validateReply(value: unknown): AssistantReply {
   if (!object(value) || !Array.isArray(value.actions) || value.actions.length > 10)
     throw new Error('The assistant returned an unreadable plan. Please try again.');
   return {
     reply: text(value.reply, 'reply', 6000),
-    actions: value.actions.map((action: unknown): AssistantAction => {
-      if (!object(action)) throw new Error('Invalid assistant action.');
-      if (action.type === 'create_idea') {
-        if (
-          !['Reel', 'Carousel'].some(choice => choice === action.format) ||
-          !Array.isArray(action.tasks) ||
-          action.tasks.length > 12
-        )
-          throw new Error('Invalid idea details.');
-        return {
-          type: action.type,
-          title: text(action.title, 'idea title'),
-          format: oneOf(action.format, ['Reel', 'Carousel'] as const),
-          seriesId: text(action.seriesId, 'series', 100, true),
-          tasks: action.tasks.map(taskFields)
-        };
-      }
-      const itemId = text(action.itemId, 'idea', 100);
-      if (action.type === 'create_task')
-        return { type: action.type, itemId, ...taskFields(action) };
-      if (action.type === 'prioritize_task' || action.type === 'complete_task')
-        return { type: action.type, itemId, taskId: text(action.taskId, 'task', 100) };
-      throw new Error('Unsupported assistant action.');
-    })
+    actions: value.actions.map(validateAssistantAction)
   };
 }
 
@@ -96,47 +47,22 @@ export function parseAssistantReply(value: string): AssistantReply {
   return validateReply(parsed);
 }
 
-const string = { type: 'string' };
-const taskProperties = {
-  title: string,
-  category: { type: 'string', enum: TASK_CATEGORIES },
-  due: { type: 'string', description: 'YYYY-MM-DD or empty string when no date was requested' },
-  priority: { type: 'string', enum: ['Normal', 'High'] }
-};
-const schema = (properties: Record<string, JsonSchema>): JsonSchema => ({
+export const REPLY_SCHEMA: JsonSchema = {
   type: 'object',
-  properties,
-  required: Object.keys(properties),
+  properties: {
+    reply: { type: 'string', description: 'A concise answer under 5,000 characters.' },
+    actions: { type: 'array', maxItems: 10, items: ACTION_SCHEMA }
+  },
+  required: ['reply', 'actions'],
   additionalProperties: false
-});
-export const REPLY_SCHEMA = schema({
-  reply: { type: 'string', description: 'A concise answer under 5,000 characters.' },
-  actions: {
-    type: 'array',
-    maxItems: 10,
-    items: {
-      anyOf: [
-        schema({
-          type: { type: 'string', enum: ['create_task'] },
-          itemId: string,
-          ...taskProperties
-        }),
-        schema({
-          type: { type: 'string', enum: ['create_idea'] },
-          title: string,
-          format: { type: 'string', enum: ['Reel', 'Carousel'] },
-          seriesId: string,
-          tasks: { type: 'array', maxItems: 12, items: schema(taskProperties) }
-        }),
-        schema({
-          type: { type: 'string', enum: ['prioritize_task', 'complete_task'] },
-          itemId: string,
-          taskId: string
-        })
-      ]
-    }
+};
+export const LEGACY_REPLY_SCHEMA: JsonSchema = {
+  ...REPLY_SCHEMA,
+  properties: {
+    ...REPLY_SCHEMA.properties,
+    actions: { type: 'array', maxItems: 10, items: assistantActionSchema(LEGACY_ACTION_TYPES) }
   }
-});
+};
 
 export function validateMessages(messages: unknown): ChatMessage[] {
   if (!Array.isArray(messages) || !messages.length || messages.length > 16)

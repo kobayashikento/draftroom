@@ -3,7 +3,9 @@
 import type { AssistantMessagesProps } from './assistant.helpers.ts';
 import { useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
-import { CheckCheck, ArrowUpRight } from 'lucide-react';
+import { CheckCheck, ArrowUpRight, ClipboardList } from 'lucide-react';
+import NextLink from 'next/link';
+import { Link } from '@chakra-ui/react';
 import { AppIcon } from '../icons';
 import { Button } from '../ui';
 import { assistantLinkedMarkdown } from './assistant-links.helpers.ts';
@@ -18,7 +20,8 @@ export default function AssistantMessages({
   busy,
   activity,
   onOpen,
-  onNavigate
+  onNavigate,
+  onReview
 }: AssistantMessagesProps) {
   const references = useAssistantLinks();
   const markdown = assistantLinkedMarkdown(references, ({ href, children }) => (
@@ -52,15 +55,41 @@ export default function AssistantMessages({
             </div>
           )}
           {message.attachments?.length ? <AssistantFileList files={message.attachments} /> : null}
+          {message.proposal?.status === 'pending' && (
+            <div className="assistant-proposal">
+              <span className="text-sm text-muted">
+                {message.proposal.labels.length} proposed changes · waiting for your review
+              </span>
+              <Button onClick={() => onReview(message.id)} disabled={busy}>
+                <AppIcon icon={ClipboardList} />
+                Review changes
+              </Button>
+            </div>
+          )}
           {message.receipts && message.receipts.length > 0 && (
             <div className="assistant-receipts">
-              {message.receipts.map((receipt, index) => (
-                <Button key={index} onClick={() => onOpen(receipt.itemId, 'Production')}>
-                  <AppIcon icon={CheckCheck} />
-                  <span>{receipt.label}</span>
-                  <AppIcon icon={ArrowUpRight} />
-                </Button>
-              ))}
+              {message.receipts.map((receipt, index) =>
+                receipt.href ? (
+                  <Link asChild key={index} className="assistant-action-receipt">
+                    <NextLink href={receipt.href} scroll={false} prefetch={false}>
+                      <AppIcon icon={CheckCheck} />
+                      <span>{receipt.label}</span>
+                      <AppIcon icon={ArrowUpRight} />
+                    </NextLink>
+                  </Link>
+                ) : receipt.itemId ? (
+                  <Button key={index} onClick={() => onOpen(receipt.itemId, 'Production')}>
+                    <AppIcon icon={CheckCheck} />
+                    <span>{receipt.label}</span>
+                    <AppIcon icon={ArrowUpRight} />
+                  </Button>
+                ) : (
+                  <div key={index} className="assistant-action-receipt">
+                    <AppIcon icon={CheckCheck} />
+                    <span>{receipt.label}</span>
+                  </div>
+                )
+              )}
             </div>
           )}
         </article>

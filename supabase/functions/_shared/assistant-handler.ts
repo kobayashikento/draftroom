@@ -7,6 +7,7 @@ import { prepareGeminiFiles } from './assistant-files.ts';
 import type { AttachmentLoader, GeminiFileSession } from './assistant-files.ts';
 import type { PerformanceContext } from './social-types.ts';
 import { unavailablePerformance } from './assistant-performance.ts';
+import { LEGACY_ACTION_TYPES } from './assistant-action-contract.ts';
 
 const MAX_BODY = 160_000;
 export class AssistantError extends Error {
@@ -93,6 +94,7 @@ export function createAssistantHandler({
         throw new AssistantError('A message and workspace context are required.', 400);
       const messages = validateMessages(body.messages);
       const context = validateContext(body.context);
+      const workspaceActions = 'actionVersion' in body && body.actionVersion === 2;
       let attachments;
       try {
         attachments = validateAttachments(
@@ -145,7 +147,9 @@ export function createAssistantHandler({
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-            body: JSON.stringify(geminiRequest(context, messages, fileSession?.files)),
+            body: JSON.stringify(
+              geminiRequest(context, messages, fileSession?.files, workspaceActions)
+            ),
             signal
           }
         );
@@ -200,7 +204,22 @@ export function createAssistantHandler({
         fenced = text.trimStart().startsWith('```');
         startsWithObject = text.trimStart().startsWith('{');
         replyStage = 'validation';
-        return json(parseAssistantReply(text));
+        const reply = parseAssistantReply(text);
+        if (
+          !workspaceActions &&
+          reply.actions.some(action => !LEGACY_ACTION_TYPES.includes(action.type))
+        )
+          throw new Error('This client cannot apply that action.');
+        if (
+          !workspaceActions &&
+          reply.actions.some(
+            action =>
+              action.type === 'create_idea' &&
+              (action.changes || action.storyboard || action.publications)
+          )
+        )
+          throw new Error('This client cannot initialize those fields.');
+        return json(reply);
       } catch (error) {
         console.error('Gemini returned an unusable assistant response', {
           model,

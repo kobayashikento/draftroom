@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AssistantHistoryNavigationProps } from './assistant.helpers.ts';
 
 export default function useAssistantHistory({
@@ -8,6 +8,9 @@ export default function useAssistantHistory({
   inputRef
 }: AssistantHistoryNavigationProps) {
   const [showHistory, setShowHistory] = useState(false);
+  useEffect(() => {
+    if (assistant.historyRequest) setShowHistory(true);
+  }, [assistant.historyRequest]);
   function returnToChat() {
     setShowHistory(false);
     setTimeout(() => inputRef.current?.focus(), 0);

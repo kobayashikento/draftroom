@@ -6,6 +6,7 @@ import { AppIcon } from './icons';
 import { Button } from './ui';
 import { useWorkspace } from './workspace/workspace-context';
 import useAssistant from './assistant/use-assistant.ts';
+import AssistantActionReviewModal from './assistant/assistant-action-review-modal';
 import AssistantPanel from './assistant/assistant-panel';
 
 export default function Assistant() {
@@ -19,27 +20,38 @@ export default function Assistant() {
     trigger.current?.focus();
   }
   return (
-    <aside className="assistant-dock" aria-label="Draftroom assistant" hidden={Boolean(modal)}>
-      <AssistantPanel assistant={assistant} onClose={close} inputRef={input} hidden={!expanded} />
-      <Button
-        ref={trigger}
-        className="assistant-trigger"
-        aria-expanded={expanded}
-        aria-controls="draftroom-assistant"
-        onClick={() => {
-          if (expanded) close();
-          else {
-            setExpanded(true);
-            setTimeout(() => input.current?.focus(), 0);
-          }
-        }}
-      >
-        <span className="assistant-avatar">
-          <AppIcon icon={Sparkles} size="md" />
-        </span>
-        <span className="font-semibold">Ask Draftroom</span>
-        <AppIcon icon={ChevronUp} className={expanded ? 'rotate-180' : ''} />
-      </Button>
-    </aside>
+    <>
+      <aside className="assistant-dock" aria-label="Draftroom assistant" hidden={Boolean(modal)}>
+        <AssistantPanel assistant={assistant} onClose={close} inputRef={input} hidden={!expanded} />
+        <Button
+          ref={trigger}
+          className="assistant-trigger"
+          aria-expanded={expanded}
+          aria-controls="draftroom-assistant"
+          onClick={() => {
+            if (expanded) close();
+            else {
+              setExpanded(true);
+              setTimeout(() => input.current?.focus(), 0);
+            }
+          }}
+        >
+          <span className="assistant-avatar">
+            <AppIcon icon={Sparkles} size="md" />
+          </span>
+          <span className="font-semibold">Ask Draftroom</span>
+          <AppIcon icon={ChevronUp} className={expanded ? 'rotate-180' : ''} />
+        </Button>
+      </aside>
+      {assistant.review && (
+        <AssistantActionReviewModal
+          review={assistant.review}
+          busy={assistant.busy}
+          onConfirm={assistant.confirmReview}
+          onCancel={assistant.cancelReview}
+          onClose={assistant.closeReview}
+        />
+      )}
+    </>
   );
 }
